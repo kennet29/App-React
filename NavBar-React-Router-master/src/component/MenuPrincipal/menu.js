@@ -1,0 +1,202 @@
+import React from 'react';
+import { NavLink } from 'react-router-dom';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import SocialBar from '../socialbar/social-bar';
+import { faSackDollar, faBoxesPacking, faArrowRight, faVest, faSwatchbook, faList, faArrowUp91,faPalette,faTruck,faWarehouse,faShirt,faCalendarCheck,faGear,faTag,faAddressCard } from '@fortawesome/free-solid-svg-icons';
+
+import 'bootstrap/dist/css/bootstrap.min.css';
+import './menu.css';
+
+
+const Menu = () => {
+ 
+  return (
+    <div className="container">
+      <div className="row">
+        <div className="col-md-3">
+          <div className="card custom-card text-center ">
+            <div className="card-icon"><FontAwesomeIcon icon={faSackDollar} /></div>
+            <div className="card-title">Ventas</div>
+            <div className="card-description"></div>
+            <NavLink to="/ventas" className="card-link btn btn-primary custom-btn">
+              Realizar una venta <FontAwesomeIcon icon={faArrowRight} />
+            </NavLink>
+          </div>
+        </div>
+
+     
+        <div className="col-md-3">
+          <div className="card custom-card text-center ">
+            <div className="card-icon"><FontAwesomeIcon icon={faBoxesPacking} /></div>
+            <div className="card-title">Ingresos</div>
+            <div className="card-description"> </div>
+            <NavLink to="/ingresos" className="card-link btn btn-primary custom-btn">
+              Ir a Ingresos <FontAwesomeIcon icon={faArrowRight} />
+            </NavLink>
+          </div>
+        </div>
+
+        <div className="col-md-3">
+          <div className="card custom-card text-center ">
+            <div className="card-icon"> <FontAwesomeIcon icon={faShirt} /> </div>
+            <div className="card-title">Articulos</div>
+            <div className="card-description"></div>
+            <NavLink to="/articulos" className="card-link btn btn-primary custom-btn">
+              Ir a Articulos <FontAwesomeIcon icon={faArrowRight} />
+            </NavLink>
+          </div>
+        </div>
+
+        <div className="col-md-3">
+          <div className="card custom-card text-center ">
+            <div className="card-icon">  <FontAwesomeIcon icon={faVest} /></div>
+            <div className="card-title">Estilos</div>
+            <div className="card-description"></div>
+            <NavLink to="/estilos" className="card-link btn btn-primary custom-btn">
+              Ir a  Estilos  <FontAwesomeIcon icon={faArrowRight} />
+            </NavLink>
+          </div>
+        </div>
+
+        <div className="col-md-3">
+          <div className="card custom-card text-center ">
+            <div className="card-icon"> <FontAwesomeIcon icon={faSwatchbook} /> </div>
+            <div className="card-title">Diseños</div>
+            <div className="card-description"></div>
+            <NavLink to="/disenos" className="card-link btn btn-primary custom-btn">
+              Ir a  Diseños <FontAwesomeIcon icon={faArrowRight} />
+            </NavLink>
+          </div>
+        </div>
+
+        <div className="col-md-3">
+          <div className="card custom-card text-center ">
+            <div className="card-icon"><FontAwesomeIcon icon={faList} /> </div>
+            <div className="card-title">Categorias</div>
+            <div className="card-description"></div>
+            <NavLink to="/categorias" className="card-link btn btn-primary custom-btn">
+              Ir a Categorias <FontAwesomeIcon icon={faArrowRight} />
+            </NavLink>
+          </div>
+        </div>
+
+        <div className="col-md-3">
+          <div className="card custom-card text-center ">
+            <div className="card-icon">  <FontAwesomeIcon icon={faArrowUp91} /> </div>
+            <div className="card-title">Tallas</div>
+            <div className="card-description"></div>
+            <NavLink to="/tallas" className="card-link btn btn-primary custom-btn">
+              Ir a Tallas <FontAwesomeIcon icon={faArrowRight} />
+            </NavLink>
+          </div>
+        </div>
+
+        <div className="col-md-3">
+          <div className="card custom-card text-center ">
+            <div className="card-icon">  <FontAwesomeIcon icon={faPalette} /> </div>
+            <div className="card-title">Colores</div>
+            <div className="card-description"></div>
+            <NavLink to="/colores" className="card-link btn btn-primary custom-btn">
+              Ir a Colores <FontAwesomeIcon icon={faArrowRight} />
+            </NavLink>
+          </div>
+        </div>
+
+        <div className="col-md-3">
+          <div className="card custom-card text-center ">
+            <div className="card-icon"> <FontAwesomeIcon icon={faTruck} /> </div>
+            <div className="card-title">Proveedores</div>
+            <div className="card-description"></div>
+            <NavLink to="/proveedores" className="card-link btn btn-primary custom-btn">
+              Ir a Proveedores <FontAwesomeIcon icon={faArrowRight} />
+            </NavLink>
+          </div>
+        </div>
+
+        <div className="col-md-3">
+          <div className="card custom-card text-center ">
+            <div className="card-icon"> <FontAwesomeIcon icon={faWarehouse} /> </div>
+            <div className="card-title">Bodegas</div>
+            <div className="card-description"></div>
+            <NavLink to="/bodegas" className="card-link btn btn-primary custom-btn">
+              Ir a la Bodegas <FontAwesomeIcon icon={faArrowRight} />
+            </NavLink>
+          </div>
+        </div>
+
+        <div className="col-md-3">
+          <div className="card custom-card text-center ">
+            <div className="card-icon"> <FontAwesomeIcon icon={faShirt} /> </div>
+            <div className="card-title">Materiales</div>
+            <div className="card-description"></div>
+            <NavLink to="/materiales" className="card-link btn btn-primary custom-btn">
+              Ir a Materiales <FontAwesomeIcon icon={faArrowRight} />
+            </NavLink>
+          </div>
+        </div>
+
+
+        <div className="col-md-3">
+          <div className="card custom-card text-center ">
+            <div className="card-icon"> <FontAwesomeIcon icon={faTag} /> </div>
+            <div className="card-title">Marcas</div>
+            <div className="card-description"></div>
+            <NavLink to="/marcas" className="card-link btn btn-primary custom-btn">
+              Ir a Marcas <FontAwesomeIcon icon={faArrowRight} />
+            </NavLink>
+          </div>
+        </div>
+
+        <div className="col-md-3">
+          <div className="card custom-card text-center ">
+            <div className="card-icon"> <FontAwesomeIcon icon={faGear} /> </div>
+            <div className="card-title">Config.</div>
+            <div className="card-description"></div>
+            <NavLink to="/configuracion" className="card-link btn btn-primary custom-btn">
+              Ir a Configuracion <FontAwesomeIcon icon={faArrowRight} />
+            </NavLink>
+          </div>
+        </div>
+
+
+
+        <div className="col-md-3">
+          <div className="card custom-card text-center ">
+            <div className="card-icon"> <FontAwesomeIcon icon={faCalendarCheck} /> </div>
+            <div className="card-title"> Promos </div>
+            <div className="card-description"></div>
+            <NavLink to="/promociones" className="card-link btn btn-primary custom-btn">
+              Ir a Promociones <FontAwesomeIcon icon={faArrowRight} />
+            </NavLink>
+          </div>
+        </div>
+
+
+        <div className="col-md-3">
+          <div className="card custom-card text-center ">
+            <div className="card-icon"> <FontAwesomeIcon icon={faAddressCard} /> </div>
+            <div className="card-title"> Usuarios </div>
+            <div className="card-description"></div>
+            <NavLink to="/promociones" className="card-link btn btn-primary custom-btn">
+              Ir a Usuarios <FontAwesomeIcon icon={faArrowRight} />
+            </NavLink>
+          </div>
+        </div>
+
+       
+
+
+
+        <SocialBar />
+
+       
+      </div>
+    </div>
+
+
+      
+
+  );
+};
+
+export default Menu;
