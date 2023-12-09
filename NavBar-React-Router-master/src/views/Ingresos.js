@@ -10,7 +10,7 @@ import Footer from '../component/footer/footer';
 const IngresosView = () => {
   const [articulos, setArticulos] = useState([]);
   const [tallas, setTallas] = useState([]);
-  const [ventaConfirmada, setVentaConfirmada] = useState(false);
+  
   const [colores, setColores] = useState([]);
   const [proveedores, setProveedores] = useState([]);
   const [marcas, setMarcas] = useState([]);
@@ -27,6 +27,7 @@ const IngresosView = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showSaleModal, setShowSaleModal] = useState(false);
   const [showAlert, setShowAlert] = useState(false); 
+  const [idMarcaSeleccionada, setIdMarcaSeleccionada] = useState('');
   const [formulario, setFormulario] = useState({
     idArticulo: '',
     idProveedor: '', 
@@ -59,6 +60,21 @@ const IngresosView = () => {
     fetchArticulos();
   }, []);
 
+
+  useEffect(() => {
+    // Fetch the list of suppliers when the component mounts
+    const fetchProveedores = async () => {
+      try {
+        const response = await axios.get('http://localhost:4000/api/proveedores');
+        setProveedores(response.data);
+      } catch (error) {
+        console.error('Error fetching suppliers:', error);
+      }
+    };
+
+    fetchProveedores();
+  }, []);
+
   useEffect(() => {
     // Fetch the list of colors when the component mounts
     const fetchColores = async () => {
@@ -73,13 +89,7 @@ const IngresosView = () => {
     fetchColores();
   }, []);
 
-  useEffect(() => {
-    // Lógica para cargar la lista de proveedores desde la API
-    fetch('http://localhost:4000/api/proveedores')
-      .then(response => response.json())
-      .then(data => setProveedores(data))
-      .catch(error => console.error('Error al obtener proveedores:', error));
-  }, []);
+ 
 
 
   useEffect(() => {
@@ -307,13 +317,7 @@ const IngresosView = () => {
   
   
   
-  const handleConfirmarVenta = () => {
-    // Lógica para confirmar la venta
-    // Puedes realizar acciones adicionales aquí, por ejemplo, enviar datos al servidor, etc.
-    setVentaConfirmada(true);
-    // Cierra el modal después de confirmar la venta
-    setShowSaleModal(false);
-  };
+
 
   const handleEditarArticulo = (index) => {
     // Mostrar el modal de edición con los datos del artículo seleccionado
@@ -322,35 +326,58 @@ const IngresosView = () => {
     setShowEditModal(true);
   };
   
-  const handleFacturarIngreso = async () => {
-    // Prepare the data for the POST request
+const handleFacturarIngreso = async () => {
+  try {
+    // Primera solicitud POST para crear el ingreso
     const ingresoData = {
       id_usuario: "652b4bac458db698d7db1485",
-      id_proveedor: formulario.idProveedor, // Use the selected provider ID
-      fecha: new Date().toISOString(), // Use the current date and time
+      id_proveedor: formulario.idProveedor,
+      fecha: new Date().toISOString(),
       iva: ivaTotal,
       descuento: descuentosTotal,
       subtotal: subTotalTotal,
       total: subTotalTotal - descuentosTotal + ivaTotal,
     };
 
-    // Log the data before making the request
-    console.log('Datos a enviar:', ingresoData);
+    console.log('Datos del ingreso a enviar:', ingresoData);
 
-    try {
-      // Make the POST request
-      const response = await axios.post('http://localhost:4000/api/ingresos', ingresoData);
+    const responseIngreso = await axios.post('http://localhost:4000/api/ingresos', ingresoData);
+    const idIngreso = responseIngreso.data._id;
 
-      // Handle the response or perform any additional actions
-      console.log('Facturación exitosa:', response.data);
-      // You can reset the state or redirect the user to another page, etc.
+    // Segunda solicitud POST con datos de la tabla de artículos
+    const articulosData = {
+      id_ingreso: idIngreso,
+      articulos: articulosIngresados.map((articulo) => ({
+        id_articulo: articulo.idArticulo,
+        id_talla: articulo.idTalla,
+        id_color: articulo.idColor,
+        id_marca: articulo.idMarca, // Enviar el ID de la marca en lugar del nombre
+        id_material: articulo.idMaterial,
+        id_estilo: articulo.idEstilo,
+        id_diseño: articulo.idDiseño,
+        cantidad: parseInt(articulo.cantidad),
+        precio_proveedor: parseFloat(articulo.precioprov),
+        iva: parseFloat(calculateIVA(articulo.cantidad, articulo.precioprov, articulo.descuento)),
+        descuento: parseFloat((articulo.cantidad * articulo.precioprov * (articulo.descuento / 100)).toFixed(2)),
+        subtotal: parseFloat(((articulo.cantidad * articulo.precioprov * (1 - articulo.descuento / 100)) + parseFloat(calculateIVA(articulo.cantidad, articulo.precioprov, articulo.descuento))).toFixed(2)),
+      })),
+      total: subTotalTotal - descuentosTotal + ivaTotal,
+    };
 
-    } catch (error) {
-      // Handle errors
-      console.error('Error al facturar ingreso:', error);
-    }
-  };
+    console.log('Datos de los artículos a enviar:', articulosData);
 
+    const responseArticulos = await axios.post('http://localhost:4000/api/detalleingreso', articulosData);
+
+    // ... (otras lógicas que puedas necesitar)
+
+    console.log('Ingreso y artículos facturados correctamente:', responseIngreso, responseArticulos);
+  } catch (error) {
+    console.error('Error al facturar ingreso:', error);
+  }
+};
+
+  
+  
 
   
 
@@ -383,21 +410,22 @@ const IngresosView = () => {
   </Form.Group>
 
   <Form.Group controlId="formProveedor" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-  <Form.Label style={{ marginBottom: '5px' }}>Proveedor</Form.Label>
-  <select
-    className="form-control"
-    style={{ width: '70%', alignSelf: 'flex-start', marginRight: '35px' }}
-    value={formulario.idProveedor}
-    onChange={(e) => setFormulario({ ...formulario, idProveedor: e.target.value })}
-  >
-    <option value="">Selecciona un proveedor...</option>
-    {proveedores.map((proveedor) => (
-      <option key={proveedor.id} value={proveedor.id}>
-        {proveedor.nombre}
-      </option>
-    ))}
-  </select>
-</Form.Group>
+        <Form.Label style={{ marginBottom: '5px' }}>Proveedor</Form.Label>
+        <select
+          className="form-control"
+          style={{ width: '70%', alignSelf: 'flex-start', marginRight: '35px' }}
+          value={formulario.idProveedor}
+          onChange={(e) => setFormulario({ ...formulario, idProveedor: e.target.value })}
+        >
+          <option value="">Proveedores...</option>
+          {proveedores.map((proveedor) => (
+            <option key={proveedor._id} value={proveedor._id}>
+              {proveedor.nombre}
+            </option>
+          ))}
+        </select>
+      </Form.Group>
+
 </Form>
 
 
