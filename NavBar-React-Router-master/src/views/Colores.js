@@ -4,6 +4,8 @@ import * as Styles from '../css/styles_colores';
 import Footer from '../component/footer/footer';
 import { FaTrash,FaEdit } from 'react-icons/fa';
 import Navbar from '../component/Navbar';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const ColoresView = () => {
   const [colors, setColors] = useState([]);
@@ -27,6 +29,11 @@ const ColoresView = () => {
       descripcion: '',
     });
     setSelectedColor(null);
+  };
+
+  const handleNotificacion = () => {
+   
+    toast.success('Operación exitosa', { position: toast.POSITION.TOP_CENTER });
   };
 
   const handleShow = () => setShowCreateModal(true);
@@ -110,6 +117,7 @@ const ColoresView = () => {
 
       if (response.ok) {
         console.log('Color creado exitosamente.');
+        handleNotificacion();
         showData();
       } else {
         console.error('Error al intentar crear el color.');
@@ -309,7 +317,7 @@ const ColoresView = () => {
         </Styles.ModalFooter>
       </Styles.StyledModal>
       <Footer />
-      
+      <ToastContainer />
     </Styles.AppContainer>
   );
 };

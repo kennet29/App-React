@@ -4,6 +4,8 @@ import * as Styles from '../css/styles_colores';
 import Footer from '../component/footer/footer';
 import { FaTrash, FaEdit } from 'react-icons/fa';
 import Navbar from '../component/Navbar';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const PromocionesView = () => {
   const [promociones, setPromociones] = useState([]);
@@ -35,6 +37,11 @@ const PromocionesView = () => {
       cantidad_Articulos: 0,
     });
     setSelectedPromocion(null);
+  };
+
+  const handleNotificacion = () => {
+   
+    toast.success('Operación exitosa', { position: toast.POSITION.TOP_CENTER });
   };
 
   const handleShow = () => setShowCreateModal(true);
@@ -108,6 +115,7 @@ const PromocionesView = () => {
       });
 
       if (response.ok) {
+        handleNotificacion();
         console.log('Promoción creada exitosamente.');
         showData();
       } else {
@@ -316,7 +324,7 @@ const PromocionesView = () => {
         </Styles.ModalFooter>
       </Styles.StyledModal>
 
-      {/* ... (Previous code remains unchanged) */}
+   
 
       <Styles.StyledModal show={showUpdateModal} onHide={handleClose}>
         <Modal.Header closeButton>
@@ -436,6 +444,7 @@ const PromocionesView = () => {
         </Styles.ModalFooter>
       </Styles.StyledModal>
       <Footer />
+      <ToastContainer />
     </Styles.AppContainer>
   );
 };

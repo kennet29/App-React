@@ -177,7 +177,7 @@ const Menu = () => {
             <div className="card-icon"> <FontAwesomeIcon icon={faAddressCard} /> </div>
             <div className="card-title"> Usuarios </div>
             <div className="card-description"></div>
-            <NavLink to="/promociones" className="card-link btn btn-primary custom-btn">
+            <NavLink to="/users" className="card-link btn btn-primary custom-btn">
               Ir a Usuarios <FontAwesomeIcon icon={faArrowRight} />
             </NavLink>
           </div>

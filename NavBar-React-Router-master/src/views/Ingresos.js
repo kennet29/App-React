@@ -1,16 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Form, Button, Row, Col, Modal,Alert } from 'react-bootstrap';
-
+import { Container, Form, Button, Row, Col, Modal, Alert } from 'react-bootstrap';
 import estilos from '../css/ingresos-estilos';
 import '../css/detalle-ingresos.css';
 import axios from 'axios';
 import Footer from '../component/footer/footer';
 
 
-const IngresosView = () => {
+  const IngresosView = () => {
   const [articulos, setArticulos] = useState([]);
   const [tallas, setTallas] = useState([]);
-  
   const [colores, setColores] = useState([]);
   const [proveedores, setProveedores] = useState([]);
   const [marcas, setMarcas] = useState([]);
@@ -21,16 +19,15 @@ const IngresosView = () => {
   const [subTotalTotal, setSubTotalTotal] = useState(0);
   const [descuentosTotal, setDescuentosTotal] = useState(0);
   const [ivaTotal, setIvaTotal] = useState(0);
-
   const [total, setTotal] = useState(0);
   const [editIndex, setEditIndex] = useState(-1);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showSaleModal, setShowSaleModal] = useState(false);
-  const [showAlert, setShowAlert] = useState(false); 
+  const [showAlert, setShowAlert] = useState(false);
   const [idMarcaSeleccionada, setIdMarcaSeleccionada] = useState('');
   const [formulario, setFormulario] = useState({
     idArticulo: '',
-    idProveedor: '', 
+    idProveedor: '',
     idTalla: '',
     idColor: '',
     cantidad: '',
@@ -39,12 +36,9 @@ const IngresosView = () => {
     idEstilo: '',
     idDiseño: '',
     descuento: '',
-    precioprov:'',
+    precioprov: '',
     total: '',
   });
-
-  
- 
 
   useEffect(() => {
     // Fetch the list of articles when the component mounts
@@ -59,7 +53,6 @@ const IngresosView = () => {
 
     fetchArticulos();
   }, []);
-
 
   useEffect(() => {
     // Fetch the list of suppliers when the component mounts
@@ -89,9 +82,6 @@ const IngresosView = () => {
     fetchColores();
   }, []);
 
- 
-
-
   useEffect(() => {
     const subTotal = articulosIngresados.reduce((total, articulo) => {
       const iva = parseFloat(calculateIVA(articulo.cantidad, articulo.precioprov, articulo.descuento));
@@ -99,19 +89,18 @@ const IngresosView = () => {
       return total + discountedPrice + iva;
     }, 0);
     setSubTotalTotal(subTotal);
-  
+
     const descuentos = articulosIngresados.reduce((total, articulo) => {
       return total + parseFloat((articulo.cantidad * articulo.precioprov * (articulo.descuento / 100)).toFixed(2));
     }, 0);
     setDescuentosTotal(descuentos);
-  
+
     const iva = articulosIngresados.reduce((total, articulo) => {
       return total + parseFloat(calculateIVA(articulo.cantidad, articulo.precioprov, articulo.descuento));
     }, 0);
     setIvaTotal(iva);
   }, [articulosIngresados]);
-  
-  
+
   useEffect(() => {
     // Fetch the list of sizes when the component mounts
     const fetchTallas = async () => {
@@ -126,7 +115,6 @@ const IngresosView = () => {
 
     fetchTallas();
   }, []);
-
 
   const handleInputChange = (e) => {
     const { id, value } = e.target;
@@ -162,7 +150,7 @@ const IngresosView = () => {
     const nuevosArticulos = [...articulosIngresados];
     nuevosArticulos.splice(index, 1);
     setArticulosIngresados(nuevosArticulos);
-  
+
     // Update totals after deleting an article
     const subTotal = nuevosArticulos.reduce((total, articulo) => {
       return (
@@ -172,17 +160,17 @@ const IngresosView = () => {
       );
     }, 0);
     setSubTotalTotal(subTotal);
-  
+
     const descuentos = nuevosArticulos.reduce((total, articulo) => {
       return total + parseFloat((articulo.cantidad * articulo.precioprov * (articulo.descuento / 100)).toFixed(2));
     }, 0);
     setDescuentosTotal(descuentos);
-  
+
     const iva = nuevosArticulos.reduce((total, articulo) => {
       return total + parseFloat(calculateIVA(articulo.cantidad, articulo.precioprov, articulo.descuento));
     }, 0);
     setIvaTotal(iva);
-  
+
     handleLimpiar();
   };
 
@@ -243,14 +231,12 @@ const IngresosView = () => {
     fetchDisenos();
   }, []);
 
-
   const calculateIVA = (cantidad, precio, descuento) => {
     const precioConDescuento = precio * (1 - descuento / 100);
     const ivaPercentage = 15; // Cambiar si el porcentaje de IVA es diferente
     const iva = (cantidad * precioConDescuento * ivaPercentage) / 100;
     return iva.toFixed(2);
   };
-
 
   const handleGuardar = () => {
     // Validación de campos antes de guardar
@@ -271,9 +257,9 @@ const IngresosView = () => {
       handleLimpiar();
       return;
     }
-  
+
     // Resto del código para guardar el artículo...
-  
+
     // If editIndex is not -1, update the existing record
     if (editIndex !== -1) {
       setArticulosIngresados((prevArticulos) => {
@@ -285,10 +271,10 @@ const IngresosView = () => {
       // Append the new record to the array
       setArticulosIngresados((prevArticulos) => [...prevArticulos, formulario]);
     }
-  
+
     // Después de actualizar la lista de artículos ingresados, actualiza los totales
     const updatedArticulos = [...articulosIngresados, formulario];
-  
+
     const subTotal = updatedArticulos.reduce((total, articulo) => {
       return (
         total +
@@ -297,27 +283,23 @@ const IngresosView = () => {
       );
     }, 0);
     setSubTotalTotal(subTotal);
-  
+
     const descuentos = updatedArticulos.reduce((total, articulo) => {
       return total + parseFloat((articulo.cantidad * articulo.precioprov * (articulo.descuento / 100)).toFixed(2));
     }, 0);
     setDescuentosTotal(descuentos);
-  
+
     const iva = updatedArticulos.reduce((total, articulo) => {
       return total + parseFloat(calculateIVA(articulo.cantidad, articulo.precioprov, articulo.descuento));
     }, 0);
     setIvaTotal(iva);
-  
+
     // Limpiar los campos después de agregar el artículo
     handleLimpiar();
-  
+
     // Cerrar el modal después de guardar correctamente
     setShowEditModal(false);
   };
-  
-  
-  
-
 
   const handleEditarArticulo = (index) => {
     // Mostrar el modal de edición con los datos del artículo seleccionado
@@ -325,61 +307,54 @@ const IngresosView = () => {
     setEditIndex(index);
     setShowEditModal(true);
   };
-  
-const handleFacturarIngreso = async () => {
-  try {
-    // Primera solicitud POST para crear el ingreso
-    const ingresoData = {
-      id_usuario: "652b4bac458db698d7db1485",
-      id_proveedor: formulario.idProveedor,
-      fecha: new Date().toISOString(),
-      iva: ivaTotal,
-      descuento: descuentosTotal,
-      subtotal: subTotalTotal,
-      total: subTotalTotal - descuentosTotal + ivaTotal,
-    };
 
-    console.log('Datos del ingreso a enviar:', ingresoData);
+  const handleFacturarIngreso = async () => {
+    try {
+      // Primera solicitud POST para crear el ingreso
+      const ingresoData = {
+        id_usuario: "652b4bac458db698d7db1485",
+        id_proveedor: formulario.idProveedor,
+        fecha: new Date().toISOString(),
+        iva: ivaTotal,
+        descuento: descuentosTotal,
+        subtotal: subTotalTotal,
+        total: subTotalTotal - descuentosTotal + ivaTotal,
+      };
 
-    const responseIngreso = await axios.post('http://localhost:4000/api/ingresos', ingresoData);
-    const idIngreso = responseIngreso.data._id;
+      console.log('Datos del ingreso a enviar:', ingresoData);
 
-    // Segunda solicitud POST con datos de la tabla de artículos
-    const articulosData = {
-      id_ingreso: idIngreso,
-      articulos: articulosIngresados.map((articulo) => ({
-        id_articulo: articulo.idArticulo,
-        id_talla: articulo.idTalla,
-        id_color: articulo.idColor,
-        id_marca: articulo.idMarca, // Enviar el ID de la marca en lugar del nombre
-        id_material: articulo.idMaterial,
-        id_estilo: articulo.idEstilo,
-        id_diseño: articulo.idDiseño,
-        cantidad: parseInt(articulo.cantidad),
-        precio_proveedor: parseFloat(articulo.precioprov),
-        iva: parseFloat(calculateIVA(articulo.cantidad, articulo.precioprov, articulo.descuento)),
-        descuento: parseFloat((articulo.cantidad * articulo.precioprov * (articulo.descuento / 100)).toFixed(2)),
-        subtotal: parseFloat(((articulo.cantidad * articulo.precioprov * (1 - articulo.descuento / 100)) + parseFloat(calculateIVA(articulo.cantidad, articulo.precioprov, articulo.descuento))).toFixed(2)),
-      })),
-      total: subTotalTotal - descuentosTotal + ivaTotal,
-    };
+      const responseIngreso = await axios.post('http://localhost:4000/api/ingresos', ingresoData);
+      const idIngreso = responseIngreso.data._id;
 
-    console.log('Datos de los artículos a enviar:', articulosData);
+      // Segunda solicitud POST con datos de la tabla de artículos
+      const articulosData = {
+        id_ingreso: idIngreso,
+        articulos: articulosIngresados.map((articulo) => ({
+          id_articulo: articulo.idArticulo,
+          id_talla: articulo.idTalla,
+          id_color: articulo.idColor,
+          id_marca: articulo.idMarca, // Enviar el ID de la marca en lugar del nombre
+          id_material: articulo.idMaterial,
+          id_estilo: articulo.idEstilo,
+          id_diseño: articulo.idDiseño,
+          cantidad: parseInt(articulo.cantidad),
+          precio_proveedor: parseFloat(articulo.precioprov),
+          iva: parseFloat(calculateIVA(articulo.cantidad, articulo.precioprov, articulo.descuento)),
+          descuento: parseFloat((articulo.cantidad * articulo.precioprov * (articulo.descuento / 100)).toFixed(2)),
+          subtotal: parseFloat(((articulo.cantidad * articulo.precioprov * (1 - articulo.descuento / 100)) + parseFloat(calculateIVA(articulo.cantidad, articulo.precioprov, articulo.descuento))).toFixed(2)),
+        })),
+        total: subTotalTotal - descuentosTotal + ivaTotal,
+      };
 
-    const responseArticulos = await axios.post('http://localhost:4000/api/detalleingreso', articulosData);
+      console.log('Datos de los artículos a enviar:', articulosData);
 
-    // ... (otras lógicas que puedas necesitar)
+      const responseArticulos = await axios.post('http://localhost:4000/api/detalleingreso', articulosData);
 
-    console.log('Ingreso y artículos facturados correctamente:', responseIngreso, responseArticulos);
-  } catch (error) {
-    console.error('Error al facturar ingreso:', error);
-  }
-};
-
-  
-  
-
-  
+      console.log('Ingreso y artículos facturados correctamente:', responseIngreso, responseArticulos);
+    } catch (error) {
+      console.error('Error al facturar ingreso:', error);
+    }
+  };
 
   const handleLimpiar = () => {
     // Clear the input fields
@@ -394,43 +369,38 @@ const handleFacturarIngreso = async () => {
       idEstilo: '',
       idDiseño: '',
       descuento: '',
-      precioprov:'',
+      precioprov: '',
       total: '',
     });
   };
-  
+
   return (
 
 
     <Container fluid style={estilos.containerStyle}>
- <Form style={{ width: '95%', backgroundColor: 'white', marginTop: '10px', marginLeft: 'auto', marginRight: 'auto', borderRadius: '5px', display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
-  <Form.Group controlId="formFechaVenta" style={{ flex: 1, display: 'flex', flexDirection: 'column', marginLeft: '35px'}}>
-    <Form.Label style={{ marginBottom: '5px' }}>Fecha de Venta</Form.Label>
-    <Form.Control type="date" style={{ width: '70%', alignSelf: 'flex-start' }} />
-  </Form.Group>
+      <Form style={{ width: '95%', backgroundColor: 'white', marginTop: '10px', marginLeft: 'auto', marginRight: 'auto', borderRadius: '5px', display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
+        <Form.Group controlId="formFechaVenta" style={{ flex: 1, display: 'flex', flexDirection: 'column', marginLeft: '35px' }}>
+          <Form.Label style={{ marginBottom: '5px' }}>Fecha de Venta</Form.Label>
+          <Form.Control type="date" style={{ width: '70%', alignSelf: 'flex-start' }} />
+        </Form.Group>
 
-  <Form.Group controlId="formProveedor" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-        <Form.Label style={{ marginBottom: '5px' }}>Proveedor</Form.Label>
-        <select
-          className="form-control"
-          style={{ width: '70%', alignSelf: 'flex-start', marginRight: '35px' }}
-          value={formulario.idProveedor}
-          onChange={(e) => setFormulario({ ...formulario, idProveedor: e.target.value })}
-        >
-          <option value="">Proveedores...</option>
-          {proveedores.map((proveedor) => (
-            <option key={proveedor._id} value={proveedor._id}>
-              {proveedor.nombre}
-            </option>
-          ))}
-        </select>
-      </Form.Group>
-
-</Form>
-
-
-
-
+        <Form.Group controlId="formProveedor" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+          <Form.Label style={{ marginBottom: '5px' }}>Proveedor</Form.Label>
+          <select
+            className="form-control"
+            style={{ width: '70%', alignSelf: 'flex-start', marginRight: '35px' }}
+            value={formulario.idProveedor}
+            onChange={(e) => setFormulario({ ...formulario, idProveedor: e.target.value })}
+          >
+            <option value="">Proveedores...</option>
+            {proveedores.map((proveedor) => (
+              <option key={proveedor._id} value={proveedor._id}>
+                {proveedor.nombre}
+              </option>
+            ))}
+          </select>
+        </Form.Group>
+      </Form>
 
       <h2 className=" mt-4 center-text" style={estilos.titulo}>
         Registro de Ingresos
@@ -438,8 +408,6 @@ const handleFacturarIngreso = async () => {
 
       <Form style={estilos.formStyle}>
         <fieldset className="form-row">
-
-
           <Row>
             <Col md={2}>
               <label style={estilos.labelStyle} htmlFor="id-articulo">
@@ -571,10 +539,6 @@ const handleFacturarIngreso = async () => {
           <hr style={{ margin: '10px 0', border: '1px solid #ccc' }} />
 
           <Row>
-
-
-
-
             <Col md={2}>
               <label style={estilos.labelStyle} htmlFor="id-diseno">
                 Diseño
@@ -594,8 +558,6 @@ const handleFacturarIngreso = async () => {
                   </option>
                 ))}
               </select>
-
-
             </Col>
 
             <Col md={2}>
@@ -642,9 +604,7 @@ const handleFacturarIngreso = async () => {
                 style={estilos.inputStyle}
               />
             </Col>
-
           </Row>
-
           <hr style={{ margin: '10px 0', border: '1px solid #ccc' }} />
 
           <Row>
@@ -669,11 +629,10 @@ const handleFacturarIngreso = async () => {
       </Form>
 
       {showAlert && (
-        <Alert variant="danger" style={{width:'50%', margin:'0 auto', marginTop:'10px'}} onClose={() => setShowAlert(false)} dismissible>
+        <Alert variant="danger" style={{ width: '50%', margin: '0 auto', marginTop: '10px' }} onClose={() => setShowAlert(false)} dismissible>
           Por favor, completa todos los campos antes de agregar el artículo.
         </Alert>
       )}
-
 
       {articulosIngresados.length > 0 && (
         <div style={{ marginTop: '10px', width: '90%', marginLeft: '5%', overflowX: 'auto' }}>
@@ -720,7 +679,6 @@ const handleFacturarIngreso = async () => {
                     >
                       Editar
                     </Button>
-
                     <Button style={{ width: '75px', height: '35px' }}
                       variant="danger"
                       size="sm"
@@ -734,28 +692,28 @@ const handleFacturarIngreso = async () => {
             </tbody>
           </table>
 
-          <div style={{color:'white'}}>
-  <strong>Total: C${subTotalTotal.toFixed(2)}</strong>
-</div>
-<div style={{color:'white'}}>
-  <strong>Descuentos Total: C${descuentosTotal.toFixed(2)}</strong>
-</div>
-<div style={{color:'white'}}>
-  <strong>IVA Total: C${ivaTotal.toFixed(2)}</strong>
-</div>
-<div style={{color:'white'}}>
-  <strong>Subtotal: C${(subTotalTotal - descuentosTotal + ivaTotal).toFixed(2)}</strong>
-</div>
+          <div style={{ color: 'white' }}>
+            <strong>Total: C${subTotalTotal.toFixed(2)}</strong>
+          </div>
+          <div style={{ color: 'white' }}>
+            <strong>Descuentos Total: C${descuentosTotal.toFixed(2)}</strong>
+          </div>
+          <div style={{ color: 'white' }}>
+            <strong>IVA Total: C${ivaTotal.toFixed(2)}</strong>
+          </div>
+          <div style={{ color: 'white' }}>
+            <strong>Subtotal: C${(subTotalTotal - descuentosTotal + ivaTotal).toFixed(2)}</strong>
+          </div>
         </div>
       )}
 
-<Button
-      variant="success"
-      style={{ width: '150px', height: '50px', marginTop: '20px',marginLeft:'45%' }}  
-      onClick={handleFacturarIngreso}
-    >
-      Facturar Ingreso
-    </Button>
+      <Button
+        variant="success"
+        style={{ width: '150px', height: '50px', marginTop: '20px', marginLeft: '45%' }}
+        onClick={handleFacturarIngreso}
+      >
+        Facturar Ingreso
+      </Button>
       <Modal show={showEditModal} onHide={() => setShowEditModal(false)}>
         <Modal.Header style={{ backgroundColor: '#4a4a4a', color: 'white' }} closeButton>
           <Modal.Title>Editar Artículo</Modal.Title>
@@ -803,7 +761,6 @@ const handleFacturarIngreso = async () => {
             </Row>
           </Form>
         </Modal.Body>
-
 
         <Modal.Footer style={{ backgroundColor: '#4a4a4a', color: 'white' }}>
           <Button variant="primary" onClick={handleGuardar} style={{ width: '100px', height: '50px' }} >

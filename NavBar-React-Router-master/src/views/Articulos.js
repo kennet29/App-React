@@ -4,6 +4,9 @@ import * as Styles from '../css/styles_colores'; // Update import for styles
 import Footer from '../component/footer/footer';
 import { FaTrash, FaEdit } from 'react-icons/fa';
 import Navbar from '../component/Navbar';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 
 const ArticulosView = () => {
   const [articulos, setArticulos] = useState([]);
@@ -19,6 +22,11 @@ const ArticulosView = () => {
   });
   const [selectedArticulo, setSelectedArticulo] = useState(null);
   const [categorias, setCategorias] = useState([]);
+
+  const handleNotificacion = () => {
+   
+    toast.success('Operación exitosa', { position: toast.POSITION.TOP_CENTER });
+  };
 
   const handleClose = () => {
     setShowCreateModal(false);
@@ -137,7 +145,7 @@ const ArticulosView = () => {
       });
 
       if (response.ok) {
-        console.log('Articulo creado exitosamente.');
+        handleNotificacion();
         showArticulos();
       } else {
         console.error('Error al intentar crear el articulo.');
@@ -380,6 +388,7 @@ const ArticulosView = () => {
         </Styles.ModalFooter>
       </Styles.StyledModal>
       <Footer />
+      <ToastContainer />
     </Styles.AppContainer>
   );
 };

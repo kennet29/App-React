@@ -4,6 +4,10 @@ import * as Styles from '../css/styles_colores';
 import Footer from '../component/footer/footer';
 import { FaTrash,FaEdit } from 'react-icons/fa';
 import Navbar from '../component/Navbar';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
+
 const BodegasView = () => {
   const [bodegas, setBodegas] = useState([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -11,6 +15,10 @@ const BodegasView = () => {
   const [resetPaginationToggle, setResetPaginationToggle] = useState(false);
   const [updateModalShow, setUpdateModalShow] = useState(false);
   const [updatingBodega, setUpdatingBodega] = useState(null);
+  const handleNotificacion = () => {
+   
+    toast.success('Operación exitosa', { position: toast.POSITION.TOP_CENTER });
+  };
 
   const handleClose = () => setShowCreateModal(false);
   const handleShow = () => setShowCreateModal(true);
@@ -108,6 +116,7 @@ const BodegasView = () => {
         const nuevaBodegaCreada = await response.json();
         setBodegas((prevBodegas) => [...prevBodegas, nuevaBodegaCreada]);
         console.log('Bodega creada exitosamente.');
+        handleNotificacion();
       } else {
         console.error('Error al crear la bodega.');
       }
@@ -288,6 +297,7 @@ const BodegasView = () => {
     
       </Styles.StyledModal>
       <Footer />
+      <ToastContainer />
     </Styles.AppContainer>
      
   );

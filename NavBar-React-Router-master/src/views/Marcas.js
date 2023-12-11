@@ -4,6 +4,9 @@ import * as Styles from '../css/styles_colores';
 import { FaTrash,FaEdit } from 'react-icons/fa';
 import Navbar from '../component/Navbar';
 import Footer from '../component/footer/footer';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 const MarcasView = () => {
   const [marcas, setMarcas] = useState([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -27,6 +30,12 @@ const MarcasView = () => {
     });
     setSelectedMarca(null);
   };
+
+  const handleNotificacion = () => {
+   
+    toast.success('Operación exitosa', { position: toast.POSITION.TOP_CENTER });
+  };
+
 
   const handleShow = () => setShowCreateModal(true);
 
@@ -101,6 +110,7 @@ const MarcasView = () => {
 
       if (response.ok) {
         console.log('Marca creada exitosamente.');
+        handleNotificacion();
         showData();
       } else {
         console.error('Error al intentar crear la marca.');
@@ -298,6 +308,7 @@ const MarcasView = () => {
         </Styles.ModalFooter>
       </Styles.StyledModal>
       <Footer/> 
+      <ToastContainer />
     </Styles.AppContainer>
   );
 };

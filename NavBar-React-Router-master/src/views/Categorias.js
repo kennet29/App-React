@@ -4,6 +4,10 @@ import * as Styles from '../css/styles_colores';
 import Footer from '../component/footer/footer';
 import { FaTrash,FaEdit } from 'react-icons/fa';
 import Navbar from '../component/Navbar';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
+
 const CategoriasView = () => {
   const [categorias, setCategorias] = useState([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -16,6 +20,12 @@ const CategoriasView = () => {
     descripcion: '',
   });
   const [selectedCategoria, setSelectedCategoria] = useState(null);
+
+  const handleNotificacion = () => {
+   
+    toast.success('Operación exitosa', { position: toast.POSITION.TOP_CENTER });
+  };
+
 
   const handleClose = () => {
     setShowCreateModal(false);
@@ -105,6 +115,7 @@ const CategoriasView = () => {
 
       if (response.ok) {
         console.log('Categoría creada exitosamente.');
+        handleNotificacion();
         showData();
       } else {
         console.error('Error al intentar crear la categoría.');
@@ -309,6 +320,7 @@ const CategoriasView = () => {
         </Styles.ModalFooter>
       </Styles.StyledModal>
       <Footer />
+      <ToastContainer />
     </Styles.AppContainer>
   );
 };

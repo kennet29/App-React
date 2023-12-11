@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Form, Button, Modal } from 'react-bootstrap';
+import { Form, Button, Modal, ToastContainer } from 'react-bootstrap';
 import * as Styles from '../css/styles_colores';
 import Footer from '../component/footer/footer';
 import { FaTrash, FaEdit } from 'react-icons/fa';
@@ -405,6 +405,7 @@ const ProveedoresView = () => {
         </Styles.ModalFooter>
       </Styles.StyledModal>
       <Footer />
+      <ToastContainer/>
     </Styles.AppContainer>
   );
 };

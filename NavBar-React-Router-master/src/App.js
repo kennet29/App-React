@@ -22,6 +22,7 @@ import LoginView from "./views/Login.js";
 import ArticulosView from "./views/Articulos.js";
 import VentasView from "./views/Ventas.js";
 import IngresosView from "./views/Ingresos.js";
+import UsuariosView from "./views/usuarios.js";
 
 
 
@@ -50,7 +51,7 @@ function App() {
           <Route path='/articulos' component={ArticulosView}  />
           <Route path='/ventas' component={VentasView}/>
           <Route path='/ingresos' component={IngresosView} exact />
-     
+          <Route path='/users' component={UsuariosView}></Route>
 
 
 

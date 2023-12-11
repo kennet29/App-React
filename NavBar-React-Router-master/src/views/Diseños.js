@@ -1,9 +1,12 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Form, Button, Modal } from 'react-bootstrap';
+import { Form, Button, Modal} from 'react-bootstrap';
 import * as Styles from '../css/styles_colores';
 import Footer from '../component/footer/footer';
 import { FaEdit, FaTrash } from 'react-icons/fa';
 import Navbar from '../component/Navbar';
+
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const DisenosView = () => {
   const [disenos, setDisenos] = useState([]);
@@ -27,6 +30,11 @@ const DisenosView = () => {
       descripcion: '',
     });
     setSelectedDiseno(null);
+  };
+
+  const handleNotificacion = () => {
+   
+    toast.success('Operación exitosa', { position: toast.POSITION.TOP_CENTER });
   };
 
   const handleShow = () => setShowCreateModal(true);
@@ -108,6 +116,7 @@ const DisenosView = () => {
 
       if (response.ok) {
         console.log('Diseño creado exitosamente.');
+        handleNotificacion();
         showData();
       } else {
         console.error('Error al intentar crear el diseño.');
@@ -309,6 +318,7 @@ const DisenosView = () => {
         </Styles.ModalFooter>
       </Styles.StyledModal>
       <Footer />
+      <ToastContainer />
     </Styles.AppContainer>
   );
 };

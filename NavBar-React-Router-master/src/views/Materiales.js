@@ -4,6 +4,8 @@ import * as Styles from '../css/styles_colores';
 import Footer from '../component/footer/footer';
 import { FaTrash, FaEdit } from 'react-icons/fa';
 import Navbar from '../component/Navbar';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const MaterialesView = () => {
   const [materiales, setMateriales] = useState([]);
@@ -28,6 +30,13 @@ const MaterialesView = () => {
     });
     setSelectedMaterial(null);
   };
+
+  const handleNotificacion = () => {
+   
+    toast.success('Operación exitosa', { position: toast.POSITION.TOP_CENTER });
+  };
+
+
 
   const handleShow = () => setShowCreateModal(true);
 
@@ -104,7 +113,7 @@ const MaterialesView = () => {
       });
 
       if (response.ok) {
-        console.log('Material creado exitosamente.');
+        handleNotificacion();
         showData();
       } else {
         console.error('Error al intentar crear el material.');
@@ -308,6 +317,7 @@ const MaterialesView = () => {
         </Styles.ModalFooter>
       </Styles.StyledModal>
       <Footer />
+      <ToastContainer />
     </Styles.AppContainer>
   );
 };

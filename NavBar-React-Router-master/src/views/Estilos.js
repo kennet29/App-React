@@ -5,7 +5,8 @@ import { FaEdit,FaTrash } from 'react-icons/fa';
 import Footer from '../component/footer/footer';
 import Navbar from '../component/Navbar';
 
-
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const EstilosView = () => {
   const [estilos, setEstilos] = useState([]);
@@ -19,6 +20,12 @@ const EstilosView = () => {
     descripcion: '',
   });
   const [selectedEstilo, setSelectedEstilo] = useState(null);
+
+  const handleNotificacion = () => {
+   
+    toast.success('Operación exitosa', { position: toast.POSITION.TOP_CENTER });
+  };
+
 
   const handleClose = () => {
     setShowCreateModal(false);
@@ -108,6 +115,7 @@ const EstilosView = () => {
 
       if (response.ok) {
         console.log('Estilo creado exitosamente.');
+        handleNotificacion();
         showData();
       } else {
         console.error('Error al intentar crear el estilo.');
@@ -309,6 +317,7 @@ const EstilosView = () => {
         </Styles.ModalFooter>
       </Styles.StyledModal>
      <Footer />
+     <ToastContainer></ToastContainer>
     </Styles.AppContainer>
   );
 };
