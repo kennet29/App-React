@@ -310,51 +310,52 @@ import Footer from '../component/footer/footer';
 
   const handleFacturarIngreso = async () => {
     try {
-      // Primera solicitud POST para crear el ingreso
-      const ingresoData = {
-        id_usuario: "652b4bac458db698d7db1485",
-        id_proveedor: formulario.idProveedor,
-        fecha: new Date().toISOString(),
-        iva: ivaTotal,
-        descuento: descuentosTotal,
-        subtotal: subTotalTotal,
-        total: subTotalTotal - descuentosTotal + ivaTotal,
-      };
+        // Primera solicitud POST para crear el ingreso
+        const ingresoData = {
+            id_usuario: "652b4bac458db698d7db1485",
+            id_proveedor: formulario.idProveedor,
+            fecha: new Date().toISOString(),
+            iva: ivaTotal,
+            descuento: descuentosTotal,
+            subtotal: subTotalTotal,
+            total: subTotalTotal - descuentosTotal + ivaTotal,
+        };
 
-      console.log('Datos del ingreso a enviar:', ingresoData);
+        console.log('Datos del ingreso a enviar:', ingresoData);
 
-      const responseIngreso = await axios.post('http://localhost:4000/api/ingresos', ingresoData);
-      const idIngreso = responseIngreso.data._id;
+        const responseIngreso = await axios.post('http://localhost:4000/api/ingresos', ingresoData);
+        const idIngreso = responseIngreso.data._id;
 
-      // Segunda solicitud POST con datos de la tabla de artículos
-      const articulosData = {
-        id_ingreso: idIngreso,
-        articulos: articulosIngresados.map((articulo) => ({
-          id_articulo: articulo.idArticulo,
-          id_talla: articulo.idTalla,
-          id_color: articulo.idColor,
-          id_marca: articulo.idMarca, // Enviar el ID de la marca en lugar del nombre
-          id_material: articulo.idMaterial,
-          id_estilo: articulo.idEstilo,
-          id_diseño: articulo.idDiseño,
-          cantidad: parseInt(articulo.cantidad),
-          precio_proveedor: parseFloat(articulo.precioprov),
-          iva: parseFloat(calculateIVA(articulo.cantidad, articulo.precioprov, articulo.descuento)),
-          descuento: parseFloat((articulo.cantidad * articulo.precioprov * (articulo.descuento / 100)).toFixed(2)),
-          subtotal: parseFloat(((articulo.cantidad * articulo.precioprov * (1 - articulo.descuento / 100)) + parseFloat(calculateIVA(articulo.cantidad, articulo.precioprov, articulo.descuento))).toFixed(2)),
-        })),
-        total: subTotalTotal - descuentosTotal + ivaTotal,
-      };
+        // Segunda solicitud POST con datos de la tabla de artículos
+        const articulosData = {
+            id_ingreso: idIngreso,
+            articulos: articulosIngresados.map((articulo) => ({
+                id_articulo: articulo.idArticulo,
+                id_talla: articulo.idTalla,
+                id_color: articulo.idColor,
+                id_marca: articulo.idMarca, // Enviar el ID de la marca en lugar del nombre
+                id_material: articulo.idMaterial,
+                id_estilo: articulo.idEstilo,
+                id_diseño: articulo.idDiseño,
+                cantidad: parseInt(articulo.cantidad),
+                precio_proveedor: parseFloat(articulo.precioprov),
+                iva: parseFloat(calculateIVA(articulo.cantidad, articulo.precioprov, articulo.descuento)),
+                descuento: parseFloat((articulo.cantidad * articulo.precioprov * (articulo.descuento / 100)).toFixed(2)),
+                subtotal: parseFloat(((articulo.cantidad * articulo.precioprov * (1 - articulo.descuento / 100)) + parseFloat(calculateIVA(articulo.cantidad, articulo.precioprov, articulo.descuento))).toFixed(2)),
+            })),
+            total: subTotalTotal - descuentosTotal + ivaTotal,
+        };
 
-      console.log('Datos de los artículos a enviar:', articulosData);
+        console.log('Datos de los artículos a enviar:', articulosData);
 
-      const responseArticulos = await axios.post('http://localhost:4000/api/detalleingreso', articulosData);
+        const responseArticulos = await axios.post('http://localhost:4000/api/detalleingreso', articulosData);
 
-      console.log('Ingreso y artículos facturados correctamente:', responseIngreso, responseArticulos);
+        console.log('Ingreso y artículos facturados correctamente:', responseIngreso, responseArticulos);
     } catch (error) {
-      console.error('Error al facturar ingreso:', error);
+        console.error('Error al facturar ingreso:', error);
     }
-  };
+};
+
 
   const handleLimpiar = () => {
     // Clear the input fields
@@ -423,7 +424,7 @@ import Footer from '../component/footer/footer';
               >
                 <option value="">Artículos...</option>
                 {articulos.map((articulo) => (
-                  <option key={articulo.id} value={articulo.id}>
+                  <option key={articulo._id} value={articulo._id}>
                     {articulo.nombre}
                   </option>
                 ))}
@@ -444,7 +445,7 @@ import Footer from '../component/footer/footer';
               >
                 <option value="">Tallas...</option>
                 {tallas.map((talla) => (
-                  <option key={talla.id} value={talla.id}>
+                  <option key={talla._id} value={talla._id}>
                     {talla.talla}
                   </option>
                 ))}
@@ -465,7 +466,7 @@ import Footer from '../component/footer/footer';
               >
                 <option value="">Colores...</option>
                 {colores.map((color) => (
-                  <option key={color.id} value={color.id}>
+                  <option key={color._id} value={color._id}>
                     {color.color}
                   </option>
                 ))}
@@ -486,7 +487,7 @@ import Footer from '../component/footer/footer';
               >
                 <option value="">Marcas...</option>
                 {marcas.map((marca) => (
-                  <option key={marca.id} value={marca.id}>
+                  <option key={marca._id} value={marca._id}>
                     {marca.marca}
                   </option>
                 ))}
@@ -507,7 +508,7 @@ import Footer from '../component/footer/footer';
               >
                 <option value="">Materiales...</option>
                 {materiales.map((material) => (
-                  <option key={material.id} value={material.id}>
+                  <option key={material._id} value={material._id}>
                     {material.material}
                   </option>
                 ))}
@@ -528,7 +529,7 @@ import Footer from '../component/footer/footer';
               >
                 <option value="">Estilos...</option>
                 {est.map((estilo) => (
-                  <option key={estilo.id} value={estilo.id}>
+                  <option key={estilo._id} value={estilo._id}>
                     {estilo.estilo}
                   </option>
                 ))}
@@ -553,7 +554,7 @@ import Footer from '../component/footer/footer';
               >
                 <option value="">Diseños ...</option>
                 {disenos.map((diseno) => (
-                  <option key={diseno.id} value={diseno.id}>
+                  <option key={diseno._id} value={diseno._id}>
                     {diseno.diseno}
                   </option>
                 ))}
