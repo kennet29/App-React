@@ -301,6 +301,22 @@ import Footer from '../component/footer/footer';
     setShowEditModal(false);
   };
 
+
+  const getNombreArticulo = (idArticulo) => {
+    const articulo = articulos.find((a) => a._id === idArticulo);
+    return articulo ? articulo.nombre : '';
+  };
+  
+  const getNombreTalla = (idTalla) => {
+    const tallaEncontrada = tallas.find((talla) => talla._id === idTalla);
+    return tallaEncontrada ? tallaEncontrada.talla : '';
+  };
+  
+  const getColorNameById = (colorId) => {
+    const color = colores.find((c) => c._id === colorId);
+    return color ? color.color : '';
+  };
+
   const handleEditarArticulo = (index) => {
     // Mostrar el modal de edición con los datos del artículo seleccionado
     setFormulario({ ...articulosIngresados[index] });
@@ -308,6 +324,25 @@ import Footer from '../component/footer/footer';
     setShowEditModal(true);
   };
 
+  const getMarcaNombreById = (id) => {
+    const marca = marcas.find((marca) => marca._id === id);
+    return marca ? marca.marca : '';
+  };
+  
+  const getMaterialNameById = (materialId) => {
+    const material = materiales.find((m) => m._id === materialId);
+    return material ? material.material : 'Nombre no encontrado';
+  };
+
+  // Función para obtener el nombre del diseño por ID
+const obtenerNombreDisenoPorId = (idDiseno) => {
+  const disenoSeleccionado = disenos.find(diseno => diseno._id === idDiseno);
+  return disenoSeleccionado ? disenoSeleccionado.diseno : 'Diseño no encontrado';
+};
+const mapEstiloIdToNombre = (id) => {
+  const estilo = est.find((e) => e._id === id);
+  return estilo ? estilo.estilo : '';
+};
   const handleFacturarIngreso = async () => {
     try {
         // Primera solicitud POST para crear el ingreso
@@ -326,6 +361,8 @@ import Footer from '../component/footer/footer';
         const responseIngreso = await axios.post('http://localhost:4000/api/ingresos', ingresoData);
         const idIngreso = responseIngreso.data._id;
 
+        console.log('Ingreso creado correctamente:', responseIngreso);
+
         // Segunda solicitud POST con datos de la tabla de artículos
         const articulosData = {
             id_ingreso: idIngreso,
@@ -333,7 +370,7 @@ import Footer from '../component/footer/footer';
                 id_articulo: articulo.idArticulo,
                 id_talla: articulo.idTalla,
                 id_color: articulo.idColor,
-                id_marca: articulo.idMarca, // Enviar el ID de la marca en lugar del nombre
+                id_marca: articulo.idMarca,
                 id_material: articulo.idMaterial,
                 id_estilo: articulo.idEstilo,
                 id_diseño: articulo.idDiseño,
@@ -350,11 +387,52 @@ import Footer from '../component/footer/footer';
 
         const responseArticulos = await axios.post('http://localhost:4000/api/detalleingreso', articulosData);
 
-        console.log('Ingreso y artículos facturados correctamente:', responseIngreso, responseArticulos);
+        console.log('Artículos facturados correctamente:', responseArticulos);
+
+        // Tercera solicitud POST para crear el registro de stock
+        for (const articulo of articulosIngresados) {
+            const stockData = {
+                Id_articulo: articulo.idArticulo,
+                Id_usuario: "652b4bac458db698d7db1485",
+                Id_color: articulo.idColor,
+                Id_marca: articulo.idMarca,
+                Id_talla: articulo.idTalla,
+                Id_estilo: articulo.idEstilo,
+                Id_material: articulo.idMaterial,
+                Id_diseño: articulo.idDiseño,
+                Descuento: 10,
+                Descuento_maximo: 20,
+              
+                Precio_prov: parseFloat(articulo.precioprov),
+                Precio_venta: parseFloat(((articulo.precioprov * (1 - articulo.descuento / 100)) + parseFloat(calculateIVA(articulo.cantidad, articulo.precioprov, articulo.descuento))).toFixed(2)),
+                Estado: true,
+                Daños: false,
+                Descripcion: "",
+                Id_ingreso: idIngreso,
+                Cod_barra: 123456789,
+                Id_bodega: articulo.idBodega || null,
+                Id_promocion: articulo.idPromocion || null,
+            };
+
+            console.log('Datos del stock a enviar:', stockData);
+
+            const responseStock = await axios.post('http://localhost:4000/api/stock', stockData);
+
+            console.log('Stock creado correctamente:', responseStock);
+        }
+
+
     } catch (error) {
+      if (error.response && error.response.status === 409) {
+        console.error('Error 409: Conflicto al crear el documento en la colección "Stock".');
+        console.error('Detalles del error:', error.response.data);
+        // Puedes manejar el conflicto de alguna manera específica si es necesario.
+    } else {
         console.error('Error al facturar ingreso:', error);
     }
+    }
 };
+
 
 
   const handleLimpiar = () => {
@@ -659,13 +737,13 @@ import Footer from '../component/footer/footer';
             <tbody>
               {articulosIngresados.map((articulo, index) => (
                 <tr key={index}>
-                  <td>{articulo.idArticulo}</td>
-                  <td>{articulo.idTalla}</td>
-                  <td>{articulo.idColor}</td>
-                  <td>{articulo.idMarca}</td>
-                  <td>{articulo.idMaterial}</td>
-                  <td>{articulo.idDiseño}</td>
-                  <td>{articulo.idEstilo}</td>
+                  <td>{getNombreArticulo(articulo.idArticulo)}</td>
+                  <td>{getNombreTalla(articulo.idTalla)}</td>
+                  <td>{getColorNameById(articulo.idColor)}</td>
+                  <td>{getMarcaNombreById(articulo.idMarca)}</td>
+                  <td>{getMaterialNameById(articulo.idMaterial)}</td>
+                  <td>{obtenerNombreDisenoPorId(articulo.idDiseño)}</td>
+                  <td>{mapEstiloIdToNombre(articulo.idEstilo)}</td>
                   <td>{articulo.cantidad}</td>
                   <td>{articulo.precioprov}</td>
                   <td>{articulo.descuento}</td>
