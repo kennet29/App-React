@@ -63,7 +63,7 @@ const ColoresView = () => {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
-          // You can include other headers as needed
+        
         },
       });
 

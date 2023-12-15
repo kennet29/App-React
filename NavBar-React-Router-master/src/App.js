@@ -1,10 +1,6 @@
 import React from "react";
 
 import Home from "./component/Home";
-
-
-import Contact from "./component/Contact";
-
 import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
 import ColoresView from "./views/Colores.js";
 import EstilosView from "./views/Estilos.js";
@@ -17,12 +13,14 @@ import ProveedoresView from "./views/Proveedores.js";
 import DisenosView from "./views/Diseños.js";
 import PromocionesView from "./views/Promociones.js";
 import ConfigView from "./views/Configuracion.js";
-
 import LoginView from "./views/Login.js";
 import ArticulosView from "./views/Articulos.js";
 import VentasView from "./views/Ventas.js";
 import IngresosView from "./views/Ingresos.js";
 import UsuariosView from "./views/usuarios.js";
+import StockView from "./views/Stock.js";
+import HistorialIngresos from "./views/HistorialIngresos.js";
+import HistorialVentas from "./views/HistorialVentas.js";
 
 
 
@@ -30,13 +28,9 @@ function App() {
   return (
     <>
       <Router>
-       
-
         <Switch>
           <Route path='/' component={LoginView} exact />
           <Route path='/index' component={Home} exact />
-        
-          <Route path='/compras' component={Contact} exact />
           <Route path='/configuracion' component={ConfigView} exact />
           <Route path='/colores' component={ColoresView} exact />
           <Route path='/estilos' component={EstilosView} exact />
@@ -52,10 +46,9 @@ function App() {
           <Route path='/ventas' component={VentasView}/>
           <Route path='/ingresos' component={IngresosView} exact />
           <Route path='/users' component={UsuariosView}></Route>
-
-
-
-         
+          <Route path='/stock' component={StockView}></Route>
+          <Route path='/historial-ingresos' component={HistorialIngresos}></Route>
+          <Route path='/historial-Ventas' component={HistorialVentas}></Route>
         </Switch>
       </Router>
     </>
