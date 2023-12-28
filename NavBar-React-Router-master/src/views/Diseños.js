@@ -13,6 +13,9 @@ const DisenosView = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [filterText, setFilterText] = useState('');
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteItemId, setDeleteItemId] = useState(null);
+
   const [resetPaginationToggle, setResetPaginationToggle] = useState(false);
   const [newDiseno, setNewDiseno] = useState({
     diseno: '',
@@ -57,9 +60,14 @@ const DisenosView = () => {
     }
   };
 
-  const handleDelete = async (disenoId) => {
+  const handleDelete = (disenoId) => {
+    setDeleteItemId(disenoId);
+    setShowDeleteModal(true);
+  };
+
+  const handleDeleteConfirmed = async () => {
     try {
-      const response = await fetch(`${url}/${disenoId}`, {
+      const response = await fetch(`${url}/${deleteItemId}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -67,15 +75,19 @@ const DisenosView = () => {
       });
 
       if (response.ok) {
-        console.log(`Diseño con ID ${disenoId} eliminado correctamente`);
+        console.log(`Diseño con ID ${deleteItemId} eliminado correctamente`);
         showData(); // Refresh the data after deletion
+        toast.success('Diseño eliminado correctamente', { position: toast.POSITION.TOP_CENTER });
       } else {
-        console.error(`Error al eliminar el diseño con ID ${disenoId}`);
-        // Provide user-friendly feedback here if needed
+        console.error(`Error al eliminar el diseño con ID ${deleteItemId}`);
+        toast.error('Error al eliminar el diseño', { position: toast.POSITION.TOP_CENTER });
       }
     } catch (error) {
       console.error('Error deleting design:', error);
-  
+      toast.error('Error al eliminar el diseño', { position: toast.POSITION.TOP_CENTER });
+    } finally {
+      setShowDeleteModal(false);
+      setDeleteItemId(null);
     }
   };
 
@@ -106,6 +118,9 @@ const DisenosView = () => {
   const handleCreate = async () => {
     try {
       const createUrl = 'http://localhost:4000/api/disenos';
+  
+      console.log('JSON que se envía al crear:', JSON.stringify(newDiseno));
+  
       const response = await fetch(createUrl, {
         method: 'POST',
         headers: {
@@ -113,24 +128,29 @@ const DisenosView = () => {
         },
         body: JSON.stringify(newDiseno),
       });
-
+  
       if (response.ok) {
         console.log('Diseño creado exitosamente.');
         handleNotificacion();
         showData();
       } else {
+        toast.error('Por favor complete todos los campos', { position: toast.POSITION.TOP_CENTER });
         console.error('Error al intentar crear el diseño.');
       }
     } catch (error) {
       console.error('Error en la solicitud de creación:', error);
     }
-
+  
     handleClose();
   };
+  
 
   const handleUpdateSubmit = async () => {
     try {
       const updateUrl = `http://localhost:4000/api/disenos/${selectedDiseno._id}`;
+  
+      console.log('JSON que se envía al actualizar:', JSON.stringify(selectedDiseno));
+  
       const response = await fetch(updateUrl, {
         method: 'PUT',
         headers: {
@@ -138,19 +158,23 @@ const DisenosView = () => {
         },
         body: JSON.stringify(selectedDiseno),
       });
-
+  
       if (response.ok) {
         console.log('Diseño actualizado exitosamente.');
         showData();
+        toast.success('Diseño actualizado correctamente', { position: toast.POSITION.TOP_CENTER });
       } else {
         console.error('Error al intentar actualizar el diseño.');
+        toast.error('Error al actualizar el diseño', { position: toast.POSITION.TOP_CENTER });
       }
     } catch (error) {
       console.error('Error en la solicitud de actualización:', error);
+      toast.error('Error al actualizar el diseño', { position: toast.POSITION.TOP_CENTER });
+    } finally {
+      handleClose();
     }
-
-    handleClose();
   };
+  
 
   useEffect(() => {
     showData();
@@ -226,15 +250,23 @@ const DisenosView = () => {
                 onChange={(e) => setNewDiseno({ ...newDiseno, diseno: e.target.value })}
               />
             </Form.Group>
+
+         
             <Form.Group controlId="formEstado">
-              <Form.Label>Estado</Form.Label>
-              <Form.Control
-                type="text"
-                placeholder="Ingrese el estado"
-                value={newDiseno.estado}
-                onChange={(e) => setNewDiseno({ ...newDiseno, estado: e.target.value })}
-              />
-            </Form.Group>
+  <Form.Label>Estado</Form.Label>
+  <Form.Control
+    as="select"
+    value={newDiseno.estado}
+    onChange={(e) => setNewDiseno({ ...newDiseno, estado: e.target.value === 'true' })}
+  >
+    <option value="">Seleccionar estado</option>
+    <option value="true">Activo</option>
+    <option value="false">Inactivo</option>
+  </Form.Control>
+</Form.Group>
+
+
+
             <Form.Group controlId="formDescripcion">
               <Form.Label>Descripción</Form.Label>
               <Form.Control
@@ -278,19 +310,19 @@ const DisenosView = () => {
               />
             </Form.Group>
             <Form.Group controlId="formEstado">
-              <Form.Label>Estado</Form.Label>
-              <Form.Control
-                type="text"
-                placeholder="Ingrese el estado"
-                value={selectedDiseno ? selectedDiseno.estado : ''}
-                onChange={(e) =>
-                  setSelectedDiseno({
-                    ...selectedDiseno,
-                    estado: e.target.value,
-                  })
-                }
-              />
-            </Form.Group>
+  <Form.Label>Estado</Form.Label>
+  <Form.Control
+    as="select"
+    value={selectedDiseno ? selectedDiseno.estado.toString() : ''}
+    onChange={(e) => setSelectedDiseno({ ...selectedDiseno, estado: e.target.value === 'true' })}
+  >
+    <option value="">Seleccionar estado</option>
+    <option value="true">Activo</option>
+    <option value="false">Inactivo</option>
+  </Form.Control>
+</Form.Group>
+
+
             <Form.Group controlId="formDescripcion">
               <Form.Label>Descripción</Form.Label>
               <Form.Control
@@ -317,6 +349,25 @@ const DisenosView = () => {
           
         </Styles.ModalFooter>
       </Styles.StyledModal>
+
+      <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
+        <Modal.Header style={{backgroundColor:'#4a4a4a',color:'white'}} closeButton>
+          <Modal.Title>Confirmar Eliminación</Modal.Title>
+        </Modal.Header>
+        <Modal.Body style={{backgroundColor:'#4a4a4a',color:'white'}} >
+          ¿Estás seguro de que quieres eliminar este diseño?
+        </Modal.Body>
+        <Modal.Footer style={{backgroundColor:'#4a4a4a',color:'white'}} >
+        <Button style={{ width: '100px', height: '50px' }} variant="danger" onClick={handleDeleteConfirmed}>
+            Si
+          </Button>
+          <Button style={{ width: '100px', height: '50px' }} variant="secondary"onClick={() => setShowDeleteModal(false)}>
+            Cancelar
+          </Button>
+        
+        </Modal.Footer >
+      </Modal>
+
       <Footer />
       <ToastContainer />
     </Styles.AppContainer>

@@ -3,11 +3,14 @@ import { Button, Modal } from 'react-bootstrap';
 import DataTable from 'react-data-table-component';
 
 export const AppContainer = styled.div`
+
   display: flex;
   flex-direction: column;
   align-items: center;
+ 
 
 `;
+// background-image: linear-gradient(to right top, #f9b7dc, #f9b5e0, #f8b3e4, #f7b1e8, #f5b0ed, #e3b9f8, #d2c1fe, #c3c8ff, #a8d7ff, #8ee5ff, #80f1ff, #89fbf4);
 
 export const StyledDataTable = styled(DataTable)`
   border: 2px solid #333;

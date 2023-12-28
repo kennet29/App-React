@@ -14,6 +14,9 @@ const BodegasView = () => {
   const [filterText, setFilterText] = useState('');
   const [resetPaginationToggle, setResetPaginationToggle] = useState(false);
   const [updateModalShow, setUpdateModalShow] = useState(false);
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [deletingBodegaId, setDeletingBodegaId] = useState(null);
+
   const [updatingBodega, setUpdatingBodega] = useState(null);
   const handleNotificacion = () => {
    
@@ -48,24 +51,44 @@ const BodegasView = () => {
     handleUpdateShow(bodegaId);
   };
 
-  const handleDelete = async (bodegaId) => {
-    try {
-      const response = await fetch(`http://localhost:4000/api/bodegas/${bodegaId}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (response.ok) {
-        setBodegas((prevBodegas) => prevBodegas.filter((bodega) => bodega._id !== bodegaId));
-        console.log(`Bodega con ID ${bodegaId} borrada exitosamente.`);
-      } else {
-        console.error(`Error borrando la bodega con ID ${bodegaId}`);
+  const handleDelete = (bodegaId) => {
+    setDeletingBodegaId(bodegaId);
+    setShowDeleteConfirmation(true);
+  };
+  
+  // ...
+  
+  // Add a new function to handle deletion confirmation
+  const handleDeleteConfirm = async () => {
+    if (deletingBodegaId) {
+      try {
+        const response = await fetch(`http://localhost:4000/api/bodegas/${deletingBodegaId}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+  
+        if (response.ok) {
+          setBodegas((prevBodegas) => prevBodegas.filter((bodega) => bodega._id !== deletingBodegaId));
+          toast.success('Bodega Eliminado correctamente', { position: toast.POSITION.TOP_CENTER });
+          console.log(`Bodega con ID ${deletingBodegaId} borrada exitosamente.`);
+        } else {
+          console.error(`Error borrando la bodega con ID ${deletingBodegaId}`);
+        }
+      } catch (error) {
+        console.error('Error en la solicitud DELETE:', error);
       }
-    } catch (error) {
-      console.error('Error en la solicitud DELETE:', error);
+  
+      setShowDeleteConfirmation(false);
+      setDeletingBodegaId(null);
     }
+  };
+  
+
+  const handleDeleteCancel = () => {
+    setShowDeleteConfirmation(false);
+    setDeletingBodegaId(null);
   };
 
   const handleClear = () => {
@@ -115,6 +138,7 @@ const BodegasView = () => {
       if (response.ok) {
         const nuevaBodegaCreada = await response.json();
         setBodegas((prevBodegas) => [...prevBodegas, nuevaBodegaCreada]);
+        toast.success('Bodega creada exitosamente', { position: toast.POSITION.TOP_CENTER });
         console.log('Bodega creada exitosamente.');
         handleNotificacion();
       } else {
@@ -150,6 +174,7 @@ const BodegasView = () => {
             bodega._id === updatingBodega._id ? updatedBodegaData : bodega
           )
         );
+        toast.success('Bodega editada exitosamente', { position: toast.POSITION.TOP_CENTER });
         console.log(`Bodega con ID ${updatingBodega._id} actualizada exitosamente.`);
       } else {
         console.error(`Error actualizando la bodega con ID ${updatingBodega._id}`);
@@ -231,10 +256,22 @@ const BodegasView = () => {
               <Form.Label>Bodega</Form.Label>
               <Form.Control type="text" placeholder="Ingrese la bodega" />
             </Form.Group>
+
+
             <Form.Group controlId="formEstado">
-              <Form.Label>Estado</Form.Label>
-              <Form.Control type="text" placeholder="Ingrese el estado" />
-            </Form.Group>
+  <Form.Label>Estado</Form.Label>
+  <Form.Control
+    as="select"
+    placeholder="Seleccione el estado"
+  >
+    <option value="true">Activo</option>
+    <option value="false">Inactivo</option>
+  </Form.Control>
+</Form.Group>
+
+
+
+
             <Form.Group controlId="formDescripcion">
               <Form.Label>Descripción</Form.Label>
               <Form.Control type="text" placeholder="Ingrese la descripción" />
@@ -267,14 +304,19 @@ const BodegasView = () => {
                 defaultValue={updatingBodega?.bodega}
               />
             </Form.Group>
+           
             <Form.Group controlId="updateFormEstado">
-              <Form.Label>Estado</Form.Label>
-              <Form.Control
-                type="text"
-                placeholder="Ingrese el estado"
-                defaultValue={updatingBodega?.estado}
-              />
-            </Form.Group>
+  <Form.Label>Estado</Form.Label>
+  <Form.Control
+    as="select"
+    defaultValue={updatingBodega?.estado ? 'true' : 'false'}
+  >
+    <option value="true">Activo</option>
+    <option value="false">Inactivo</option>
+  </Form.Control>
+</Form.Group>
+
+
             <Form.Group controlId="updateFormDescripcion">
               <Form.Label>Descripción</Form.Label>
               <Form.Control
@@ -296,6 +338,25 @@ const BodegasView = () => {
         </Styles.ModalFooter>
     
       </Styles.StyledModal>
+
+
+      <Styles.StyledModal show={showDeleteConfirmation} onHide={handleDeleteCancel}>
+  <Modal.Header closeButton>
+    <Modal.Title>Confirmar Eliminación</Modal.Title>
+  </Modal.Header>
+  <Modal.Body>
+    <p>¿Estás seguro de que deseas eliminar esta bodega?</p>
+  </Modal.Body>
+  <Styles.ModalFooter>
+    <Button className="otros" variant="danger" onClick={handleDeleteConfirm}>
+      Sí, eliminar
+    </Button>
+    <Button className="otros" variant="secondary" onClick={handleDeleteCancel}>
+      Cancelar
+    </Button>
+  </Styles.ModalFooter>
+</Styles.StyledModal>
+
       <Footer />
       <ToastContainer />
     </Styles.AppContainer>

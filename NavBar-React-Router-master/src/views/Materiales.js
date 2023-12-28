@@ -12,6 +12,8 @@ const MaterialesView = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [filterText, setFilterText] = useState('');
+  const [showDeleteConfirmationModal, setShowDeleteConfirmationModal] = useState(false);
+  const [materialToDelete, setMaterialToDelete] = useState(null);
   const [resetPaginationToggle, setResetPaginationToggle] = useState(false);
   const [newMaterial, setNewMaterial] = useState({
     material: '',
@@ -30,12 +32,6 @@ const MaterialesView = () => {
     });
     setSelectedMaterial(null);
   };
-
-  const handleNotificacion = () => {
-   
-    toast.success('Operación exitosa', { position: toast.POSITION.TOP_CENTER });
-  };
-
 
 
   const handleShow = () => setShowCreateModal(true);
@@ -58,7 +54,13 @@ const MaterialesView = () => {
     }
   };
 
-  const handleDelete = async (materialId) => {
+  const handleDelete = (materialId) => {
+    const selected = materiales.find((material) => material._id === materialId);
+    setMaterialToDelete(selected);
+    setShowDeleteConfirmationModal(true);
+  };
+
+  const handleConfirmDelete = async (materialId) => {
     try {
       const response = await fetch(`${url}/${materialId}`, {
         method: 'DELETE',
@@ -68,6 +70,7 @@ const MaterialesView = () => {
       });
 
       if (response.ok) {
+        toast.success('Material eliminado exitosamente', { position: toast.POSITION.TOP_CENTER });
         console.log(`Material con ID ${materialId} eliminado correctamente`);
         showData(); // Refresh data after successful deletion
       } else {
@@ -76,7 +79,11 @@ const MaterialesView = () => {
     } catch (error) {
       console.error('Error:', error);
     }
+
+    // Cerrar el modal de confirmación
+    setShowDeleteConfirmationModal(false);
   };
+
 
   const handleClear = () => {
     if (filterText) {
@@ -113,7 +120,8 @@ const MaterialesView = () => {
       });
 
       if (response.ok) {
-        handleNotificacion();
+        toast.success('Material creado exitosamente', { position: toast.POSITION.TOP_CENTER });
+        
         showData();
       } else {
         console.error('Error al intentar crear el material.');
@@ -136,6 +144,7 @@ const MaterialesView = () => {
       });
 
       if (response.ok) {
+        toast.success('Material actualizado exitosamente', { position: toast.POSITION.TOP_CENTER });
         console.log('Material actualizado exitosamente.');
         showData();
       } else {
@@ -210,6 +219,7 @@ const MaterialesView = () => {
         </Modal.Header>
         <Modal.Body>
           <Form>
+
             <Form.Group controlId="formMaterial">
               <Form.Label>Material</Form.Label>
               <Form.Control
@@ -219,6 +229,7 @@ const MaterialesView = () => {
                 onChange={(e) => setNewMaterial({ ...newMaterial, material: e.target.value })}
               />
             </Form.Group>
+
             <Form.Group controlId="formDescripcion">
               <Form.Label>Descripción</Form.Label>
               <Form.Control
@@ -228,19 +239,20 @@ const MaterialesView = () => {
                 onChange={(e) => setNewMaterial({ ...newMaterial, descripcion: e.target.value })}
               />
             </Form.Group>
+
             <Form.Group controlId="formEstado">
-              <Form.Label>Estado</Form.Label>
-              <Form.Control
-                as="select"
-                value={newMaterial.estado ? 'Activo' : 'Inactivo'}
-                onChange={(e) =>
-                  setNewMaterial({ ...newMaterial, estado: e.target.value === 'Activo' })
-                }
-              >
-                <option>Activo</option>
-                <option>Inactivo</option>
-              </Form.Control>
-            </Form.Group>
+  <Form.Label>Estado</Form.Label>
+  <Form.Control
+    as="select"
+    placeholder="Seleccione el estado"
+  >
+    <option value="true">Activo</option>
+    <option value="false">Inactivo</option>
+  </Form.Control>
+</Form.Group>
+
+
+
           </Form>
         </Modal.Body>
         <Styles.ModalFooter>
@@ -288,6 +300,7 @@ const MaterialesView = () => {
                 }
               />
             </Form.Group>
+            
             <Form.Group controlId="formEstado">
               <Form.Label>Estado</Form.Label>
               <Form.Control
@@ -315,9 +328,32 @@ const MaterialesView = () => {
           </Button>
         
         </Styles.ModalFooter>
+
+
+        
       </Styles.StyledModal>
+
+      <Modal show={showDeleteConfirmationModal} onHide={() => setShowDeleteConfirmationModal(false)}>
+        <Modal.Header style={{backgroundColor:'#4a4a4a',color:'white'}} closeButton>
+          <Modal.Title>Confirmar Eliminación</Modal.Title>
+        </Modal.Header>
+        <Modal.Body style={{backgroundColor:'#4a4a4a',color:'white'}}>
+          ¿Estás seguro de que deseas eliminar este material?
+        </Modal.Body>
+        <Modal.Footer style={{backgroundColor:'#4a4a4a',color:'white'}}>
+          <Button style={{ width: '100px', height: '50px' }} variant="danger" onClick={() => handleConfirmDelete(materialToDelete._id)}>
+            Sí
+          </Button>
+          <Button style={{ width: '100px', height: '50px' }} variant="secondary" onClick={() => setShowDeleteConfirmationModal(false)}>
+            Cancelar
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      
       <Footer />
       <ToastContainer />
+      
     </Styles.AppContainer>
   );
 };

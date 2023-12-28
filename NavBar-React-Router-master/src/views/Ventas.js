@@ -3,6 +3,7 @@ import { Container, Form, Button, Row, Col } from 'react-bootstrap';
 import estilos from '../css/ingresos-estilos';
 import '../css/detalle-ingresos.css';
 import Footer from '../component/footer/footer';
+import { FaSearch } from 'react-icons/fa';
 
 const VentasView = () => {
   const [tallas, setTallas] = useState([]);
@@ -15,38 +16,27 @@ const VentasView = () => {
   const [discountPercentage, setDiscountPercentage] = useState(0);
 
   useEffect(() => {
-    // Fetch data for Tallas
-    fetch('http://localhost:4000/api/tallas')
-      .then(response => response.json())
-      .then(data => setTallas(data))
-      .catch(error => console.error('Error fetching tallas:', error));
-
-    // Fetch data for Colores
-    fetch('http://localhost:4000/api/colores')
-      .then(response => response.json())
-      .then(data => setColores(data))
-      .catch(error => console.error('Error fetching colores:', error));
-
-      fetch('http://localhost:4000/api/marcas')
-      .then(response => response.json())
-      .then(data => setMarcas(data))
-      .catch(error => console.error('Error fetching marcas:', error));
-
-      fetch('http://localhost:4000/api/materiales')
-      .then(response => response.json())
-      .then(data => setMateriales(data))
-      .catch(error => console.error('Error fetching materiales:', error));
-
-      fetch('http://localhost:4000/api/estilos')
-      .then(response => response.json())
-      .then(data => setEst(data))
-      .catch(error => console.error('Error fetching estilos:', error));
-
-      fetch('http://localhost:4000/api/disenos')
-      .then(response => response.json())
-      .then(data => setDisenos(data))
-      .catch(error => console.error('Error fetching diseños:', error));
-  }, [])
+    const fetchData = async (endpoint, setDataFunction) => {
+      try {
+        const response = await fetch(`http://localhost:4000/api/${endpoint}`);
+        const data = await response.json();
+        setDataFunction(data);
+      } catch (error) {
+        console.error(`Error fetching ${endpoint}:`, error);
+      }
+    };
+    fetchData('tallas', setTallas);
+    fetchData('colores', setColores);
+    fetchData('marcas', setMarcas);
+    fetchData('materiales', setMateriales);
+    fetchData('estilos', setEst);
+    fetchData('disenos', setDisenos);
+  }, []);
+  
+  const listArticulos = () => {
+   
+    console.log('Listing Articulos...');
+  };
 
   return (
     <Container fluid style={estilos.containerStyle}>
@@ -68,7 +58,7 @@ const VentasView = () => {
     
 
       <Form style={estilos.formStyle2}>
-        <fieldset className="form-row">
+        
           <Row>
             <Col md={2}>
               <label style={estilos.labelStyle} htmlFor="id-articulo">
@@ -77,7 +67,15 @@ const VentasView = () => {
               <select style={estilos.inputStyle} className="form-control">
                 <option value="">Artículos...</option>
               </select>
+            
             </Col>
+
+    <Col md={2} style={{marginTop:'40px'}}>
+    <Button style={estilos.search} variant="outline-secondary" onClick={listArticulos}>
+            <FaSearch />  
+          </Button>
+    </Col>
+
 
             <Col md={2}>
         <label style={estilos.labelStyle3} htmlFor="id-talla">
@@ -200,7 +198,7 @@ const VentasView = () => {
               Limpiar
             </Button>
           </Row>
-        </fieldset>
+        
       </Form>
 
       <Button

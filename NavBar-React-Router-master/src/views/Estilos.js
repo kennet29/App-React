@@ -20,7 +20,19 @@ const EstilosView = () => {
     descripcion: '',
   });
   const [selectedEstilo, setSelectedEstilo] = useState(null);
-
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [deleteItemId, setDeleteItemId] = useState(null);
+  
+  const showDeleteConfirmationModal = (estiloId) => {
+    setDeleteItemId(estiloId);
+    setShowDeleteConfirmation(true);
+  };
+  
+  const closeDeleteConfirmationModal = () => {
+    setShowDeleteConfirmation(false);
+    setDeleteItemId(null);
+  };
+  
   const handleNotificacion = () => {
    
     toast.success('Operación exitosa', { position: toast.POSITION.TOP_CENTER });
@@ -58,7 +70,11 @@ const EstilosView = () => {
     }
   };
 
-  const handleDelete = async (estiloId) => {
+  const handleDelete = (estiloId) => {
+    showDeleteConfirmationModal(estiloId);
+  };
+
+  const handleDeleteConfirmed = async (estiloId) => {
     try {
       const response = await fetch(`${url}/${estiloId}`, {
         method: 'DELETE',
@@ -66,17 +82,21 @@ const EstilosView = () => {
           'Content-Type': 'application/json',
         },
       });
-
+  
       if (response.ok) {
         console.log(`Estilo con ID ${estiloId} eliminado correctamente.`);
         showData(); // Update the styles list after deletion
+        toast.success('Estilo eliminado correctamente', { position: toast.POSITION.TOP_CENTER });
       } else {
         console.error(`Error al eliminar el estilo con ID ${estiloId}.`);
       }
     } catch (error) {
       console.error('Error:', error);
+    } finally {
+      closeDeleteConfirmationModal();
     }
   };
+  
 
   const handleClear = () => {
     if (filterText) {
@@ -104,6 +124,9 @@ const EstilosView = () => {
 
   const handleCreate = async () => {
     try {
+      // Log the JSON being sent
+      console.log('Creating new style with JSON:', JSON.stringify(newEstilo));
+  
       const createUrl = 'http://localhost:4000/api/estilos';
       const response = await fetch(createUrl, {
         method: 'POST',
@@ -112,20 +135,25 @@ const EstilosView = () => {
         },
         body: JSON.stringify(newEstilo),
       });
-
+  
       if (response.ok) {
         console.log('Estilo creado exitosamente.');
-        handleNotificacion();
+       
         showData();
+        toast.success('Estilo creado exitosamente', { position: toast.POSITION.TOP_CENTER });
       } else {
         console.error('Error al intentar crear el estilo.');
+        toast.error('Error al intentar crear el estilo', { position: toast.POSITION.TOP_CENTER });
       }
     } catch (error) {
       console.error('Error en la solicitud de creación:', error);
+      toast.error('Error en la solicitud de creación', { position: toast.POSITION.TOP_CENTER });
     }
-
+  
     handleClose();
   };
+  
+  
 
   const handleUpdateSubmit = async () => {
     try {
@@ -137,20 +165,23 @@ const EstilosView = () => {
         },
         body: JSON.stringify(selectedEstilo),
       });
-
+  
       if (response.ok) {
         console.log('Estilo actualizado exitosamente.');
         showData();
+        toast.success('Estilo actualizado exitosamente', { position: toast.POSITION.TOP_CENTER });
       } else {
         console.error('Error al intentar actualizar el estilo.');
+        toast.error('Error al intentar actualizar el estilo', { position: toast.POSITION.TOP_CENTER });
       }
     } catch (error) {
       console.error('Error en la solicitud de actualización:', error);
+      toast.error('Error en la solicitud de actualización', { position: toast.POSITION.TOP_CENTER });
     }
-
+  
     handleClose();
   };
-
+  
   useEffect(() => {
     showData();
   }, []);
@@ -225,15 +256,22 @@ const EstilosView = () => {
                 onChange={(e) => setNewEstilo({ ...newEstilo, estilo: e.target.value })}
               />
             </Form.Group>
-            <Form.Group controlId="formEstado">
-              <Form.Label>Estado</Form.Label>
-              <Form.Control
-                type="text"
-                placeholder="Ingrese el estado"
-                value={newEstilo.estado}
-                onChange={(e) => setNewEstilo({ ...newEstilo, estado: e.target.value })}
-              />
-            </Form.Group>
+            <Form.Label>Estado</Form.Label>
+
+            <Form.Control
+  as="select"
+  value={newEstilo.estado !== null && newEstilo.estado !== undefined ? newEstilo.estado.toString() : 'true'}
+  onChange={(e) => setNewEstilo({ ...newEstilo, estado: e.target.value === 'true' })}
+>
+  <option >Selecciona un estado</option>
+  <option value="true">Activo</option>
+  <option value="false">Inactivo</option>
+</Form.Control>
+
+
+
+
+
             <Form.Group controlId="formDescripcion">
               <Form.Label>Descripción</Form.Label>
               <Form.Control
@@ -277,19 +315,22 @@ const EstilosView = () => {
               />
             </Form.Group>
             <Form.Group controlId="formEstado">
-              <Form.Label>Estado</Form.Label>
-              <Form.Control
-                type="text"
-                placeholder="Ingrese el estado"
-                value={selectedEstilo ? selectedEstilo.estado : ''}
-                onChange={(e) =>
-                  setSelectedEstilo({
-                    ...selectedEstilo,
-                    estado: e.target.value,
-                  })
-                }
-              />
-            </Form.Group>
+  <Form.Label>Estado</Form.Label>
+  <Form.Control
+    as="select"
+    value={selectedEstilo ? (selectedEstilo.estado ? 'Activo' : 'Inactivo') : ''}
+    onChange={(e) =>
+      setSelectedEstilo({
+        ...selectedEstilo,
+        estado: e.target.value === 'Activo',
+      })
+    }
+  >
+    <option value="Activo">Activo</option>
+    <option value="Inactivo">Inactivo</option>
+  </Form.Control>
+</Form.Group>
+
             <Form.Group controlId="formDescripcion">
               <Form.Label>Descripción</Form.Label>
               <Form.Control
@@ -316,6 +357,24 @@ const EstilosView = () => {
           
         </Styles.ModalFooter>
       </Styles.StyledModal>
+
+      <Styles.StyledModal show={showDeleteConfirmation} onHide={closeDeleteConfirmationModal}>
+  <Modal.Header closeButton>
+    <Modal.Title>Confirmar Eliminación</Modal.Title>
+  </Modal.Header>
+  <Modal.Body>
+    <p>¿Estás seguro de que deseas eliminar este estilo?</p>
+  </Modal.Body>
+  <Styles.ModalFooter>
+    <Button style={{width:'100px',height:'50px'}} variant="danger" onClick={() => handleDeleteConfirmed(deleteItemId)}>
+      Sí
+    </Button>
+    <Button style={{width:'100px',height:'50px'}} variant="secondary" onClick={closeDeleteConfirmationModal}>
+      Cancelar
+    </Button>
+  </Styles.ModalFooter>
+</Styles.StyledModal>;
+
      <Footer />
      <ToastContainer></ToastContainer>
     </Styles.AppContainer>

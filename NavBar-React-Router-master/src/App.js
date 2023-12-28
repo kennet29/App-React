@@ -21,6 +21,7 @@ import UsuariosView from "./views/usuarios.js";
 import StockView from "./views/Stock.js";
 import HistorialIngresos from "./views/HistorialIngresos.js";
 import HistorialVentas from "./views/HistorialVentas.js";
+import DetalleIngresosView from "./views/Detalle-ingresos.js";
 
 
 
@@ -49,6 +50,7 @@ function App() {
           <Route path='/stock' component={StockView}></Route>
           <Route path='/historial-ingresos' component={HistorialIngresos}></Route>
           <Route path='/historial-Ventas' component={HistorialVentas}></Route>
+          <Route path='/ingresos-detalles' component={DetalleIngresosView} ></Route>
         </Switch>
       </Router>
     </>

@@ -104,6 +104,15 @@ const estilos = {
       marginLeft:'auto',
       marginRight:'auto',
       marginTop:'10px'
+    },search:
+    {
+      color:'black',
+      width: '35px',
+      height:'35px',
+      marginBottom:'10px',
+      border: '2px solid #333',  
+      padding: '5px',
+      marginLeft:'10px',
     }
     
   };

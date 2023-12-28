@@ -1,15 +1,21 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Form, Button, Modal, ToastContainer } from 'react-bootstrap';
+import { Form, Button, Modal } from 'react-bootstrap';
 import * as Styles from '../css/styles_colores';
 import Footer from '../component/footer/footer';
 import Navbar from '../component/Navbar';
 import { FaTrash,FaEdit } from 'react-icons/fa';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 const TallasView = () => {
   const [tallas, setTallas] = useState([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [filterText, setFilterText] = useState('');
   const [resetPaginationToggle, setResetPaginationToggle] = useState(false);
+  const [showDeleteConfirmationModal, setShowDeleteConfirmationModal] = useState(false);
+const [tallaToDeleteId, setTallaToDeleteId] = useState(null);
+
   const [newTalla, setNewTalla] = useState({
     talla: '',
     estado: '',
@@ -48,7 +54,12 @@ const TallasView = () => {
     }
   };
 
-  const handleDelete = async (tallaId) => {
+  const handleDelete = (tallaId) => {
+    setTallaToDeleteId(tallaId);
+    setShowDeleteConfirmationModal(true);
+  };
+
+  const handleConfirmedDelete = async (tallaId) => {
     try {
       const response = await fetch(`${url}/${tallaId}`, {
         method: 'DELETE',
@@ -56,17 +67,22 @@ const TallasView = () => {
           'Content-Type': 'application/json',
         },
       });
-
+  
       if (response.ok) {
-        console.log(`Talla con ID ${tallaId} eliminada correctamente`);
+        toast.success(`Talla con ID ${tallaId} eliminada correctamente.`);
         showData(); // Refresh data after successful deletion
       } else {
-        console.error(`Error al intentar eliminar la talla con ID ${tallaId}`);
+        toast.error(`Error al intentar eliminar la talla con ID ${tallaId}`);
       }
     } catch (error) {
       console.error('Error:', error);
+      toast.error('Error al intentar eliminar la talla.');
     }
+  
+    setShowDeleteConfirmationModal(false);
   };
+  
+  
 
   const handleClear = () => {
     if (filterText) {
@@ -101,19 +117,21 @@ const TallasView = () => {
         },
         body: JSON.stringify(newTalla),
       });
-
+  
       if (response.ok) {
-        console.log('Talla creada exitosamente.');
+        toast.success('Talla creada exitosamente.');
         showData();
       } else {
-        console.error('Error al intentar crear la talla.');
+        toast.error('Complete todos los campos');
       }
     } catch (error) {
       console.error('Error en la solicitud de creación:', error);
+      toast.error('Error en la solicitud de creación.');
     }
-
+  
     handleClose();
   };
+  
 
   const handleUpdateSubmit = async () => {
     try {
@@ -124,17 +142,18 @@ const TallasView = () => {
         },
         body: JSON.stringify(selectedTalla),
       });
-
+  
       if (response.ok) {
-        console.log('Talla actualizada exitosamente.');
+        toast.success('Talla actualizada exitosamente.');
         showData();
       } else {
-        console.error('Error al intentar actualizar la talla.');
+        toast.error('Completa todos los campos');
       }
     } catch (error) {
       console.error('Error en la solicitud de actualización:', error);
+      toast.error('Error en la solicitud de actualización.');
     }
-
+  
     handleClose();
   };
 
@@ -169,8 +188,9 @@ const TallasView = () => {
           <FaEdit /> 
         </Styles.ActionButton>
         <Styles.ActionButton onClick={() => handleDelete(row._id)}>
-          <FaTrash /> 
-        </Styles.ActionButton>
+  <FaTrash />
+</Styles.ActionButton>
+
       </div>
       ),
       center: true,
@@ -209,15 +229,23 @@ const TallasView = () => {
                 onChange={(e) => setNewTalla({ ...newTalla, talla: e.target.value })}
               />
             </Form.Group>
+
+
             <Form.Group controlId="formEstado">
-              <Form.Label>Estado</Form.Label>
-              <Form.Control
-                type="text"
-                placeholder="Ingrese el estado"
-                value={newTalla.estado}
-                onChange={(e) => setNewTalla({ ...newTalla, estado: e.target.value })}
-              />
-            </Form.Group>
+  <Form.Label>Estado</Form.Label>
+  <Form.Control
+    as="select"
+    value={newTalla.estado}
+    onChange={(e) => setNewTalla({ ...newTalla, estado: e.target.value })}
+  >
+    <option value="">Seleccionar estado</option>
+    <option value="true">Activo</option>
+    <option value="false">Inactivo</option>
+  </Form.Control>
+</Form.Group>
+
+
+
             <Form.Group controlId="formDescripcion">
               <Form.Label>Descripción</Form.Label>
               <Form.Control
@@ -246,6 +274,8 @@ const TallasView = () => {
         </Modal.Header>
         <Modal.Body>
           <Form>
+
+
             <Form.Group controlId="formTalla">
               <Form.Label>Talla</Form.Label>
               <Form.Control
@@ -260,20 +290,23 @@ const TallasView = () => {
                 }
               />
             </Form.Group>
+
+            
             <Form.Group controlId="formEstado">
-              <Form.Label>Estado</Form.Label>
-              <Form.Control
-                type="text"
-                placeholder="Ingrese el estado"
-                value={selectedTalla ? selectedTalla.estado : ''}
-                onChange={(e) =>
-                  setSelectedTalla({
-                    ...selectedTalla,
-                    estado: e.target.value,
-                  })
-                }
-              />
-            </Form.Group>
+  <Form.Label>Estado</Form.Label>
+  <Form.Control
+    as="select"
+    value={selectedTalla ? selectedTalla.estado.toString() : ''}
+    onChange={(e) => setSelectedTalla({ ...selectedTalla, estado: e.target.value })}
+  >
+    <option value="">Seleccionar estado</option>
+    <option value="true">Activo</option>
+    <option value="false">Inactivo</option>
+  </Form.Control>
+</Form.Group>
+
+
+
             <Form.Group controlId="formDescripcion">
               <Form.Label>Descripción</Form.Label>
               <Form.Control
@@ -301,7 +334,24 @@ const TallasView = () => {
         </Styles.ModalFooter>
       </Styles.StyledModal>
       <Footer />
-      <ToastContainer />
+      <Styles.StyledModal show={showDeleteConfirmationModal} onHide={() => setShowDeleteConfirmationModal(false)}>
+  <Modal.Header closeButton>
+    <Modal.Title>Confirmar Eliminación</Modal.Title>
+  </Modal.Header>
+  <Modal.Body>
+    ¿Estás seguro de que deseas eliminar esta talla?
+  </Modal.Body>
+  <Styles.ModalFooter>
+    <Button className="otros" variant="danger" onClick={() => handleConfirmedDelete(tallaToDeleteId)}>
+      Sí, Eliminar
+    </Button>
+    <Button className="otros" variant="secondary" onClick={() => setShowDeleteConfirmationModal(false)}>
+      Cancelar
+    </Button>
+  </Styles.ModalFooter>
+</Styles.StyledModal>
+
+      <ToastContainer  position="top-center" />
     </Styles.AppContainer>
 
   );

@@ -14,6 +14,9 @@ const CategoriasView = () => {
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [filterText, setFilterText] = useState('');
   const [resetPaginationToggle, setResetPaginationToggle] = useState(false);
+  const [showConfirmationModal, setShowConfirmationModal] = useState(false);
+  const [categoryToDelete, setCategoryToDelete] = useState(null);
+
   const [newCategoria, setNewCategoria] = useState({
     categoria: '',
     estado: '',
@@ -58,22 +61,31 @@ const CategoriasView = () => {
     }
   };
 
-  const handleDelete = async (categoriaId) => {
+  const handleDelete = (categoriaId) => {
+    setCategoryToDelete(categoriaId);
+    setShowConfirmationModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
     try {
-      const deleteUrl = `http://localhost:4000/api/categorias/${categoriaId}`;
+      const deleteUrl = `http://localhost:4000/api/categorias/${categoryToDelete}`;
       const response = await fetch(deleteUrl, {
         method: 'DELETE',
       });
 
       if (response.ok) {
-        console.log(`Categoría con ID ${categoriaId} eliminada exitosamente.`);
+        console.log(`Categoría con ID ${categoryToDelete} eliminada exitosamente.`);
+        // Show a success toast
+        toast.success('Categoría eliminada exitosamente', { position: toast.POSITION.TOP_CENTER });
         // After successful deletion, update the UI by fetching and displaying the updated data
         showData();
       } else {
-        console.error(`Error al intentar borrar la categoría con ID ${categoriaId}.`);
+        console.error(`Error al intentar borrar la categoría con ID ${categoryToDelete}.`);
       }
     } catch (error) {
       console.error('Error en la solicitud de eliminación:', error);
+    } finally {
+      setShowConfirmationModal(false);
     }
   };
 
@@ -112,20 +124,24 @@ const CategoriasView = () => {
         },
         body: JSON.stringify(newCategoria),
       });
-
+  
       if (response.ok) {
         console.log('Categoría creada exitosamente.');
-        handleNotificacion();
+        handleNotificacion('Categoría creada exitosamente');
         showData();
       } else {
         console.error('Error al intentar crear la categoría.');
+        toast.error('Por favor complete todos los campos', { position: toast.POSITION.TOP_CENTER });
       }
     } catch (error) {
       console.error('Error en la solicitud de creación:', error);
+      // Puedes mostrar una notificación de error si lo deseas
+      toast.error('Error en la solicitud de creación', { position: toast.POSITION.TOP_CENTER });
     }
-
+  
     handleClose();
   };
+  
 
   const handleUpdateSubmit = async () => {
     try {
@@ -139,6 +155,7 @@ const CategoriasView = () => {
       });
 
       if (response.ok) {
+        toast.error('Por favor complete todos los campos', { position: toast.POSITION.TOP_CENTER });
         console.log('Categoría actualizada exitosamente.');
         showData();
       } else {
@@ -224,17 +241,21 @@ const CategoriasView = () => {
                 }
               />
             </Form.Group>
+
             <Form.Group controlId="formEstado">
-              <Form.Label>Estado</Form.Label>
-              <Form.Control
-                type="text"
-                placeholder="Ingrese el estado"
-                value={newCategoria.estado}
-                onChange={(e) =>
-                  setNewCategoria({ ...newCategoria, estado: e.target.value })
-                }
-              />
-            </Form.Group>
+  <Form.Label>Estado</Form.Label>
+  <Form.Control
+    as="select"
+    value={newCategoria.estado}
+    onChange={(e) => setNewCategoria({ ...newCategoria, estado: e.target.value })}
+  >
+    <option value="">Seleccionar estado</option>
+    <option value="true">Activo</option>
+    <option value="false">Inactivo</option>
+  </Form.Control>
+</Form.Group>
+
+
             <Form.Group controlId="formDescripcion">
               <Form.Label>Descripción</Form.Label>
               <Form.Control
@@ -279,20 +300,23 @@ const CategoriasView = () => {
                 }
               />
             </Form.Group>
+
+
             <Form.Group controlId="formEstado">
-              <Form.Label>Estado</Form.Label>
-              <Form.Control
-                type="text"
-                placeholder="Ingrese el estado"
-                value={selectedCategoria ? selectedCategoria.estado : ''}
-                onChange={(e) =>
-                  setSelectedCategoria({
-                    ...selectedCategoria,
-                    estado: e.target.value,
-                  })
-                }
-              />
-            </Form.Group>
+  <Form.Label>Estado</Form.Label>
+  <Form.Control
+    as="select"
+    value={selectedCategoria ? selectedCategoria.estado.toString() : ''}
+    onChange={(e) => setSelectedCategoria({ ...selectedCategoria, estado: e.target.value })}
+  >
+    <option value="">Seleccionar estado</option>
+    <option value="true">Activo</option>
+    <option value="false">Inactivo</option>
+  </Form.Control>
+</Form.Group>
+
+
+
             <Form.Group controlId="formDescripcion">
               <Form.Label>Descripción</Form.Label>
               <Form.Control
@@ -319,6 +343,23 @@ const CategoriasView = () => {
           
         </Styles.ModalFooter>
       </Styles.StyledModal>
+
+      <Modal show={showConfirmationModal} onHide={() => setShowConfirmationModal(false)}>
+        <Modal.Header style={{backgroundColor:'#4a4a4a',color:'white'}} closeButton>
+          <Modal.Title style={{backgroundColor:'#4a4a4a',color:'white'}}>Confirmar Eliminación</Modal.Title>
+        </Modal.Header>
+        <Modal.Body style={{backgroundColor:'#4a4a4a',color:'white'}}>¿Está seguro de que desea eliminar esta categoría?</Modal.Body>
+        <Modal.Footer style={{backgroundColor:'#4a4a4a',color:'white'}}>
+          
+          <Button style={{ width: '100px', height: '50px' }} variant="danger" onClick={handleConfirmDelete}>
+            Confirmar
+          </Button>
+          <Button style={{ width: '100px', height: '50px' }} variant="secondary" onClick={() => setShowConfirmationModal(false)}>
+            Cancelar
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
       <Footer />
       <ToastContainer />
     </Styles.AppContainer>

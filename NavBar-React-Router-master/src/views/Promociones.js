@@ -6,6 +6,7 @@ import { FaTrash, FaEdit } from 'react-icons/fa';
 import Navbar from '../component/Navbar';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { format } from 'date-fns';
 
 const PromocionesView = () => {
   const [promociones, setPromociones] = useState([]);
@@ -13,6 +14,7 @@ const PromocionesView = () => {
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [filterText, setFilterText] = useState('');
   const [resetPaginationToggle, setResetPaginationToggle] = useState(false);
+  const [showDeleteConfirmationModal, setShowDeleteConfirmationModal] = useState(false);
   const [newPromocion, setNewPromocion] = useState({
     promocion: '',
     fecha_inicio: '',
@@ -43,7 +45,9 @@ const PromocionesView = () => {
    
     toast.success('Operación exitosa', { position: toast.POSITION.TOP_CENTER });
   };
-
+  const isNumeric = (value) => {
+    return /^\d+$/.test(value);
+  };
   const handleShow = () => setShowCreateModal(true);
 
   const url = 'http://localhost:4000/api/promociones';
@@ -60,9 +64,15 @@ const PromocionesView = () => {
 
   // ... (Previous code remains unchanged)
 
-  const handleDelete = async (promocionId) => {
+  const handleDelete = (promocionId) => {
+    const selected = promociones.find((promocion) => promocion._id === promocionId);
+    setSelectedPromocion(selected);
+    setShowDeleteConfirmationModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
     try {
-      const response = await fetch(`${url}/${promocionId}`, {
+      const response = await fetch(`${url}/${selectedPromocion._id}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -70,14 +80,22 @@ const PromocionesView = () => {
       });
 
       if (response.ok) {
-        console.log(`Promoción con ID ${promocionId} eliminada correctamente`);
+        console.log(`Promoción con ID ${selectedPromocion._id} eliminada correctamente`);
         showData();
+        handleNotificacion(); // You may want to notify the user of successful deletion
       } else {
-        console.error(`Error al intentar eliminar la promoción con ID ${promocionId}`);
+        console.error(`Error al intentar eliminar la promoción con ID ${selectedPromocion._id}`);
       }
     } catch (error) {
       console.error('Error:', error);
     }
+
+    handleCloseDeleteConfirmationModal();
+  };
+
+  const handleCloseDeleteConfirmationModal = () => {
+    setShowDeleteConfirmationModal(false);
+    setSelectedPromocion(null);
   };
 
   const handleClear = () => {
@@ -169,13 +187,13 @@ const PromocionesView = () => {
     },
     {
       name: 'FECHA INICIO',
-      selector: (row) => row.fecha_inicio,
+      selector: (row) => format(new Date(row.fecha_inicio), 'dd/MM/yyyy'),
       sortable: true,
       center: true,
     },
     {
       name: 'FECHA FINAL',
-      selector: (row) => row.fecha_final,
+      selector: (row) => format(new Date(row.fecha_final), 'dd/MM/yyyy'),
       sortable: true,
       center: true,
     },
@@ -372,20 +390,23 @@ const PromocionesView = () => {
                 }
               />
             </Form.Group>
+
             <Form.Group controlId="formDescuento">
-              <Form.Label>Descuento (%)</Form.Label>
-              <Form.Control
-                type="number"
-                placeholder="Ingrese el descuento"
-                value={selectedPromocion ? selectedPromocion.descuento : ''}
-                onChange={(e) =>
-                  setSelectedPromocion({
-                    ...selectedPromocion,
-                    descuento: e.target.value,
-                  })
-                }
-              />
-            </Form.Group>
+  <Form.Label>Descuento (%)</Form.Label>
+  <Form.Control
+    type="number"
+    placeholder="Ingrese el descuento"
+    value={newPromocion.descuento}
+    onChange={(e) => {
+      const inputValue = e.target.value;
+      if (isNumeric(inputValue) || inputValue === '') {
+        setNewPromocion({ ...newPromocion, descuento: inputValue });
+      }
+    }}
+  />
+</Form.Group>
+
+
             <Form.Group controlId="formDescripcion">
               <Form.Label>Descripción</Form.Label>
               <Form.Control
@@ -418,20 +439,22 @@ const PromocionesView = () => {
                 <option>Inactivo</option>
               </Form.Control>
             </Form.Group>
-            <Form.Group controlId="formCantidadArticulos">
-              <Form.Label>Cantidad de Artículos</Form.Label>
-              <Form.Control
-                type="number"
-                placeholder="Ingrese la cantidad de artículos"
-                value={selectedPromocion ? selectedPromocion.cantidad_Articulos : ''}
-                onChange={(e) =>
-                  setSelectedPromocion({
-                    ...selectedPromocion,
-                    cantidad_Articulos: e.target.value,
-                  })
-                }
-              />
-            </Form.Group>
+
+           <Form.Group controlId="formCantidadArticulos">
+  <Form.Label>Cantidad de Artículos</Form.Label>
+  <Form.Control
+    type="number"
+    placeholder="Ingrese la cantidad de artículos"
+    value={newPromocion.cantidad_Articulos}
+    onChange={(e) => {
+      const inputValue = e.target.value;
+      if (isNumeric(inputValue) || inputValue === '') {
+        setNewPromocion({ ...newPromocion, cantidad_Articulos: inputValue });
+      }
+    }}
+  />
+</Form.Group>
+
           </Form>
         </Modal.Body>
         <Styles.ModalFooter>
@@ -443,6 +466,24 @@ const PromocionesView = () => {
           </Button>
         </Styles.ModalFooter>
       </Styles.StyledModal>
+
+      <Styles.StyledModal show={showDeleteConfirmationModal} onHide={handleCloseDeleteConfirmationModal}>
+        <Modal.Header closeButton>
+          <Modal.Title>Confirmar Eliminación</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p>¿Está seguro de que desea eliminar la promoción?</p>
+        </Modal.Body>
+        <Styles.ModalFooter>
+          <Button className="otros" variant="secondary" onClick={handleCloseDeleteConfirmationModal}>
+            Cancelar
+          </Button>
+          <Button className="otros" variant="danger" onClick={handleConfirmDelete}>
+            Eliminar
+          </Button>
+        </Styles.ModalFooter>
+      </Styles.StyledModal>
+
       <Footer />
       <ToastContainer />
     </Styles.AppContainer>

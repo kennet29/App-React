@@ -14,10 +14,12 @@ const ArticulosView = () => {
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [filterText, setFilterText] = useState('');
   const [resetPaginationToggle, setResetPaginationToggle] = useState(false);
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [deleteItemId, setDeleteItemId] = useState(null);
   const [newArticulo, setNewArticulo] = useState({
     nombre: '',
     descripcion: '',
-    estado: true,
+    estado: '',
     categoria: '',
   });
   const [selectedArticulo, setSelectedArticulo] = useState(null);
@@ -87,9 +89,14 @@ const ArticulosView = () => {
     }
   };
 
-  const handleDelete = async (articuloId) => {
+  const handleDelete = (articuloId) => {
+    setDeleteItemId(articuloId);
+    setShowDeleteConfirmation(true);
+  };
+
+  const handleDeleteConfirmed = async () => {
     try {
-      const deleteUrl = `http://localhost:4000/api/articulos/${articuloId}`;
+      const deleteUrl = `http://localhost:4000/api/articulos/${deleteItemId}`;
       const response = await fetch(deleteUrl, {
         method: 'DELETE',
         headers: {
@@ -98,14 +105,24 @@ const ArticulosView = () => {
       });
 
       if (response.ok) {
-        console.log(`Articulo con ID ${articuloId} borrado exitosamente.`);
+        console.log(`Articulo con ID ${deleteItemId} borrado exitosamente.`);
         showArticulos();
+        toast.success('Artículo eliminado correctamente', { position: toast.POSITION.TOP_CENTER });
       } else {
-        console.error(`Error al borrar el articulo con ID ${articuloId}.`);
+        console.error(`Error al borrar el articulo con ID ${deleteItemId}.`);
+        toast.error('Error al intentar eliminar el artículo', { position: toast.POSITION.TOP_CENTER });
       }
     } catch (error) {
       console.error('Error al realizar la solicitud DELETE:', error);
+      toast.error('Error al intentar eliminar el artículo', { position: toast.POSITION.TOP_CENTER });
+    } finally {
+      closeDeleteConfirmationModal();
     }
+  };
+
+  const closeDeleteConfirmationModal = () => {
+    setShowDeleteConfirmation(false);
+    setDeleteItemId(null);
   };
 
   const handleClear = () => {
@@ -148,6 +165,7 @@ const ArticulosView = () => {
         handleNotificacion();
         showArticulos();
       } else {
+        toast.error('Por favor complete los campos',{ position: toast.POSITION.TOP_CENTER });
         console.error('Error al intentar crear el articulo.');
       }
     } catch (error) {
@@ -171,11 +189,14 @@ const ArticulosView = () => {
       if (response.ok) {
         console.log('Articulo actualizado exitosamente.');
         showArticulos();
+        toast.success('Artículo actualizado correctamente', { position: toast.POSITION.TOP_CENTER });
       } else {
         console.error('Error al intentar actualizar el articulo.');
+        toast.error('Error al intentar actualizar el artículo', { position: toast.POSITION.TOP_CENTER });
       }
     } catch (error) {
       console.error('Error en la solicitud de actualización:', error);
+      toast.error('Error en la solicitud de actualización', { position: toast.POSITION.TOP_CENTER });
     }
 
     handleClose();
@@ -275,6 +296,7 @@ const ArticulosView = () => {
                 value={newArticulo.estado}
                 onChange={(e) => setNewArticulo({ ...newArticulo, estado: e.target.value })}
               >
+                <option value="">Selecciona un Estado</option>
                 <option value={true}>Activo</option>
                 <option value={false}>Inactivo</option>
               </Form.Control>
@@ -387,6 +409,26 @@ const ArticulosView = () => {
          
         </Styles.ModalFooter>
       </Styles.StyledModal>
+      <Styles.AppContainer>
+   
+      <Styles.StyledModal show={showDeleteConfirmation} onHide={closeDeleteConfirmationModal}>
+        <Modal.Header closeButton>
+          <Modal.Title>Confirmar Eliminación</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p>¿Estás seguro de que deseas eliminar este artículo?</p>
+        </Modal.Body>
+        <Styles.ModalFooter>
+          <Button style={{ width: '100px', height: '50px' }} variant="danger" onClick={handleDeleteConfirmed}>
+            Sí
+          </Button>
+          <Button style={{ width: '100px', height: '50px' }} variant="secondary" onClick={closeDeleteConfirmationModal}>
+            Cancelar
+          </Button>
+        </Styles.ModalFooter>
+      </Styles.StyledModal>
+   
+    </Styles.AppContainer>
       <Footer />
       <ToastContainer />
     </Styles.AppContainer>

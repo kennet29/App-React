@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Form, Button, Modal } from 'react-bootstrap';
 import * as Styles from '../css/styles_colores';
 import Footer from '../component/footer/footer';
-import { FaTrash, FaEdit } from 'react-icons/fa';
+import {FaEdit } from 'react-icons/fa';
 import Navbar from '../component/Navbar';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -62,14 +62,14 @@ const HistorialIngresosView = () => {
     setShowUpdateModal(true);
   };
 
-  const url = 'http://localhost:4000/api/ingresos';
+
 
   const showData = async () => {
     try {
       const response = await fetch('http://localhost:4000/api/ingresos');
       const data = await response.json();
 
-      // Mapear los datos y reemplazar el ID del proveedor con el nombre
+    
       const ingresosWithProveedorNames = await Promise.all(
         data.map(async (ingreso) => {
           const nombreProveedor = await getNameById(ingreso.id_proveedor);
@@ -92,26 +92,6 @@ const HistorialIngresosView = () => {
       item.id_proveedor && item.id_proveedor.toLowerCase().includes(filterText.toLowerCase())
   );
 
-  const handleDelete = async (ingresoId) => {
-    try {
-      const deleteUrl = `http://localhost:4000/api/ingresos/${ingresoId}`;
-      const response = await fetch(deleteUrl, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (response.ok) {
-        console.log(`Ingreso con ID ${ingresoId} borrado exitosamente.`);
-        showData();
-      } else {
-        console.error(`Error al borrar el ingreso con ID ${ingresoId}.`);
-      }
-    } catch (error) {
-      console.error('Error al realizar la solicitud DELETE:', error);
-    }
-  };
 
   const columns = [
  
@@ -168,9 +148,6 @@ const HistorialIngresosView = () => {
         <div>
           <Styles.ActionButton onClick={() => handleUpdate(row._id)} update>
             <FaEdit />
-          </Styles.ActionButton>
-          <Styles.ActionButton onClick={() => handleDelete(row._id)}>
-            <FaTrash />
           </Styles.ActionButton>
         </div>
       ),
@@ -247,10 +224,7 @@ const HistorialIngresosView = () => {
   return (
     <Styles.AppContainer>
       <Navbar />
-      <Styles.CreateButton variant="primary" onClick={handleShow}>
-        Crear
-      </Styles.CreateButton>
-
+     
       <Styles.StyledDataTable
         columns={columns}
         data={ingresos}
@@ -261,86 +235,7 @@ const HistorialIngresosView = () => {
         persistTableHead
       />
 
-      <Styles.StyledModal show={showCreateModal} onHide={handleClose}>
-        <Modal.Header closeButton>
-          <Modal.Title>Crear Ingreso</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Form>
-            <Form.Group controlId="formIdUsuario">
-              <Form.Label>ID Usuario</Form.Label>
-              <Form.Control
-                type="text"
-                placeholder="Ingrese el ID Usuario"
-                value={newIngreso.id_usuario}
-                onChange={(e) => setNewIngreso({ ...newIngreso, id_usuario: e.target.value })}
-              />
-            </Form.Group>
-            <Form.Group controlId="formIdProveedor">
-              <Form.Label>ID Proveedor</Form.Label>
-              <Form.Control
-                type="text"
-                placeholder="Ingrese el ID Proveedor"
-                value={newIngreso.id_proveedor}
-                onChange={(e) => setNewIngreso({ ...newIngreso, id_proveedor: e.target.value })}
-              />
-            </Form.Group>
-            <Form.Group controlId="formFecha">
-              <Form.Label>Fecha</Form.Label>
-              <Form.Control
-                type="text"
-                placeholder="Ingrese la fecha"
-                value={newIngreso.fecha}
-                onChange={(e) => setNewIngreso({ ...newIngreso, fecha: e.target.value })}
-              />
-            </Form.Group>
-            <Form.Group controlId="formIVA">
-              <Form.Label>IVA</Form.Label>
-              <Form.Control
-                type="number"
-                placeholder="Ingrese el IVA"
-                value={newIngreso.iva}
-                onChange={(e) => setNewIngreso({ ...newIngreso, iva: e.target.value })}
-              />
-            </Form.Group>
-            <Form.Group controlId="formDescuento">
-              <Form.Label>Descuento</Form.Label>
-              <Form.Control
-                type="number"
-                placeholder="Ingrese el descuento"
-                value={newIngreso.descuento}
-                onChange={(e) => setNewIngreso({ ...newIngreso, descuento: e.target.value })}
-              />
-            </Form.Group>
-            <Form.Group controlId="formSubtotal">
-              <Form.Label>Subtotal</Form.Label>
-              <Form.Control
-                type="number"
-                placeholder="Ingrese el subtotal"
-                value={newIngreso.subtotal}
-                onChange={(e) => setNewIngreso({ ...newIngreso, subtotal: e.target.value })}
-              />
-            </Form.Group>
-            <Form.Group controlId="formTotal">
-              <Form.Label>Total</Form.Label>
-              <Form.Control
-                type="number"
-                placeholder="Ingrese el total"
-                value={newIngreso.total}
-                onChange={(e) => setNewIngreso({ ...newIngreso, total: e.target.value })}
-              />
-            </Form.Group>
-          </Form>
-        </Modal.Body>
-        <Styles.ModalFooter>
-          <Button className="otros" variant="primary" onClick={handleCreate}>
-            Guardar
-          </Button>
-          <Button className="otros" variant="secondary" onClick={handleClose}>
-            Cerrar
-          </Button>
-        </Styles.ModalFooter>
-      </Styles.StyledModal>
+      
 
       <Styles.StyledModal show={showUpdateModal} onHide={handleClose}>
         <Modal.Header closeButton>
@@ -348,20 +243,7 @@ const HistorialIngresosView = () => {
         </Modal.Header>
         <Modal.Body>
           <Form>
-            <Form.Group controlId="formIdUsuario">
-              <Form.Label>ID Usuario</Form.Label>
-              <Form.Control
-                type="text"
-                placeholder="Ingrese el ID Usuario"
-                value={selectedIngreso ? selectedIngreso.id_usuario : ''}
-                onChange={(e) =>
-                  setSelectedIngreso({
-                    ...selectedIngreso,
-                    id_usuario: e.target.value,
-                  })
-                }
-              />
-            </Form.Group>
+            
             <Form.Group controlId="formIdProveedor">
               <Form.Label>ID Proveedor</Form.Label>
               <Form.Control

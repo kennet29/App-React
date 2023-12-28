@@ -1,16 +1,21 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Form, Button, Modal, ToastContainer } from 'react-bootstrap';
+import { Form, Button, Modal } from 'react-bootstrap';
 import * as Styles from '../css/styles_colores';
 import Footer from '../component/footer/footer';
 import { FaTrash, FaEdit } from 'react-icons/fa';
 import Navbar from '../component/Navbar';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const ProveedoresView = () => {
   const [proveedores, setProveedores] = useState([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [filterText, setFilterText] = useState('');
+  const [showConfirmationModal, setShowConfirmationModal] = useState(false);
+  
   const [resetPaginationToggle, setResetPaginationToggle] = useState(false);
+  const [selectedProveedorId, setSelectedProveedorId] = useState(null);
   const [newProveedor, setNewProveedor] = useState({
     nombre: '',
     direccion: '',
@@ -49,32 +54,35 @@ const ProveedoresView = () => {
     }
   };
 
-  const handleDelete = async (proveedorId) => {
+  const handleDelete = (proveedorId) => {
+    setSelectedProveedorId(proveedorId); // Assuming you have a state for selected provider ID
+    setShowConfirmationModal(true);
+  };
+  
+  const handleConfirmDelete = async () => {
     try {
-      const response = await fetch(`${url}/${proveedorId}`, {
+      const response = await fetch(`${url}/${selectedProveedorId}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
         },
       });
-
+  
       if (response.ok) {
-        console.log(`Proveedor con ID ${proveedorId} eliminado correctamente`);
-        showData();
+        toast.success('Proveedor Eliminado correctamente', { position: toast.POSITION.TOP_CENTER });
+        showData(); 
       } else {
-        console.error(`Error al intentar eliminar el proveedor con ID ${proveedorId}`);
+        toast.error('Error Proveedor no encontrado', { position: toast.POSITION.TOP_CENTER });
+        console.error(`Error al intentar eliminar el proveedor con ID ${selectedProveedorId}`);
       }
     } catch (error) {
       console.error('Error:', error);
     }
+  
+    setShowConfirmationModal(false);
   };
+  
 
-  const handleClear = () => {
-    if (filterText) {
-      setResetPaginationToggle(!resetPaginationToggle);
-      setFilterText('');
-    }
-  };
 
   const filteredItems = proveedores.filter(
     (item) => item.nombre && item.nombre.toLowerCase().includes(filterText.toLowerCase())
@@ -104,9 +112,10 @@ const ProveedoresView = () => {
       });
 
       if (response.ok) {
-        console.log('Proveedor creado exitosamente.');
+        toast.success('Proveedor creado correctamente', { position: toast.POSITION.TOP_CENTER });
         showData();
       } else {
+        toast.error('Complete todos los campos', { position: toast.POSITION.TOP_CENTER });
         console.error('Error al intentar crear el proveedor.');
       }
     } catch (error) {
@@ -133,9 +142,11 @@ const ProveedoresView = () => {
       });
 
       if (response.ok) {
+        toast.success('Proveedor Editado correctamente', { position: toast.POSITION.TOP_CENTER });
         console.log('Proveedor actualizado exitosamente.');
         showData();
       } else {
+        toast.error('Complete todos los campos.', { position: toast.POSITION.TOP_CENTER });
         console.error('Error al intentar actualizar el proveedor.');
       }
     } catch (error) {
@@ -149,6 +160,7 @@ const ProveedoresView = () => {
     showData();
   }, []);
 
+  
   const columns = [
     {
       name: 'NOMBRE',
@@ -405,6 +417,24 @@ const ProveedoresView = () => {
         </Styles.ModalFooter>
       </Styles.StyledModal>
       <Footer />
+      <Modal show={showConfirmationModal} onHide={() => setShowConfirmationModal(false)}>
+  <Modal.Header style={{color:'white',backgroundColor:'#4a4a4a'}} closeButton>
+    <Modal.Title>Confirmar Eliminación</Modal.Title>
+  </Modal.Header>
+  <Modal.Body style={{color:'white',backgroundColor:'#4a4a4a'}} >
+    ¿Está seguro de que desea eliminar este proveedor?
+  </Modal.Body>
+  <Modal.Footer style={{color:'white',backgroundColor:'#4a4a4a'}} >
+    <Button style={{ width: '100px', height: '50px' }} variant="danger" onClick={() => handleConfirmDelete()}>
+      Si
+    </Button>
+    <Button style={{ width: '100px', height: '50px' }} variant="secondary" onClick={() => setShowConfirmationModal(false)}>
+      Cancelar
+    </Button>
+  </Modal.Footer>
+</Modal>
+
+
       <ToastContainer/>
     </Styles.AppContainer>
   );

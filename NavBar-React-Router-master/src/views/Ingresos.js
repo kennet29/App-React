@@ -382,14 +382,10 @@ const mapEstiloIdToNombre = (id) => {
             })),
             total: subTotalTotal - descuentosTotal + ivaTotal,
         };
-
         console.log('Datos de los artículos a enviar:', articulosData);
-
         const responseArticulos = await axios.post('http://localhost:4000/api/detalleingreso', articulosData);
-
         console.log('Artículos facturados correctamente:', responseArticulos);
 
-        // Tercera solicitud POST para crear el registro de stock
         for (const articulo of articulosIngresados) {
             const stockData = {
                 Id_articulo: articulo.idArticulo,
@@ -402,7 +398,6 @@ const mapEstiloIdToNombre = (id) => {
                 Id_diseño: articulo.idDiseño,
                 Descuento: 10,
                 Descuento_maximo: 20,
-              
                 Precio_prov: parseFloat(articulo.precioprov),
                 Precio_venta: parseFloat(((articulo.precioprov * (1 - articulo.descuento / 100)) + parseFloat(calculateIVA(articulo.cantidad, articulo.precioprov, articulo.descuento))).toFixed(2)),
                 Estado: true,
@@ -413,11 +408,8 @@ const mapEstiloIdToNombre = (id) => {
                 Id_bodega: articulo.idBodega || null,
                 Id_promocion: articulo.idPromocion || null,
             };
-
             console.log('Datos del stock a enviar:', stockData);
-
             const responseStock = await axios.post('http://localhost:4000/api/stock', stockData);
-
             console.log('Stock creado correctamente:', responseStock);
         }
 

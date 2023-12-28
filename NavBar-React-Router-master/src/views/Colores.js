@@ -3,7 +3,7 @@ import { Form, Button, Modal } from 'react-bootstrap';
 import * as Styles from '../css/styles_colores';
 import Footer from '../component/footer/footer';
 import { FaTrash,FaEdit } from 'react-icons/fa';
-import Navbar from '../component/Navbar';
+import MyNavbar from '../component/Navbar';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -12,6 +12,8 @@ const ColoresView = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [filterText, setFilterText] = useState('');
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteColorId, setDeleteColorId] = useState(null);
   const [resetPaginationToggle, setResetPaginationToggle] = useState(false);
   const [newColor, setNewColor] = useState({
     color: '',
@@ -56,28 +58,37 @@ const ColoresView = () => {
     }
   };
 
-  const handleDelete = async (colorId) => {
+  const handleDelete = (colorId) => {
+    setDeleteColorId(colorId);
+    setShowDeleteModal(true);
+  };
+
+  const handleDeleteConfirm = async () => {
     try {
-      const deleteUrl = `http://localhost:4000/api/colores/${colorId}`;
+      const deleteUrl = `http://localhost:4000/api/colores/${deleteColorId}`;
       const response = await fetch(deleteUrl, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
-        
         },
       });
 
       if (response.ok) {
-        console.log(`Color con ID ${colorId} borrado exitosamente.`);
-        // Update the list of colors after deletion
+        console.log(`Color con ID ${deleteColorId} borrado exitosamente.`);
+        toast.success('Color Eliminado', { position: toast.POSITION.TOP_CENTER });
         showData();
       } else {
-        console.error(`Error al borrar el color con ID ${colorId}.`);
+        toast.error('Error al borrar el Color', { position: toast.POSITION.TOP_CENTER });
+        console.error(`Error al borrar el color con ID ${deleteColorId}.`);
       }
     } catch (error) {
       console.error('Error al realizar la solicitud DELETE:', error);
+    } finally {
+      // Close the delete confirmation modal
+      setShowDeleteModal(false);
     }
   };
+
 
   const handleClear = () => {
     if (filterText) {
@@ -85,6 +96,8 @@ const ColoresView = () => {
       setFilterText('');
     }
   };
+
+
 
   const filteredItems = colors.filter(
     (item) =>
@@ -116,10 +129,12 @@ const ColoresView = () => {
       });
 
       if (response.ok) {
+        toast.error('Color creado exitosamente.', { position: toast.POSITION.TOP_CENTER });
         console.log('Color creado exitosamente.');
         handleNotificacion();
         showData();
       } else {
+        toast.error('Por favor complete todos los campos', { position: toast.POSITION.TOP_CENTER });
         console.error('Error al intentar crear el color.');
       }
     } catch (error) {
@@ -141,9 +156,11 @@ const ColoresView = () => {
       });
 
       if (response.ok) {
+        toast.success('Por favor complete todos los campos', { position: toast.POSITION.TOP_CENTER });
         console.log('Color actualizado exitosamente.');
         showData();
       } else {
+        toast.error('Por favor complete todos los campos', { position: toast.POSITION.TOP_CENTER });
         console.error('Error al intentar actualizar el color.');
       }
     } catch (error) {
@@ -195,7 +212,7 @@ const ColoresView = () => {
   return (
     
     <Styles.AppContainer>
-     <Navbar />
+     <MyNavbar />
       <Styles.CreateButton variant="primary" onClick={handleShow}>
         Crear
       </Styles.CreateButton>
@@ -225,15 +242,20 @@ const ColoresView = () => {
                 onChange={(e) => setNewColor({ ...newColor, color: e.target.value })}
               />
             </Form.Group>
+
+
             <Form.Group controlId="formEstado">
-              <Form.Label>Estado</Form.Label>
-              <Form.Control
-                type="text"
-                placeholder="Ingrese el estado"
-                value={newColor.estado}
-                onChange={(e) => setNewColor({ ...newColor, estado: e.target.value })}
-              />
-            </Form.Group>
+  <Form.Label>Estado</Form.Label>
+  <Form.Control
+    as="select"
+    value={newColor.estado}
+    onChange={(e) => setNewColor({ ...newColor, estado: e.target.value })}
+  >
+    <option value="">Seleccionar estado</option>
+    <option value="true">Activo</option>
+    <option value="false">Inactivo</option>
+  </Form.Control>
+</Form.Group>
             <Form.Group controlId="formDescripcion">
               <Form.Label>Descripción</Form.Label>
               <Form.Control
@@ -276,20 +298,23 @@ const ColoresView = () => {
                 }
               />
             </Form.Group>
+
+
             <Form.Group controlId="formEstado">
-              <Form.Label>Estado</Form.Label>
-              <Form.Control
-                type="text"
-                placeholder="Ingrese el estado"
-                value={selectedColor ? selectedColor.estado : ''}
-                onChange={(e) =>
-                  setSelectedColor({
-                    ...selectedColor,
-                    estado: e.target.value,
-                  })
-                }
-              />
-            </Form.Group>
+  <Form.Label>Estado</Form.Label>
+  <Form.Control
+    as="select"
+    value={selectedColor ? selectedColor.estado.toString() : ''}
+    onChange={(e) => setSelectedColor({ ...selectedColor, estado: e.target.value })}
+  >
+    <option value="">Seleccionar estado</option>
+    <option value="true">Activo</option>
+    <option value="false">Inactivo</option>
+  </Form.Control>
+</Form.Group>
+
+
+
             <Form.Group controlId="formDescripcion">
               <Form.Label>Descripción</Form.Label>
               <Form.Control
@@ -316,6 +341,23 @@ const ColoresView = () => {
          
         </Styles.ModalFooter>
       </Styles.StyledModal>
+
+      <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
+        <Modal.Header style={{backgroundColor:'#4a4a4a',color:'white'}} closeButton>
+          <Modal.Title style={{textAlign:'center'}} >Confirmar Eliminación</Modal.Title>
+        </Modal.Header >
+        <Modal.Body style={{backgroundColor:'#4a4a4a',color:'white'}}>
+          ¿Estás seguro de que quieres eliminar este color?
+        </Modal.Body>
+        <Styles.ModalFooter style={{backgroundColor:'#4a4a4a',color:'white'}} > 
+          <Button className="otros" variant="danger" onClick={handleDeleteConfirm}>
+            SI
+          </Button>
+          <Button className="otros" variant="secondary" onClick={() => setShowDeleteModal(false)}>
+            Cancelar
+          </Button>
+        </Styles.ModalFooter>
+      </Modal>
       <Footer />
       <ToastContainer />
     </Styles.AppContainer>

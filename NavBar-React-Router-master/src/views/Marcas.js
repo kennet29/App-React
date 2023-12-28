@@ -13,6 +13,7 @@ const MarcasView = () => {
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [filterText, setFilterText] = useState('');
   const [resetPaginationToggle, setResetPaginationToggle] = useState(false);
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [newMarca, setNewMarca] = useState({
     marca: '',
     estado: '',
@@ -31,14 +32,7 @@ const MarcasView = () => {
     setSelectedMarca(null);
   };
 
-  const handleNotificacion = () => {
-   
-    toast.success('Operación exitosa', { position: toast.POSITION.TOP_CENTER });
-  };
-
-
   const handleShow = () => setShowCreateModal(true);
-
   const handleUpdate = (marcaId) => {
     const selected = marcas.find((marca) => marca._id === marcaId);
     setSelectedMarca(selected);
@@ -57,29 +51,33 @@ const MarcasView = () => {
     }
   };
 
-  const handleDelete = async (marcaId) => {
+  const handleDelete = (marcaId) => {
+    const selected = marcas.find((marca) => marca._id === marcaId);
+    setSelectedMarca(selected);
+    setShowDeleteConfirmation(true);
+  };
+
+  
+  const handleDeleteConfirmed = async (marcaId) => {
     try {
       const response = await fetch(`${url}/${marcaId}`, {
         method: 'DELETE',
       });
-
+  
       if (response.ok) {
+        toast.success('Material eliminado exitosamente', { position: toast.POSITION.TOP_CENTER });
         console.log(`Marca con ID ${marcaId} eliminada correctamente`);
-        showData(); // Update the state or trigger a re-fetch
+        showData(); 
       } else {
+        toast.error('Error en el borrado', { position: toast.POSITION.TOP_CENTER });
         console.error(`Error al eliminar la marca con ID ${marcaId}`);
       }
     } catch (error) {
       console.error('Error deleting marca:', error);
     }
   };
+  
 
-  const handleClear = () => {
-    if (filterText) {
-      setResetPaginationToggle(!resetPaginationToggle);
-      setFilterText('');
-    }
-  };
 
   const filteredItems = marcas.filter(
     (item) => item.marca && item.marca.toLowerCase().includes(filterText.toLowerCase())
@@ -98,72 +96,91 @@ const MarcasView = () => {
     );
   }, [filterText, resetPaginationToggle]);
 
-  const handleCreate = async () => {
-    try {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(newMarca),
-      });
+ const handleCreate = async () => {
+  try {
+    console.log('JSON que se envía en la creación:', JSON.stringify(newMarca)); 
+    const newMarcaToSend = {
+      ...newMarca,
+      estado: newMarca.estado === 'Activo',
+    };
 
-      if (response.ok) {
-        console.log('Marca creada exitosamente.');
-        handleNotificacion();
-        showData();
-      } else {
-        console.error('Error al intentar crear la marca.');
-      }
-    } catch (error) {
-      console.error('Error en la solicitud de creación:', error);
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(newMarcaToSend),
+    });
+
+    if (response.ok) {
+      toast.success('Marca creada exitosamente', { position: toast.POSITION.TOP_CENTER });
+      console.log('Marca creada exitosamente.');
+     
+      showData();
+    } else {
+      toast.error('Error en la creacion', { position: toast.POSITION.TOP_CENTER });
+      console.error('Error al intentar crear la marca.');
     }
+  } catch (error) {
+    console.error('Error en la solicitud de creación:', error);
+  }
 
-    handleClose();
-  };
+  handleClose();
+};
 
-  const handleUpdateSubmit = async () => {
-    try {
-      const response = await fetch(`${url}/${selectedMarca._id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(selectedMarca),
-      });
 
-      if (response.ok) {
-        console.log('Marca actualizada exitosamente.');
-        showData();
-      } else {
-        console.error('Error al intentar actualizar la marca.');
-      }
-    } catch (error) {
-      console.error('Error en la solicitud de actualización:', error);
+const handleUpdateSubmit = async () => {
+  try {
+    console.log('JSON que se envía en la actualización:', JSON.stringify(selectedMarca));
+    const selectedMarcaToSend = {
+      ...selectedMarca,
+      estado: selectedMarca.estado === 'Activo',
+    };
+
+    const response = await fetch(`${url}/${selectedMarca._id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(selectedMarcaToSend),
+    });
+
+    if (response.ok) {
+      toast.success('Marca actualizado exitosamente', { position: toast.POSITION.TOP_CENTER });
+      console.log('Marca actualizada exitosamente.');
+      showData();
+    } else {
+      toast.error('Error en la actualizacion', { position: toast.POSITION.TOP_CENTER });
+      console.error('Error al intentar actualizar la marca.');
     }
+  } catch (error) {
+    console.error('Error en la solicitud de actualización:', error);
+  }
 
-    handleClose();
-  };
+  handleClose();
+};
+
 
   useEffect(() => {
     showData();
   }, []);
 
-  const columns = [
+  const columns  = [
+  
     {
-      name: 'MARCA',
+      name: 'Marca',
       selector: (row) => row.marca,
       sortable: true,
       center: true,
     },
     {
-      name: 'ESTADO',
+      name: 'Estado',
       selector: (row) => (row.estado ? 'Activo' : 'Inactivo'),
       sortable: true,
       center: true,
     },
     {
-      name: 'DESCRIPCIÓN',
+      name: 'Descripcion',
       selector: (row) => row.descripcion,
       sortable: true,
       center: true,
@@ -176,8 +193,8 @@ const MarcasView = () => {
           <FaEdit /> 
         </Styles.ActionButton>
         <Styles.ActionButton onClick={() => handleDelete(row._id)}>
-          <FaTrash /> 
-        </Styles.ActionButton>
+  <FaTrash /> 
+</Styles.ActionButton>
       </div>
       ),
       center: true,
@@ -216,15 +233,23 @@ const MarcasView = () => {
                 onChange={(e) => setNewMarca({ ...newMarca, marca: e.target.value })}
               />
             </Form.Group>
+
+
             <Form.Group controlId="formEstado">
-              <Form.Label>Estado</Form.Label>
-              <Form.Control
-                type="text"
-                placeholder="Ingrese el estado"
-                value={newMarca.estado}
-                onChange={(e) => setNewMarca({ ...newMarca, estado: e.target.value })}
-              />
-            </Form.Group>
+  <Form.Label>Estado</Form.Label>
+  <Form.Control
+    as="select"
+    value={newMarca.estado}
+    onChange={(e) => setNewMarca({ ...newMarca, estado: e.target.value })}
+  >
+    <option value="">Seleccionar Estado</option>
+    <option value="Activo">Activo</option>
+    <option value="Inactivo">Inactivo</option>
+  </Form.Control>
+</Form.Group>
+
+
+
             <Form.Group controlId="formDescripcion">
               <Form.Label>Descripción</Form.Label>
               <Form.Control
@@ -267,20 +292,28 @@ const MarcasView = () => {
                 }
               />
             </Form.Group>
-            <Form.Group controlId="formEstado">
-              <Form.Label>Estado</Form.Label>
-              <Form.Control
-                type="text"
-                placeholder="Ingrese el estado"
-                value={selectedMarca ? selectedMarca.estado : ''}
-                onChange={(e) =>
-                  setSelectedMarca({
-                    ...selectedMarca,
-                    estado: e.target.value,
-                  })
-                }
-              />
-            </Form.Group>
+
+
+           <Form.Group controlId="formEstado">
+  <Form.Label>Estado</Form.Label>
+  <Form.Control
+    as="select"
+    value={selectedMarca ? selectedMarca.estado : ''}
+    onChange={(e) =>
+      setSelectedMarca({
+        ...selectedMarca,
+        estado: e.target.value,
+      })
+    }
+  >
+    <option value="">Seleccionar Estado</option>
+    <option value="Activo">Activo</option>
+    <option value="Inactivo">Inactivo</option>
+  </Form.Control>
+</Form.Group>
+
+
+
             <Form.Group controlId="formDescripcion">
               <Form.Label>Descripción</Form.Label>
               <Form.Control
@@ -307,6 +340,28 @@ const MarcasView = () => {
         
         </Styles.ModalFooter>
       </Styles.StyledModal>
+
+      <Modal  show={showDeleteConfirmation} onHide={() => setShowDeleteConfirmation(false)}>
+  <Modal.Header   closeButton  style={{backgroundColor:'#4a4a4a',color:'white'}}>
+    <Modal.Title>Confirmar Eliminación</Modal.Title>
+  </Modal.Header>
+  <Modal.Body style={{backgroundColor:'#4a4a4a',color:'white'}}>
+    ¿Estás seguro de que deseas eliminar esta marca?
+  </Modal.Body>
+  <Modal.Footer style={{backgroundColor:'#4a4a4a',color:'white'}}>
+    <Button variant="danger" style={{ width: '100px', height: '50px' }} onClick={() => {
+      handleDeleteConfirmed(selectedMarca._id);
+      setShowDeleteConfirmation(false);
+    }}>
+      Si
+    </Button>
+    <Button style={{ width: '100px', height: '50px' }} variant="secondary" onClick={() => setShowDeleteConfirmation(false)}>
+      Cancelar
+    </Button>
+  </Modal.Footer>
+</Modal>
+
+
       <Footer/> 
       <ToastContainer />
     </Styles.AppContainer>
