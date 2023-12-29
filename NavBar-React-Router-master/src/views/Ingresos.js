@@ -396,8 +396,8 @@ const mapEstiloIdToNombre = (id) => {
                 Id_estilo: articulo.idEstilo,
                 Id_material: articulo.idMaterial,
                 Id_diseño: articulo.idDiseño,
-                Descuento: 10,
-                Descuento_maximo: 20,
+                Descuento: articulo.descuento,
+                Descuento_maximo: articulo.descuento * 1.1,
                 Precio_prov: parseFloat(articulo.precioprov),
                 Precio_venta: parseFloat(((articulo.precioprov * (1 - articulo.descuento / 100)) + parseFloat(calculateIVA(articulo.cantidad, articulo.precioprov, articulo.descuento))).toFixed(2)),
                 Estado: true,
@@ -407,6 +407,7 @@ const mapEstiloIdToNombre = (id) => {
                 Cod_barra: 123456789,
                 Id_bodega: articulo.idBodega || null,
                 Id_promocion: articulo.idPromocion || null,
+                Existencias:articulo.cantidad,
             };
             console.log('Datos del stock a enviar:', stockData);
             const responseStock = await axios.post('http://localhost:4000/api/stock', stockData);

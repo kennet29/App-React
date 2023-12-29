@@ -13,6 +13,7 @@ const VentasView = () => {
   const [materiales, setMateriales] = useState([]);
   const [est, setEst] = useState([]);
   const [disenos, setDisenos] = useState([]);
+  const [articleData, setArticleData] = useState({});
   const [stockData, setStockData] = useState([]);
   const [showModal, setShowModal] = useState(false);
 
@@ -21,6 +22,25 @@ const VentasView = () => {
     console.log('Stock Data:', stockData);
     setShowModal(true);
   };
+
+  useEffect(() => {
+    const fetchArticleData = async () => {
+      try {
+        const response = await fetch('http://localhost:4000/api/articulos');
+        const data = await response.json();
+        const articleMap = {};
+        data.forEach((article) => {
+          articleMap[article._id] = article.categoria;
+        });
+        setArticleData(articleMap);
+      } catch (error) {
+        console.error('Error fetching article data:', error);
+      }
+    };
+
+    fetchArticleData();
+   
+  }, []);
 
   const handleCloseModal = () => setShowModal(false);
 
@@ -51,21 +71,25 @@ const VentasView = () => {
       console.error('Error fetching stock data:', error);
     }
   };
+  
 
   const columns = [
     
     { name: 'Articulo ID', selector: 'Id_articulo', sortable: true },
     { name: 'Color ID', selector: 'Id_color', sortable: true },
+    { name: 'Categoria ID', selector: 'Categoria_ID', sortable: true, 
+      cell: (row) => articleData[row.Id_articulo] || 'Not found'
+    },
     { name: 'Marca ID', selector: 'Id_marca', sortable: true },
     { name: 'Talla ID', selector: 'Id_talla', sortable: true },
     { name: 'Estilo ID', selector: 'Id_estilo', sortable: true },
     { name: 'Material ID', selector: 'Id_material', sortable: true },
     { name: 'Diseño ID', selector: 'Id_diseño', sortable: true },
     { name: 'Descuento', selector: 'Descuento', sortable: true },
+    { name: 'Existencias', selector:'Existencias', sortable:true },
     { name: 'Precio Venta', selector: 'Precio_venta', sortable: true },
     { name: 'Estado', selector: 'Estado', sortable: true, cell: row => (row.Estado ? 'Activo' : 'Inactivo') },
     {
-      
       name: 'Opciones',
       cell: (row) => (
         <Button style={{width:'40px',height:'40px'}} >
