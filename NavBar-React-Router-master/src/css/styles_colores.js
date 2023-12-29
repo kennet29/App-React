@@ -58,3 +58,22 @@ export const ModalFooter = styled(Modal.Footer)`
     height: 60px;  // Adjust the height as needed
   }
 `;
+
+
+export const PrintButton = styled.button`
+  background-color: ${(props) => (props.update ? '#FF8066' : '#FF8066')};
+  
+  color: #fff;
+  border: none;
+
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 18px;
+  margin: 4px 2px;
+  cursor: pointer;
+  
+  border-radius: 4px;
+  width: 40px;
+  height: 40px;
+`;

@@ -17,6 +17,7 @@ import { FcPaid } from "react-icons/fc";
 import { FcAlphabeticalSortingAz } from "react-icons/fc";
 import { FcList } from "react-icons/fc";
 import { FcCalendar } from "react-icons/fc";
+import { FaArrowRightToBracket } from "react-icons/fa6";
 
 import "./navbar.css";
 
@@ -36,11 +37,11 @@ const MyNavbar = () => {
       <Navbar.Collapse id="basic-navbar-nav" className={mobile ? "show" : ""}>
         <Nav className="mr-auto">
 
-        <Nav.Link>
+        <Nav.Link href="/index" to="/index" >
           Inicio
         </Nav.Link>
 
-          <Nav.Link href="#">Configuración</Nav.Link>
+          <Nav.Link  href="/configuracion" to="/configuracion" >Configuración</Nav.Link>
           <NavDropdown title="Ventas">
             <NavDropdown.Item > <FcCurrencyExchange style={{ fontSize: '30px' }}></FcCurrencyExchange>Realizar Venta</NavDropdown.Item>
             <NavDropdown.Item href="#"> <FcOvertime style={{ fontSize: '30px' }} />Historial</NavDropdown.Item>
@@ -130,7 +131,7 @@ const MyNavbar = () => {
 
       </Navbar.Collapse>
       <Nav>
-        <Nav.Link href="#" style={{ marginRight: '5px' }} className="ml-auto">Cerrar Sesión</Nav.Link>
+        <Nav.Link href="#" style={{ marginRight: '5px' }} className="ml-auto">   Cerrar Sesión  <FaArrowRightToBracket /></Nav.Link>
       </Nav>
     </Navbar>
   );

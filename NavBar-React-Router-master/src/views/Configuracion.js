@@ -6,6 +6,7 @@ import Footer from '../component/footer/footer';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
+
 class ConfigView extends Component {
   constructor(props) {
     super(props);
@@ -81,9 +82,10 @@ class ConfigView extends Component {
       .then(response => {
         console.log('Data updated successfully:', response.data);
         this.setState({ isEditing: false });
-        toast.success('Cambios guardados correctamente');
+        toast.success('Cambios guardados correctamente', { position: toast.POSITION.TOP_CENTER });
       })
       .catch(error => {
+        toast.error('Complete todos los campos', { position: toast.POSITION.TOP_CENTER });
         console.error('Error updating data:', error);
         toast.error('Error al guardar cambios');
       });
@@ -105,7 +107,7 @@ class ConfigView extends Component {
                 name="nombre_negocio"
                 value={this.state.isEditing ? this.state.nombre_negocio : ''}
                 className="config-input campos"
-                style={{textAlign:'center',fontSize:'20px'}}
+                style={{textAlign:'center',fontSize:'20px',borderRadius:'5px'}}
                 readOnly={!this.state.isEditing}
                 onChange={this.handleChange}
               />
@@ -117,19 +119,19 @@ class ConfigView extends Component {
                 name="direccion"
                 value={this.state.isEditing ? this.state.direccion : ''}
                 className="config-input campos"
-                style={{textAlign:'center',fontSize:'20px'}}
+                style={{textAlign:'center',fontSize:'20px',borderRadius:'5px'}}
                 readOnly={!this.state.isEditing}
                 onChange={this.handleChange}
               />
 
-              <label style={{fontSize:'25px',color:'white'}} className="campos" htmlFor="correo_electronico">Correo Electrónico</label>
+              <label style={{fontSize:'25px',color:'white',borderRadius:'5px'}} className="campos" htmlFor="correo_electronico">Correo Electrónico</label>
               <input
                 type="text"
                 id="correo_electronico"
                 name="correo_electronico"
                 value={this.state.isEditing ? this.state.correo_electronico : ''}
                 className="config-input campos"
-                style={{textAlign:'center',fontSize:'20px'}}
+                style={{textAlign:'center',fontSize:'20px',borderRadius:'5px'}}
                 readOnly={!this.state.isEditing}
                 onChange={this.handleChange}
               />
@@ -141,7 +143,7 @@ class ConfigView extends Component {
                 name="telefono_1"
                 value={this.state.isEditing ? this.state.telefono_1 : ''}
                 className="config-input campos"
-                style={{textAlign:'center',fontSize:'20px'}}
+                style={{textAlign:'center',fontSize:'20px',borderRadius:'5px'}}
                 readOnly={!this.state.isEditing}
                 onChange={this.handleChange}
               />
@@ -155,7 +157,7 @@ class ConfigView extends Component {
                 name="telefono_2"
                 value={this.state.isEditing ? this.state.telefono_2 : ''}
                 className="config-input campos"
-                style={{textAlign:'center',fontSize:'20px'}}
+                style={{textAlign:'center',fontSize:'20px',borderRadius:'5px'}}
                 readOnly={!this.state.isEditing}
                 onChange={this.handleChange}
               />
@@ -167,7 +169,7 @@ class ConfigView extends Component {
                 name="eslogan"
                 value={this.state.isEditing ? this.state.eslogan : ''}
                 className="config-input campos"
-                style={{textAlign:'center',fontSize:'20px'}}
+                style={{textAlign:'center',fontSize:'20px',borderRadius:'5px'}}
                 readOnly={!this.state.isEditing}
                 onChange={this.handleChange}
               />
@@ -180,7 +182,7 @@ class ConfigView extends Component {
                 value={this.state.isEditing ? this.state.tipo_de_cambio_dolar : ''}
                 className="config-input campos"
                 readOnly={!this.state.isEditing}
-                style={{textAlign:'center',fontSize:'20px'}}
+                style={{textAlign:'center',fontSize:'20px',borderRadius:'5px'}}
                 onChange={this.handleChange}
               />
             </div>

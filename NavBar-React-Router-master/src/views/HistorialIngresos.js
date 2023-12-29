@@ -6,6 +6,7 @@ import {FaEdit } from 'react-icons/fa';
 import Navbar from '../component/Navbar';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { FcPrint } from "react-icons/fc";
 
 const HistorialIngresosView = () => {
   const [ingresos, setIngresos] = useState([]);
@@ -136,11 +137,10 @@ const HistorialIngresosView = () => {
     },
     {
         
-            name: 'Total',
-            selector: (row) => row.total.toFixed(2),
-            sortable: true,
-            center: true,
-       
+      name: 'Total',
+      selector: (row) => row.total.toFixed(2),
+      sortable: true,
+      center: true,  
     },
     {
       name: 'Acciones',
@@ -149,6 +149,9 @@ const HistorialIngresosView = () => {
           <Styles.ActionButton onClick={() => handleUpdate(row._id)} update>
             <FaEdit />
           </Styles.ActionButton>
+          <Styles.PrintButton     update>
+          <FcPrint  />
+          </Styles.PrintButton>
         </div>
       ),
       center: true,
