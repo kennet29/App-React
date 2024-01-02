@@ -20,6 +20,8 @@ const VentasView = () => {
   const [newQuantity, setNewQuantity] = useState(''); 
   const [editItem, setEditItem] = useState(null);
   const [applyDiscount, setApplyDiscount] = useState(false);
+  const [promociones, setPromociones] = useState([]);
+
   
 
   const [nombresColores, setNombresColores] = useState([]);
@@ -46,6 +48,21 @@ const VentasView = () => {
 
     setTotalDescuento(descuentoTotal);
   }, [articulosSeleccionados]);
+
+useEffect(() => {
+  const fetchPromociones = async () => {
+    try {
+      const response = await axios.get('http://localhost:4000/api/promociones');
+      const promocionesData = response.data;
+      setPromociones(promocionesData);
+    } catch (error) {
+      console.error('Error fetching promociones:', error);
+    }
+  };
+
+  fetchPromociones();
+}, []);
+
 
 
   const isArticuloAlreadySelected = (nuevoArticulo) => {
@@ -234,6 +251,12 @@ const getArticuloNameById = (idArticulo) => {
   return nombresArticulos[idArticulo] || 'Desconocido';
 };
 
+const getPromocionNameById = (idPromocion) => {
+  const promocion = promociones.find((promo) => promo._id === idPromocion);
+  return promocion ? promocion.promocion : 'Sin Promo';
+};
+
+
 
   const handleEditModal = (row) => {
     setEditItem(row);
@@ -243,16 +266,17 @@ const getArticuloNameById = (idArticulo) => {
 
   
 
-  const calculateDiscount = (articulo) => {
-    // Assuming the discount percentage is available in the article object
-    const discountPercentage = articulo.Descuento || 0;
-  
-    // Calculate the discount amount
-    const discountAmount = (articulo.Existencias * articulo.Precio_venta * discountPercentage) / 100;
-  
-    // Return the formatted discount amount
-    return `$${discountAmount.toFixed(2)}`;
-  };
+ const calculateDiscount = (articulo) => {
+  // Assuming the discount percentage is available in the article object
+  const discountPercentage = applyDiscount ? (articulo.Descuento || 0) : 0;
+
+  // Calculate the discount amount
+  const discountAmount = (articulo.Existencias * articulo.Precio_venta * discountPercentage) / 100;
+
+  // Return the formatted discount amount
+  return `C$${discountAmount.toFixed(2)}`;
+};
+
 
   const calculateTotal = () => {
     let totalVenta = 0;
@@ -486,6 +510,9 @@ const getArticuloNameById = (idArticulo) => {
     {name:'Descuento %',selector:'Descuento',sortable:true},
 
     { name: 'Existencias', selector: 'Existencias', sortable: true },
+
+     { name: 'Promocion', selector: 'Id_promocion', sortable: true, cell: (row) => getPromocionNameById(row.Id_promocion) },
+
     {
       name: 'Opciones',
       cell: (row) => (
@@ -559,7 +586,7 @@ const getArticuloNameById = (idArticulo) => {
   </div>
   <div style={{ marginTop: '10px' }}>
     <h4>Total: ${calculateTotal()}</h4>
-    <h5>Descuento Total: ${totalDescuento.toFixed(2)}</h5>
+    <h5>Descuento Total: C${totalDescuento.toFixed(2)}</h5>
 
   </div>
 </div>
@@ -572,12 +599,12 @@ const getArticuloNameById = (idArticulo) => {
       <Footer />
 
       <Modal show={!!editItem} onHide={() => setEditItem(null)}>
-      <Modal.Header closeButton>
+      <Modal.Header style={{backgroundColor:'#4a4a4a',color:'white'}} closeButton>
         <Modal.Title>Editar Cantidad</Modal.Title>
-      </Modal.Header>
-      <Modal.Body>
-        <Form.Group>
-          <Form.Label>Cantidad:</Form.Label>
+      </Modal.Header  >
+      <Modal.Body style={{backgroundColor:'#4a4a4a',color:'white'}}>
+        <Form.Group >
+          <Form.Label >Cantidad:</Form.Label>
           <Form.Control
             type="number"
             value={editedQuantity}
@@ -585,7 +612,7 @@ const getArticuloNameById = (idArticulo) => {
           />
         </Form.Group>
       </Modal.Body>
-      <Modal.Footer>
+      <Modal.Footer style={{backgroundColor:'#4a4a4a',color:'white'}}>
       <Button style={{width:'100px',height:'50px'}}  variant="primary" onClick={handleSaveEdit}>
           Guardar
         </Button>
