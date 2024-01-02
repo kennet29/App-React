@@ -30,7 +30,7 @@ const estilos = {
       marginLeft:'3%',
       width:'95%',
       fontSize:'13px',
-      
+     
       backgroundColor: 'white',
       borderRadius: '5px',
      
@@ -82,7 +82,7 @@ const estilos = {
       color:'black',
       width: '50%',
       marginBottom:'10px',
-      border: '2px solid #333',  // Puedes personalizar el color y el grosor del borde
+       // Puedes personalizar el color y el grosor del borde
       padding: '5px',
       marginLeft:'10px',
       // Cambia el ancho del input según tus necesidades
@@ -104,15 +104,18 @@ const estilos = {
       marginLeft:'auto',
       marginRight:'auto',
       marginTop:'10px'
+
     },search:
     {
-      color:'black',
-      width: '35px',
-      height:'35px',
-      marginBottom:'10px',
-      border: '2px solid #333',  
+      color:'white',
+      width: '150px',
+      height:'55px',
+  
+      backgroundColor:'blue', 
       padding: '5px',
-      marginLeft:'10px',
+      marginLeft:'45%',
+      marginRight:'45%',
+      marginTop:'10px',
     }
     
   };
