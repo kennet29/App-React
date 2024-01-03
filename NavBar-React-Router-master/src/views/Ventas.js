@@ -22,7 +22,10 @@ const VentasView = () => {
   const [applyDiscount, setApplyDiscount] = useState(false);
   const [promociones, setPromociones] = useState([]);
 
-  
+
+const [applyPromotion, setApplyPromotion] = useState(false);
+const [totalPromotionDiscount, setTotalPromotionDiscount] = useState(0);
+
 
   const [nombresColores, setNombresColores] = useState([]);
   const [nombresTallas, setNombresTallas] = useState([]);
@@ -31,11 +34,14 @@ const VentasView = () => {
   const [nombresMateriales, setNombresMateriales] = useState([]);
   const [nombresDiseños, setNombresDiseños] = useState([]);
   const [nombresArticulos, setNombresArticulos] = useState([]);
+  const [nombresBodegas, setNombresBodegas] = useState([]);
 
 
 
   const [editedQuantity, setEditedQuantity] = useState(0);
   const [totalDescuento, setTotalDescuento] = useState(0);
+  const [selectedPromotionDiscount, setSelectedPromotionDiscount] = useState(0);
+
 
   useEffect(() => {
     // Actualizar el total de descuentos cada vez que cambia la lista de artículos seleccionados
@@ -62,6 +68,25 @@ useEffect(() => {
 
   fetchPromociones();
 }, []);
+
+useEffect(() => {
+  const fetchBodegas = async () => {
+    try {
+      const response = await axios.get('http://localhost:4000/api/bodegas');
+      const bodegasData = response.data;
+      const nombres = bodegasData.reduce((acc, bodega) => {
+        acc[bodega._id] = bodega.nombre;
+        return acc;
+      }, {});
+      setNombresBodegas(nombres);
+    } catch (error) {
+      console.error('Error fetching bodegas:', error);
+    }
+  };
+
+  fetchBodegas();
+}, []);
+
 
 
 
@@ -256,6 +281,10 @@ const getPromocionNameById = (idPromocion) => {
   return promocion ? promocion.promocion : 'Sin Promo';
 };
 
+const getBodegaNameById = (idBodega) => {
+  return nombresBodegas[idBodega] || 'Sin Bodega';
+};
+
 
 
   const handleEditModal = (row) => {
@@ -268,6 +297,9 @@ const getPromocionNameById = (idPromocion) => {
 
  const calculateDiscount = (articulo) => {
   // Assuming the discount percentage is available in the article object
+  if (articulo.Daños) {
+    return 'C$0.00'; // No aplicar descuento si hay daño
+  }
   const discountPercentage = applyDiscount ? (articulo.Descuento || 0) : 0;
 
   // Calculate the discount amount
@@ -277,47 +309,77 @@ const getPromocionNameById = (idPromocion) => {
   return `C$${discountAmount.toFixed(2)}`;
 };
 
+const applyMaxDiscount = (subtotal, descuentoMaximo) => {
+  // Lógica para aplicar el descuento máximo, por ejemplo:
+  const maxDiscountAmount = (subtotal * descuentoMaximo) / 100;
+  return maxDiscountAmount;
+};
 
-  const calculateTotal = () => {
-    let totalVenta = 0;
-    let totalDescuento = 0;
-  
-    articulosSeleccionados.forEach((articulo) => {
-      const subtotal = articulo.Existencias * articulo.Precio_venta;
-  
-      // Solo calcula el descuento si applyDiscount es true y el artículo tiene descuento
-      const discountAmount = applyDiscount && articulo.Descuento
-        ? (subtotal * articulo.Descuento) / 100
-        : 0;
-  
-      totalVenta += subtotal;
-      totalDescuento += discountAmount;
-    });
-  
-    return (totalVenta - totalDescuento).toFixed(2);
-  };
-  
-  const handleEliminarArticulo = (idArticulo) => {
-    // Filter out the selected article to remove it from the state
-    const updatedArticulos = articulosSeleccionados.filter((articulo) => articulo.Id_articulo !== idArticulo);
-    setArticulosSeleccionados(updatedArticulos);
-  };
+// Luego, en tu función calculateTotal, donde aplicas descuentos, puedes hacer algo como:
+const calculateTotal = () => {
+  let totalVenta = 0;
+  let totalDescuento = 0;
 
-  const handleDiscountChange = () => {
-    setApplyDiscount(!applyDiscount);
-  };
-  
+  articulosSeleccionados.forEach((articulo) => {
+    const subtotal = articulo.Existencias * articulo.Precio_venta;
 
+    // Verificar si el checkbox de aplicar descuento está marcado y aplicar descuento máximo
+    const discountPercentage = applyDiscount ? (articulo.Descuento || 0) : 0;
+    const discountAmount = (subtotal * discountPercentage) / 100;
+    const maxDiscountAmount = applyDiscount ? applyMaxDiscount(subtotal, articulo.Descuento_maximo) : 0;
+
+    totalVenta += subtotal;
+    totalDescuento += discountAmount + maxDiscountAmount;
+  });
+
+  return (totalVenta - totalDescuento).toFixed(2);
+};
+
+
+ 
+ const handleEliminarArticulo = (articuloToRemove) => {
+  setArticulosSeleccionados((prevArticulos) => {
+    const updatedArticulos = prevArticulos.filter((articulo) => articulo._id !== articuloToRemove._id);
+
+  
+    const updatedDescuentoTotal = updatedArticulos.reduce((total, articulo) => {
+      const descuento = articulo.Descuento || 0;
+      const descuentoAmount = (articulo.Existencias * articulo.Precio_venta * descuento) / 100;
+      return total + descuentoAmount;
+    }, 0);
+
+    setTotalDescuento(updatedDescuentoTotal);
+
+    return updatedArticulos;
+  });
+};
+
+
+useEffect(() => {
+  const descuentoTotal = articulosSeleccionados.reduce((total, articulo) => {
+    const descuento = applyDiscount ? (articulo.Descuento || 0) : 0;
+    const descuentoAmount = (articulo.Existencias * articulo.Precio_venta * descuento) / 100;
+    const promotionDiscount = applyPromotion ? calculatePromotionDiscount(articulo) : 0;
+    return total + descuentoAmount + promotionDiscount;
+  }, 0);
+
+  setTotalDescuento(descuentoTotal);
+
+  const totalPromoDiscount = applyPromotion
+    ? articulosSeleccionados.reduce((total, articulo) => total + calculatePromotionDiscount(articulo), 0)
+    : 0;
+
+  setTotalPromotionDiscount(totalPromoDiscount);
+}, [articulosSeleccionados, applyDiscount, applyPromotion]);
+  
+  
   const handleSaveEdit = () => {
-    // Validar que la cantidad editada no sea mayor que Existencias
+    
     if (editedQuantity > editItem.Existencias) {
-      // Mostrar un mensaje de error o tomar la acción necesaria
       toast.error('No hay Stock suficiente',{ position: toast.POSITION.TOP_CENTER });
-      // Puedes agregar un mensaje de error o usar una biblioteca para manejar notificaciones
       return;
     }
-  
-    // Update the quantity in your state
+
     setArticulosSeleccionados((prev) =>
       prev.map((item) =>
         item.Id_articulo === editItem.Id_articulo
@@ -325,32 +387,27 @@ const getPromocionNameById = (idPromocion) => {
           : item
       )
     );
-    // Close the edit modal
     setEditItem(null);
   };
   
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Obtener datos de categorías
+   
         const categoriasResponse = await axios.get('http://localhost:4000/api/categorias');
         const categoriasData = categoriasResponse.data;
         setCategorias(categoriasData);
 
-        // Obtener datos de stock
         const stockResponse = await axios.get('http://localhost:4000/api/stock/');
         const stockData = stockResponse.data;
 
-        // Actualizar datos con nombres de categorías
         const updatedData = await Promise.all(
           stockData.map(async (item) => {
             const articuloResponse = await axios.get(`http://localhost:4000/api/articulos/${item.Id_articulo}`);
             const articuloData = articuloResponse.data;
 
-            // Buscar el nombre de la categoría correspondiente
             const categoria = categoriasData.find((cat) => cat._id === articuloData.categoria);
 
-            // Agregar la nueva propiedad 'nombre_categoria'
             return {
               ...item,
               nombre_categoria: categoria ? categoria.categoria : 'Desconocida',
@@ -375,29 +432,91 @@ const getPromocionNameById = (idPromocion) => {
     }
   };
 
+  const getPromocionDiscountPercentage = (idPromocion) => {
+    const promocion = promociones.find((promo) => promo._id === idPromocion);
+    return promocion ? `${promocion.descuento}%` : 'Sin Promocion';
+  };
+  
+
 
   const handleShowModal = () => setShowModal(true);
   const handleCloseModal = () => setShowModal(false);
 
   const handleAgregarArticulo = (row) => {
-    // Verificar si el artículo ya está en la lista
     if (isArticuloAlreadySelected(row)) {
-      // Mostrar un mensaje o tomar la acción necesaria
       toast.warning('El artículo ya está en la lista', { position: toast.POSITION.TOP_CENTER });
       return;
     }
-  
+    const promotionDiscount = row.Id_promocion ? getPromocionDiscountPercentage(row.Id_promocion) : 0;
+    setSelectedPromotionDiscount(promotionDiscount);
     setArticulosSeleccionados([...articulosSeleccionados, row]);
   };
+
+  const handleDiscountChange = (type) => {
+    if (type === 'discount') {
+      setApplyDiscount(!applyDiscount);
+    } else if (type === 'promotion') {
+      setApplyPromotion(!applyPromotion);
+    }
+  };
   
-  // Función para construir y personalizar la tabla fuera del modal
+ 
+  const calculatePromotionDiscount = (articulo) => {
+    if (!applyPromotion || !articulo.Id_promocion) {
+      return 0;
+    }
+    const promocion = promociones.find((promo) => promo._id === articulo.Id_promocion);
+    if (!promocion) {
+      return 0;
+    }
+    const discountAmount = (articulo.Existencias * articulo.Precio_venta * promocion.descuento) / 100;
+    return discountAmount;
+  };
+  
+ 
+  useEffect(() => {
+    const descuentoTotal = articulosSeleccionados.reduce((total, articulo) => {
+      const descuento = applyDiscount ? (articulo.Descuento || 0) : 0;
+      const descuentoAmount = (articulo.Existencias * articulo.Precio_venta * descuento) / 100;
+      const promotionDiscount = calculatePromotionDiscount(articulo);
+      return total + descuentoAmount + promotionDiscount;
+    }, 0);
+  
+    setTotalDescuento(descuentoTotal);
+  
+    const totalPromoDiscount = articulosSeleccionados.reduce((total, articulo) => {
+      return total + calculatePromotionDiscount(articulo);
+    }, 0);
+    setTotalPromotionDiscount(totalPromoDiscount);
+  }, [articulosSeleccionados, applyDiscount, applyPromotion]);
+  
+
+  useEffect(() => {
+    const descuentoTotal = articulosSeleccionados.reduce((total, articulo) => {
+      const descuento = applyDiscount ? (articulo.Descuento || 0) : 0;
+      const descuentoAmount = (articulo.Existencias * articulo.Precio_venta * descuento) / 100;
+      const promotionDiscount = calculatePromotionDiscount(articulo);
+      return total + descuentoAmount + promotionDiscount;
+    }, 0);
+  
+    setTotalDescuento(descuentoTotal);
+  
+    const totalPromoDiscount = articulosSeleccionados.reduce((total, articulo) => {
+      return total + calculatePromotionDiscount(articulo);
+    }, 0);
+  
+    setTotalPromotionDiscount(totalPromoDiscount);
+  }, [articulosSeleccionados, applyDiscount, applyPromotion]);
+  
+
   const construirTablaPersonalizada = () => {
     if (articulosSeleccionados.length === 0) {
       return null;
     }
 
+ 
     return (
-<Container style={{marginTop: '10px', width: '100%', marginLeft: '5%', overflowX: 'auto',fontFamily:'Bold'}} >
+<Container style={{marginTop: '10px',   overflowX: 'auto',overflowY:'auto',fontFamily:'Bold'}} >
 <table style={{ textAlign: 'center', fontFamily: 'Arial' }} className="table table-bordered table-striped">
         <thead>
           <tr>
@@ -412,13 +531,14 @@ const getPromocionNameById = (idPromocion) => {
             <th>Precio </th>
             <th>Cantidad</th>
             <th>Descuento</th>
+            <th>Desc. Promo (%)</th>
             <th>Subtotal</th>
             <th>Opciones</th>
           </tr>
         </thead>
         <tbody>
           {articulosSeleccionados.map((articulo) => (
-            <tr key={articulo.Id_articulo}>
+            <tr key={articulo._id}>
               <td>{getArticuloNameById(articulo.Id_articulo)}</td>
 
               <td>{articulo.nombre_categoria}</td>
@@ -437,6 +557,7 @@ const getPromocionNameById = (idPromocion) => {
               <td>{articulo.Precio_venta}</td>
               <td> {articulo.Existencias}</td>
               <td>{calculateDiscount(articulo)}</td>
+              <td>{getPromocionDiscountPercentage(articulo.Id_promocion)}</td>
               <td>${(articulo.Existencias * articulo.Precio_venta).toFixed(2)}</td>
 
               <td>
@@ -448,11 +569,10 @@ const getPromocionNameById = (idPromocion) => {
                 <FaPencilAlt />
               </Button>
 
-             
                 <Button
                   variant="outline-danger"
-                  style={{ width: '40px', height: '40px' }}
-                  onClick={() => handleEliminarArticulo(articulo.Id_articulo)}
+                  style={{ width: '40px', height: '40px',marginTop:'2px' }}
+                  onClick={() => handleEliminarArticulo(articulo)}
                 >
                   <MdDeleteForever style={{}} />
 
@@ -478,38 +598,51 @@ const getPromocionNameById = (idPromocion) => {
     { name: 'Color', 
       selector: 'Id_color', 
       sortable: true,
-      cell: (row) => getColorNameById(row.Id_color), // Aplicar función para obtener el nombre del color
+      cell: (row) => getColorNameById(row.Id_color), 
     },
     { name: 'Marca', 
       selector: 'Id_marca', 
       sortable: true,
-      cell: (row) => getMarcaNameById(row.Id_marca), // Aplicar función para obtener el nombre de la marca
+      cell: (row) => getMarcaNameById(row.Id_marca), 
     },
     { name: 'Talla', 
       selector: 'Id_talla', 
       sortable: true,
-      cell: (row) => getTallaNameById(row.Id_talla), // Aplicar función para obtener el nombre de la talla
+      cell: (row) => getTallaNameById(row.Id_talla), 
     },
     { name: 'Estilo', 
       selector: 'Id_estilo', 
       sortable: true,
-      cell: (row) => getEstiloNameById(row.Id_estilo), // Aplicar función para obtener el nombre del estilo
+      cell: (row) => getEstiloNameById(row.Id_estilo), 
     },
     { name: 'Material', 
       selector: 'Id_material', 
       sortable: true,
-      cell: (row) => getMaterialNameById(row.Id_material), // Aplicar función para obtener el nombre del material
+      cell: (row) => getMaterialNameById(row.Id_material), 
     },
     { name: 'Diseño', 
       selector: 'Id_diseño', 
       sortable: true,
-      cell: (row) => getDiseñoNameById(row.Id_diseño), // Aplicar función para obtener el nombre del diseño
+      cell: (row) => getDiseñoNameById(row.Id_diseño), 
     },
     { name: 'Precio', selector: 'Precio_venta', sortable: true },
 
     {name:'Descuento %',selector:'Descuento',sortable:true},
 
     { name: 'Existencias', selector: 'Existencias', sortable: true },
+
+    { name: 'Daño', selector: 'Daños', cell: (row) => (row.Daños ? 'Sí' : 'No') },
+
+    { name: 'Desc Max %', selector: 'Descuento_maximo', sortable: true, cell: (row) => (row.Descuento_maximo ? `${row.Descuento_maximo}%` : 'N/A') },
+
+
+
+    { 
+      name: 'Bodega', 
+      selector: 'Id_bodega', 
+      sortable: true,
+      cell: (row) => getBodegaNameById(row.Id_bodega),
+    },
 
      { name: 'Promocion', selector: 'Id_promocion', sortable: true, cell: (row) => getPromocionNameById(row.Id_promocion) },
 
@@ -555,40 +688,41 @@ const getPromocionNameById = (idPromocion) => {
             highlightOnHover
             striped
             responsive
-            style={{ overflowX: 'auto',overflowY:'auto',textAlign:'center' }}
+            style={{ overflowX: 'auto',overflowY:'auto',textAlign:'center',width:'100%' }}
           />
         </Modal.Body>
       </Modal>
 
-      <div style={{ marginTop: '20px', marginLeft: '3%' }}>
+      <div style={{ marginTop: '20px', width:'95' }}>
         <h3 style={{color:'white',textAlign:'center'}} >Artículos Seleccionados</h3>
         {construirTablaPersonalizada()}
       </div>
 
 
       <div style={{ margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', maxWidth: '400px', backgroundColor: 'white', padding: '10px', borderRadius: '5px' }}>
-  <div>
-    <Form.Check
-      type="checkbox"
-      label="Aplicar Descuento"
-      checked={applyDiscount}
-      onChange={handleDiscountChange}
-    />
-  </div>
+      <div>
+  <Form.Check
+    type="checkbox"
+    label="Aplicar Descuento"
+    checked={applyDiscount}
+    onChange={() => handleDiscountChange('discount')}
+  />
+</div>
 
-  <div>
-    <Form.Check
-      type="checkbox"
-      label="Aplicar Promocion"
-    
-      
-    />
-  </div>
-  <div style={{ marginTop: '10px' }}>
-    <h4>Total: ${calculateTotal()}</h4>
-    <h5>Descuento Total: C${totalDescuento.toFixed(2)}</h5>
+<div>
+  <Form.Check
+    type="checkbox"
+    label="Aplicar Promocion"
+    checked={applyPromotion}
+    onChange={() => handleDiscountChange('promotion')}
+  />
+</div>
 
-  </div>
+<div style={{ marginTop: '10px' }}>
+  <h4>Total: ${calculateTotal()}</h4>
+  <h5>Descuento Total: C${totalDescuento.toFixed(2)}</h5>
+  <h5>Promoción Descuento Total: C${totalPromotionDiscount.toFixed(2)}</h5>
+</div>
 </div>
 
 
