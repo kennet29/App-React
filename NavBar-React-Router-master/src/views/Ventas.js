@@ -21,6 +21,8 @@ const VentasView = () => {
   const [editItem, setEditItem] = useState(null);
   const [applyDiscount, setApplyDiscount] = useState(false);
   const [promociones, setPromociones] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+
 
 
 const [applyPromotion, setApplyPromotion] = useState(false);
@@ -41,6 +43,11 @@ const [totalPromotionDiscount, setTotalPromotionDiscount] = useState(0);
   const [editedQuantity, setEditedQuantity] = useState(0);
   const [totalDescuento, setTotalDescuento] = useState(0);
   const [selectedPromotionDiscount, setSelectedPromotionDiscount] = useState(0);
+
+
+
+
+
 
 
   useEffect(() => {
@@ -332,7 +339,12 @@ const calculateTotal = () => {
     totalDescuento += discountAmount + maxDiscountAmount;
   });
 
-  return (totalVenta - totalDescuento).toFixed(2);
+  const totalConDescuento = totalVenta - totalDescuento - totalPromotionDiscount;
+  
+  // Asegurar que el total no sea negativo
+  const totalFinal = Math.max(totalConDescuento, 0).toFixed(2);
+
+  return totalFinal;
 };
 
 
@@ -434,7 +446,7 @@ useEffect(() => {
 
   const getPromocionDiscountPercentage = (idPromocion) => {
     const promocion = promociones.find((promo) => promo._id === idPromocion);
-    return promocion ? `${promocion.descuento}%` : 'Sin Promocion';
+    return promocion ? `${promocion.descuento}%` : 'Sin Promo';
   };
   
 
@@ -457,9 +469,24 @@ useEffect(() => {
       setApplyDiscount(!applyDiscount);
     } else if (type === 'promotion') {
       setApplyPromotion(!applyPromotion);
+      setTotalPromotionDiscount(0); // Reiniciar el descuento de la promoción al cambiar el estado
     }
   };
   
+  
+
+  const calculateDiscountWithDamage = (articulo) => {
+    // Asumiendo que el descuento normal está en porcentaje
+    const normalDiscountPercentage = (articulo.Descuento || 0);
+    const normalDiscountAmount = (articulo.Existencias * articulo.Precio_venta * normalDiscountPercentage) / 100;
+  
+    // Asumiendo que el descuento máximo está en porcentaje
+    const maxDiscountPercentage = (articulo.Descuento_maximo || 0);
+    const maxDiscountAmount = (articulo.Existencias * articulo.Precio_venta * maxDiscountPercentage) / 100;
+  
+    // Mostrar el descuento máximo solo si el artículo tiene daños
+    return articulo.Daños ? `C$${maxDiscountAmount.toFixed(2)}` : `C$${normalDiscountAmount.toFixed(2)}`;
+  };
  
   const calculatePromotionDiscount = (articulo) => {
     if (!applyPromotion || !articulo.Id_promocion) {
@@ -472,6 +499,7 @@ useEffect(() => {
     const discountAmount = (articulo.Existencias * articulo.Precio_venta * promocion.descuento) / 100;
     return discountAmount;
   };
+  
   
  
   useEffect(() => {
@@ -491,6 +519,20 @@ useEffect(() => {
   }, [articulosSeleccionados, applyDiscount, applyPromotion]);
   
 
+  const calculateDamageDiscount = () => {
+    const damageDiscountTotal = articulosSeleccionados.reduce((total, articulo) => {
+      if (articulo.Daños) {
+        // Asumiendo que el descuento máximo está en porcentaje
+        const maxDiscountPercentage = (articulo.Descuento_maximo || 0);
+        const maxDiscountAmount = (articulo.Existencias * articulo.Precio_venta * maxDiscountPercentage) / 100;
+        return total + maxDiscountAmount;
+      }
+      return total;
+    }, 0);
+  
+    return damageDiscountTotal.toFixed(2);
+  };
+
   useEffect(() => {
     const descuentoTotal = articulosSeleccionados.reduce((total, articulo) => {
       const descuento = applyDiscount ? (articulo.Descuento || 0) : 0;
@@ -507,6 +549,26 @@ useEffect(() => {
   
     setTotalPromotionDiscount(totalPromoDiscount);
   }, [articulosSeleccionados, applyDiscount, applyPromotion]);
+
+  const filteredData = data.filter((row) => {
+    const attributesToSearch = [
+      getArticuloNameById(row.idArticulo),
+      row.nombre_categoria,
+      getColorNameById(row.Id_color),
+      getMarcaNameById(row.Id_marca),
+      getTallaNameById(row.Id_talla),
+      getEstiloNameById(row.Id_estilo),
+      getMaterialNameById(row.Id_material),
+      getDiseñoNameById(row.Id_diseño),
+      row.Precio_venta.toString(), // Convertir a cadena para permitir búsquedas numéricas
+      row.Existencias.toString(), // Convertir a cadena para permitir búsquedas numéricas
+      // Agrega más atributos según sea necesario
+    ];
+  
+    return attributesToSearch.some(
+      (attribute) => attribute.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  });
   
 
   const construirTablaPersonalizada = () => {
@@ -530,6 +592,7 @@ useEffect(() => {
             <th>Diseño</th>
             <th>Precio </th>
             <th>Cantidad</th>
+            <th>IVA</th>
             <th>Descuento</th>
             <th>Desc. Promo (%)</th>
             <th>Subtotal</th>
@@ -554,9 +617,10 @@ useEffect(() => {
 
              <td>{getDiseñoNameById(articulo.Id_diseño)}</td>
 
-              <td>{articulo.Precio_venta}</td>
+              <td>C${articulo.Precio_venta}</td>
               <td> {articulo.Existencias}</td>
-              <td>{calculateDiscount(articulo)}</td>
+              <td>{`C$${((articulo.Precio_venta * 0.15).toFixed(2))}`}</td>
+              <td>{articulo.Daños ? calculateDiscountWithDamage(articulo) : calculateDiscount(articulo)}</td>
               <td>{getPromocionDiscountPercentage(articulo.Id_promocion)}</td>
               <td>${(articulo.Existencias * articulo.Precio_venta).toFixed(2)}</td>
 
@@ -680,16 +744,24 @@ useEffect(() => {
           <Modal.Title  >Inventario</Modal.Title>
         </Modal.Header>
         <Modal.Body style={{color:'white',backgroundColor:'#4a4a4a'}}>
-          <DataTable
-           
-            columns={columns}
-            data={data}
-            pagination
-            highlightOnHover
-            striped
-            responsive
-            style={{ overflowX: 'auto',overflowY:'auto',textAlign:'center',width:'100%' }}
-          />
+        <Form.Control
+  type="text"
+  placeholder="Buscar..."
+  value={searchTerm}
+  onChange={(e) => setSearchTerm(e.target.value)}
+/>
+
+        <DataTable
+  columns={columns}
+  data={filteredData}
+  pagination
+  highlightOnHover
+  striped
+  responsive
+  style={{ overflowX: 'auto', overflowY: 'auto', textAlign: 'center', width: '100%' }}
+/>
+
+
         </Modal.Body>
       </Modal>
 
@@ -721,6 +793,7 @@ useEffect(() => {
 <div style={{ marginTop: '10px' }}>
   <h4>Total: ${calculateTotal()}</h4>
   <h5>Descuento Total: C${totalDescuento.toFixed(2)}</h5>
+  <h5>Descuento por Daños: C${calculateDamageDiscount()}</h5>
   <h5>Promoción Descuento Total: C${totalPromotionDiscount.toFixed(2)}</h5>
 </div>
 </div>
