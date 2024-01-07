@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Form, Button, Modal, Toast } from 'react-bootstrap';
+import { Container, Form, Button, Modal } from 'react-bootstrap';
 import DataTable from 'react-data-table-component';
 import axios from 'axios';
 import estilos from '../css/ingresos-estilos';
@@ -570,6 +570,110 @@ useEffect(() => {
     );
   });
   
+const [cantidad, setCantidad] = useState(0);
+
+const [fecha, setFecha] = useState("");
+const [cliente, setCliente] = useState("");
+const [idVentas, setIdVentas] = useState(""); 
+
+
+const realizarVenta = async () => {
+  const ventaUrl = "http://localhost:4000/api/ventas";
+  const detalleUrl = "http://localhost:4000/api/detalleventa";
+  const descuento = parseFloat(document.getElementById('descuentoTotal').innerText.split('C$')[1]);
+  const total = parseFloat(document.getElementById('totalVenta').innerText.split('$')[1]);
+
+  // Obtener datos para la primera petición
+  const data = {
+    cliente: cliente,
+    fecha: fecha,
+    descuento: descuento,
+    total: total,
+    estado: true // Este valor es constante según tu solicitud
+  };
+
+  try {
+    // Realizar la primera petición POST para la venta principal
+    const responseVenta = await fetch(ventaUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(data)
+    });
+
+    if (responseVenta.ok) {
+      const responseDataVenta = await responseVenta.json();
+      const idVentas = responseDataVenta._id;
+
+      console.log("Venta realizada con éxito, ID:", idVentas);
+
+      // Realizar la segunda petición POST para el detalle de la venta
+      const articulosData = {
+        id_ventas: idVentas,
+        articulos: articulosSeleccionados.map((articulo) => {
+          const descuentoArticulo = calcularDescuentoArticulo(articulo);
+          return {
+            id_articulo: articulo.Id_articulo,
+            id_marca: articulo.Id_marca,
+            id_color: articulo.Id_color,
+            id_estilo: articulo.Id_estilo,
+            id_material: articulo.Id_material,
+            id_talla: articulo.Id_talla,
+            id_diseño: articulo.Id_diseño,
+            cantidad: parseInt(articulo.Existencias),
+            precio: articulo.Precio_venta,
+            subtotal: calculateSubtotal(articulo),
+            descuento: parseFloat(descuentoArticulo),
+            _id: articulo._id
+          };
+        }),
+        total: total // Puedes ajustar el total según tus necesidades
+      };
+
+      // Realizar la segunda petición POST para el detalle de la venta
+      const responseDetalle = await fetch(detalleUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(articulosData)
+      });
+      console.log("JSON enviados:", {
+        ventaPrincipal: data,
+        detalleVenta: articulosData
+      });
+
+      if (responseDetalle.ok) {
+        console.log("Detalle de venta registrado con éxito.");
+      } else {
+        console.error("Error al registrar el detalle de la venta. Código de respuesta:", responseDetalle.status);
+      }
+    } else {
+      console.error("Error al realizar la venta. Código de respuesta:", responseVenta.status);
+    }
+  } catch (error) {
+    console.error("Error de red:", error);
+  }
+};
+
+// Función para calcular el descuento de cada artículo
+const calcularDescuentoArticulo = (articulo) => {
+  // Verificar si el artículo tiene descuento regular o máximo
+  const descuentoRegular = articulo.Descuento || 0;
+  const descuentoMaximo = articulo.Descuento_maximo || 0;
+
+  // Calcular descuento de promoción si está disponible
+  const descuentoPromocion = getPromocionDiscountPercentage(articulo.Id_promocion) || 0;
+
+  // Sumar los descuentos
+  const descuentoTotal = descuentoRegular + descuentoMaximo + descuentoPromocion;
+
+  return descuentoTotal;
+};
+
+
+
 
   const construirTablaPersonalizada = () => {
     if (articulosSeleccionados.length === 0) {
@@ -622,7 +726,7 @@ useEffect(() => {
               <td>{`C$${((articulo.Precio_venta * 0.15).toFixed(2))}`}</td>
               <td>{articulo.Daños ? calculateDiscountWithDamage(articulo) : calculateDiscount(articulo)}</td>
               <td>{getPromocionDiscountPercentage(articulo.Id_promocion)}</td>
-              <td>${(articulo.Existencias * articulo.Precio_venta).toFixed(2)}</td>
+             <td>${calculateSubtotal(articulo)}</td>
 
               <td>
               <Button
@@ -650,6 +754,11 @@ useEffect(() => {
       </Container>
     );
   };
+
+  const calculateSubtotal = (articulo) => {
+  return (articulo.Existencias * articulo.Precio_venta).toFixed(2);
+};
+
 
   const columns = [
     { 
@@ -726,13 +835,23 @@ useEffect(() => {
         Registro de Ventas
       </h2>
       <Form style={{ width: '95%', backgroundColor: 'white', marginTop: '10px', marginLeft: '3%', marginRight: 'auto', borderRadius: '5px', display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
-        <Form.Group controlId="formFechaVenta" style={{ flex: 1, display: 'flex', flexDirection: 'column', marginLeft: '55px' }}>
+        <Form.Group controlId="formfecha" style={{ flex: 1, display: 'flex', flexDirection: 'column', marginLeft: '55px' }}>
           <Form.Label style={{ marginLeft: '40px' }}>Fecha de Venta</Form.Label>
-          <Form.Control type="date" className="form-control" style={estilos.inputStyle2} />
+          <Form.Control 
+  type="date" 
+  className="form-control" 
+  style={estilos.inputStyle2} 
+  onChange={(e) => setFecha(e.target.value)}
+/>
         </Form.Group>
-        <Form.Group controlId="formProveedor" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <Form.Group controlId="formproveedor" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
           <Form.Label style={{ marginLeft: '50px' }}>Cliente</Form.Label>
-          <Form.Control type="text" style={estilos.inputStyle2} className="form-control" />
+         <Form.Control 
+  type="text" 
+  style={estilos.inputStyle2} 
+  className="form-control" 
+  onChange={(e) => setCliente(e.target.value)}
+/>
         </Form.Group>
       </Form>
       <Button style={estilos.search} variant="outline-secondary" onClick={handleShowModal}>
@@ -760,7 +879,6 @@ useEffect(() => {
   responsive
   style={{ overflowX: 'auto', overflowY: 'auto', textAlign: 'center', width: '100%' }}
 />
-
 
         </Modal.Body>
       </Modal>
@@ -791,15 +909,16 @@ useEffect(() => {
 </div>
 
 <div style={{ marginTop: '10px' }}>
-  <h4>Total: ${calculateTotal()}</h4>
-  <h5>Descuento Total: C${totalDescuento.toFixed(2)}</h5>
+  <h4 id="totalVenta">Total: ${calculateTotal()}</h4>
+<h5 id="descuentoTotal">Descuento Total: C${totalDescuento.toFixed(2)}</h5>
+
   <h5>Descuento por Daños: C${calculateDamageDiscount()}</h5>
   <h5>Promoción Descuento Total: C${totalPromotionDiscount.toFixed(2)}</h5>
 </div>
 </div>
 
 
-      <Button variant="success" style={{ width: '150px', height: '50px', marginTop: '20px', marginLeft: '45%' }}>
+      <Button variant="success" style={{ width: '150px', height: '50px', marginTop: '20px', marginLeft: '45%' }} onClick={realizarVenta}>
         Realizar Venta
       </Button>
 
