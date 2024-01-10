@@ -72,7 +72,7 @@ const estilos = {
       color:'black',
       width: '90%',
       marginBottom:'10px',
-      border: '2px solid #333',  // Puedes personalizar el color y el grosor del borde
+      // Puedes personalizar el color y el grosor del borde
       padding: '5px',
       marginLeft:'10px',
       marginRight:'20px',
@@ -115,7 +115,7 @@ const estilos = {
       padding: '5px',
       marginLeft:'45%',
       marginRight:'45%',
-      marginTop:'10px',
+      marginTop:'15px',
     }
     
   };

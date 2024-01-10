@@ -14,6 +14,7 @@ import Footer from '../component/footer/footer';
   const [marcas, setMarcas] = useState([]);
   const [materiales, setMateriales] = useState([]);
   const [est, setEst] = useState([]);
+  const [categorias, setCategorias] = useState([]);
   const [disenos, setDisenos] = useState([]);
   const [articulosIngresados, setArticulosIngresados] = useState([]);
   const [subTotalTotal, setSubTotalTotal] = useState(0);
@@ -24,7 +25,7 @@ import Footer from '../component/footer/footer';
   const [showEditModal, setShowEditModal] = useState(false);
   const [showSaleModal, setShowSaleModal] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
-  const [idMarcaSeleccionada, setIdMarcaSeleccionada] = useState('');
+ 
   const [formulario, setFormulario] = useState({
     idArticulo: '',
     idProveedor: '',
@@ -36,6 +37,7 @@ import Footer from '../component/footer/footer';
     idEstilo: '',
     idDiseño: '',
     descuento: '',
+    idCategoria: '',
     precioprov: '',
     total: '',
   });
@@ -55,6 +57,14 @@ import Footer from '../component/footer/footer';
   }, []);
 
   useEffect(() => {
+    const fetchCategorias = async () => {
+        const response = await axios.get('http://localhost:4000/api/categorias');
+        setCategorias(response.data);
+    };
+    fetchCategorias();
+  }, []); 
+
+  useEffect(() => {
     // Fetch the list of suppliers when the component mounts
     const fetchProveedores = async () => {
       try {
@@ -69,18 +79,13 @@ import Footer from '../component/footer/footer';
   }, []);
 
   useEffect(() => {
-    // Fetch the list of colors when the component mounts
     const fetchColores = async () => {
-      try {
         const response = await axios.get('http://localhost:4000/api/colores');
         setColores(response.data);
-      } catch (error) {
-        console.error('Error fetching colors:', error);
-      }
     };
-
     fetchColores();
   }, []);
+
 
   useEffect(() => {
     const subTotal = articulosIngresados.reduce((total, articulo) => {
@@ -102,15 +107,12 @@ import Footer from '../component/footer/footer';
   }, [articulosIngresados]);
 
   useEffect(() => {
-    // Fetch the list of sizes when the component mounts
+   
     const fetchTallas = async () => {
-      try {
+     
         const response = await axios.get('http://localhost:4000/api/tallas');
         setTallas(response.data);
-        console.log('Tallas:', response.data); // Log the fetched data
-      } catch (error) {
-        console.error('Error fetching sizes:', error);
-      }
+      
     };
 
     fetchTallas();
@@ -175,59 +177,36 @@ import Footer from '../component/footer/footer';
   };
 
   useEffect(() => {
-    // Fetch the list of brands when the component mounts
     const fetchMarcas = async () => {
-      try {
         const response = await axios.get('http://localhost:4000/api/marcas');
         setMarcas(response.data);
-      } catch (error) {
-        console.error('Error fetching brands:', error);
-      }
     };
-
     fetchMarcas();
   }, []);
 
 
   useEffect(() => {
-    // Fetch the list of materials when the component mounts
     const fetchMateriales = async () => {
-      try {
         const response = await axios.get('http://localhost:4000/api/materiales');
         setMateriales(response.data);
-      } catch (error) {
-        console.error('Error fetching materials:', error);
-      }
     };
 
     fetchMateriales();
   }, []);
 
   useEffect(() => {
-    // Fetch the list of styles when the component mounts
     const fetchEstilos = async () => {
-      try {
         const response = await axios.get('http://localhost:4000/api/estilos');
         setEst(response.data);
-      } catch (error) {
-        console.error('Error fetching styles:', error);
-      }
     };
-
     fetchEstilos();
   }, []);
 
   useEffect(() => {
-    // Fetch the list of designs when the component mounts
     const fetchDisenos = async () => {
-      try {
         const response = await axios.get('http://localhost:4000/api/disenos');
         setDisenos(response.data);
-      } catch (error) {
-        console.error('Error fetching designs:', error);
-      }
     };
-
     fetchDisenos();
   }, []);
 
@@ -250,6 +229,7 @@ import Footer from '../component/footer/footer';
       formulario.idDiseño === '' ||
       formulario.cantidad === '' ||
       formulario.precioprov === '' ||
+      formulario.idCategoria === '' ||
       formulario.descuento === ''
     ) {
       // Muestra la alerta si algún campo está vacío
@@ -309,7 +289,7 @@ import Footer from '../component/footer/footer';
   
   const getNombreTalla = (idTalla) => {
     const tallaEncontrada = tallas.find((talla) => talla._id === idTalla);
-    return tallaEncontrada ? tallaEncontrada.talla : '';
+    return tallaEncontrada ? tallaEncontrada.talla : 'Desconocida';
   };
   
   const getColorNameById = (colorId) => {
@@ -318,7 +298,6 @@ import Footer from '../component/footer/footer';
   };
 
   const handleEditarArticulo = (index) => {
-    // Mostrar el modal de edición con los datos del artículo seleccionado
     setFormulario({ ...articulosIngresados[index] });
     setEditIndex(index);
     setShowEditModal(true);
@@ -343,6 +322,13 @@ const mapEstiloIdToNombre = (id) => {
   const estilo = est.find((e) => e._id === id);
   return estilo ? estilo.estilo : '';
 };
+
+const getNombreCategoriaById = (categoriaId) => {
+  const categoria = categorias.find((c) => c._id === categoriaId);
+  return categoria ? categoria.categoria : '';
+};
+
+
   const handleFacturarIngreso = async () => {
     try {
         // Primera solicitud POST para crear el ingreso
@@ -368,6 +354,7 @@ const mapEstiloIdToNombre = (id) => {
             id_ingreso: idIngreso,
             articulos: articulosIngresados.map((articulo) => ({
                 id_articulo: articulo.idArticulo,
+                id_categoria:articulo.idCategoria,
                 id_talla: articulo.idTalla,
                 id_color: articulo.idColor,
                 id_marca: articulo.idMarca,
@@ -390,6 +377,7 @@ const mapEstiloIdToNombre = (id) => {
             const stockData = {
                 Id_articulo: articulo.idArticulo,
                 Id_usuario: "652b4bac458db698d7db1485",
+                Id_categoria:articulo.idCategoria,
                 Id_color: articulo.idColor,
                 Id_marca: articulo.idMarca,
                 Id_talla: articulo.idTalla,
@@ -441,6 +429,7 @@ const mapEstiloIdToNombre = (id) => {
       idEstilo: '',
       idDiseño: '',
       descuento: '',
+      idCategoria: '',
       precioprov: '',
       total: '',
     });
@@ -501,6 +490,10 @@ const mapEstiloIdToNombre = (id) => {
                 ))}
               </select>
             </Col>
+
+
+
+           
 
             <Col md={2}>
               <label style={estilos.labelStyle3} htmlFor="id-talla">
@@ -633,6 +626,27 @@ const mapEstiloIdToNombre = (id) => {
             </Col>
 
             <Col md={2}>
+              <label style={estilos.labelStyle} htmlFor="id-categoria">
+                Categoria
+              </label>
+              <select
+                id="id-categoria"
+                className="form-control"
+                value={formulario.idCategoria}
+                onChange={(e) => setFormulario({ ...formulario, idCategoria: e.target.value })}
+                required
+                style={estilos.inputStyle}
+              >
+                <option value="">Categoria...</option>
+                {categorias.map((categoria) => (
+                  <option key={categoria._id} value={categoria._id}>
+                    {categoria.categoria}
+                  </option>
+                ))}
+              </select>
+            </Col>
+
+            <Col md={2}>
               <label htmlFor="cantidad" style={estilos.labelStyle}>
                 Cantidad
               </label>
@@ -713,6 +727,7 @@ const mapEstiloIdToNombre = (id) => {
             <thead  >
               <tr style={{ backgroundColor: '#00FFBD' }} >
                 <th>Articulo</th>
+                <th>Categoría</th>
                 <th>Talla</th>
                 <th>Color</th>
                 <th>Marca</th>
@@ -731,6 +746,7 @@ const mapEstiloIdToNombre = (id) => {
               {articulosIngresados.map((articulo, index) => (
                 <tr key={index}>
                   <td>{getNombreArticulo(articulo.idArticulo)}</td>
+                  <td>{getNombreCategoriaById(articulo.idCategoria)}</td>
                   <td>{getNombreTalla(articulo.idTalla)}</td>
                   <td>{getColorNameById(articulo.idColor)}</td>
                   <td>{getMarcaNombreById(articulo.idMarca)}</td>

@@ -20,10 +20,10 @@ const ArticulosView = () => {
     nombre: '',
     descripcion: '',
     estado: '',
-    categoria: '',
+   
   });
   const [selectedArticulo, setSelectedArticulo] = useState(null);
-  const [categorias, setCategorias] = useState([]);
+
 
   const handleNotificacion = () => {
    
@@ -37,7 +37,7 @@ const ArticulosView = () => {
       nombre: '',
       descripcion: '',
       estado: true,
-      categoria: '',
+    
     });
     setSelectedArticulo(null);
   };
@@ -48,7 +48,7 @@ const ArticulosView = () => {
     const selected = articulos.find((articulo) => articulo._id === articuloId);
     setSelectedArticulo({
       ...selected,
-      categoria: selected.categoria._id, // Set the category ID for the select value
+     // Set the category ID for the select value
     });
     setShowUpdateModal(true);
   };
@@ -56,38 +56,21 @@ const ArticulosView = () => {
   const showArticulos = async () => {
     try {
       const articulosResponse = await fetch('http://localhost:4000/api/articulos');
-      const categoriasResponse = await fetch('http://localhost:4000/api/categorias');
-
       const articulosData = await articulosResponse.json();
-      const categoriasData = await categoriasResponse.json();
-
+      
       // Map categoria IDs to categoria objects
-      const categoriasMap = categoriasData.reduce((map, categoria) => {
-        map[categoria._id] = categoria;
-        return map;
-      }, {});
-
       // Associate categoria object with each articulo
       const articulosWithCategoria = articulosData.map((articulo) => ({
         ...articulo,
-        categoria: categoriasMap[articulo.categoria],
       }));
-
+  
+      // Update state with fetched data
       setArticulos(articulosWithCategoria);
     } catch (error) {
       console.error('Error fetching data:', error);
     }
   };
-
-  const showCategorias = async () => {
-    try {
-      const response = await fetch('http://localhost:4000/api/categorias');
-      const data = await response.json();
-      setCategorias(data);
-    } catch (error) {
-      console.error('Error fetching categorias:', error);
-    }
-  };
+  
 
   const handleDelete = (articuloId) => {
     setDeleteItemId(articuloId);
@@ -204,7 +187,7 @@ const ArticulosView = () => {
 
   useEffect(() => {
     showArticulos();
-    showCategorias();
+ 
   }, []);
 
   const columns = [
@@ -226,12 +209,7 @@ const ArticulosView = () => {
       sortable: true,
       center: true,
     },
-    {
-      name: 'Categoría',
-      selector: (row) => row.categoria.categoria, // Display category name instead of ID
-      sortable: true,
-      center: true,
-    },
+   
     {
       name: 'Acciones',
       cell: (row) => (
@@ -301,20 +279,7 @@ const ArticulosView = () => {
                 <option value={false}>Inactivo</option>
               </Form.Control>
             </Form.Group>
-            <Form.Group controlId="formCategoria">
-              <Form.Label>Categoría</Form.Label>
-              <Form.Control
-                as="select"
-                value={newArticulo.categoria}
-                onChange={(e) => setNewArticulo({ ...newArticulo, categoria: e.target.value })}
-              >
-                {categorias.map((categoria) => (
-                  <option key={categoria._id} value={categoria._id}>
-                    {categoria.categoria}
-                  </option>
-                ))}
-              </Form.Control>
-            </Form.Group>
+           
           </Form>
         </Modal.Body>
         <Styles.ModalFooter>
@@ -378,25 +343,7 @@ const ArticulosView = () => {
                 <option value={false}>Inactivo</option>
               </Form.Control>
             </Form.Group>
-            <Form.Group controlId="formCategoria">
-              <Form.Label>Categoría</Form.Label>
-              <Form.Control
-                as="select"
-                value={selectedArticulo ? selectedArticulo.categoria : ''}
-                onChange={(e) =>
-                  setSelectedArticulo({
-                    ...selectedArticulo,
-                    categoria: e.target.value,
-                  })
-                }
-              >
-                {categorias.map((categoria) => (
-                  <option key={categoria._id} value={categoria._id}>
-                    {categoria.categoria}
-                  </option>
-                ))}
-              </Form.Control>
-            </Form.Group>
+            
           </Form>
         </Modal.Body>
         <Styles.ModalFooter>

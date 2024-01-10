@@ -5,830 +5,310 @@ import axios from 'axios';
 import estilos from '../css/ingresos-estilos';
 import '../css/detalle-ingresos.css';
 import Footer from '../component/footer/footer';
-import { FaPlus,FaPencilAlt } from 'react-icons/fa';
+import { FaPlus, FaPencilAlt } from 'react-icons/fa';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { MdDeleteForever } from "react-icons/md";
 
 
 const VentasView = () => {
-  const [data, setData] = useState([]);
-  const [categorias, setCategorias] = useState([]);
+
+  const estadoFormatter = row => (row.Estado ? 'Activo' : 'Descontinuados');
+  const danosFormatter = row => (row.Daños ? 'Sí' : 'No');
+
+  const bodegaFormatter = row => (row.Id_bodega ? row.Id_bodega : 'S/B');
+  const [selectedItems, setSelectedItems] = useState([]);
+  const [selectedRow, setSelectedRow] = useState(null);
   const [showModal, setShowModal] = useState(false);
-  const [articulosSeleccionados, setArticulosSeleccionados] = useState([]);
-  const [editingArticle, setEditingArticle] = useState(null);
-  const [newQuantity, setNewQuantity] = useState(''); 
-  const [editItem, setEditItem] = useState(null);
-  const [applyDiscount, setApplyDiscount] = useState(false);
-  const [promociones, setPromociones] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
-
-
-
-const [applyPromotion, setApplyPromotion] = useState(false);
-const [totalPromotionDiscount, setTotalPromotionDiscount] = useState(0);
-
-
-  const [nombresColores, setNombresColores] = useState([]);
-  const [nombresTallas, setNombresTallas] = useState([]);
-  const [nombresMarcas, setNombresMarcas] = useState([]);
-  const [nombresEstilos, setNombresEstilos] = useState([]);
-  const [nombresMateriales, setNombresMateriales] = useState([]);
-  const [nombresDiseños, setNombresDiseños] = useState([]);
-  const [nombresArticulos, setNombresArticulos] = useState([]);
-  const [nombresBodegas, setNombresBodegas] = useState([]);
-
-
-
-  const [editedQuantity, setEditedQuantity] = useState(0);
-  const [totalDescuento, setTotalDescuento] = useState(0);
-  const [selectedPromotionDiscount, setSelectedPromotionDiscount] = useState(0);
-
-
-
-
-
-
-
-  useEffect(() => {
-    // Actualizar el total de descuentos cada vez que cambia la lista de artículos seleccionados
-    const descuentoTotal = articulosSeleccionados.reduce((total, articulo) => {
-      // Asumiendo que el descuento está en porcentaje
-      const descuento = articulo.Descuento || 0;
-      const descuentoAmount = (articulo.Existencias * articulo.Precio_venta * descuento) / 100;
-      return total + descuentoAmount;
-    }, 0);
-
-    setTotalDescuento(descuentoTotal);
-  }, [articulosSeleccionados]);
-
-useEffect(() => {
-  const fetchPromociones = async () => {
-    try {
-      const response = await axios.get('http://localhost:4000/api/promociones');
-      const promocionesData = response.data;
-      setPromociones(promocionesData);
-    } catch (error) {
-      console.error('Error fetching promociones:', error);
-    }
+  const [categorias, setCategorias] = useState([]);
+  const [articulos, setArticulos] = useState([]);
+  const [colores, setColores] = useState([]);
+  const [tallas, setTallas] = useState([]);
+  const [est, setEst] = useState([]);
+  const [marcas, setMarcas] = useState([]);
+  const [materiales, setMateriales] = useState([]);
+  const [disenos, setDisenos] = useState([]);
+  const [promotions, setPromotions] = useState([]);
+  const [editingItem, setEditingItem] = useState(null);
+  const [newQuantity, setNewQuantity] = useState(0);
+  const handleShowModal = () => {
+    setShowModal(true);
+  };
+  const handleCloseModal = () => {
+    setShowModal(false);
   };
 
-  fetchPromociones();
-}, []);
-
-useEffect(() => {
-  const fetchBodegas = async () => {
-    try {
-      const response = await axios.get('http://localhost:4000/api/bodegas');
-      const bodegasData = response.data;
-      const nombres = bodegasData.reduce((acc, bodega) => {
-        acc[bodega._id] = bodega.nombre;
-        return acc;
-      }, {});
-      setNombresBodegas(nombres);
-    } catch (error) {
-      console.error('Error fetching bodegas:', error);
-    }
-  };
-
-  fetchBodegas();
-}, []);
+  const [stockData, setStockData] = useState([]);
 
 
 
-
-  const isArticuloAlreadySelected = (nuevoArticulo) => {
-    return articulosSeleccionados.some((articulo) => {
-      // Comparar los campos relevantes para evitar duplicados
-      return (
-        articulo.Id_articulo === nuevoArticulo.Id_articulo &&
-        articulo.Id_color === nuevoArticulo.Id_color &&
-        articulo.Id_marca === nuevoArticulo.Id_marca &&
-        articulo.Id_talla === nuevoArticulo.Id_talla &&
-        articulo.Id_estilo === nuevoArticulo.Id_estilo &&
-        articulo.Id_material === nuevoArticulo.Id_material &&
-        articulo.Id_diseño === nuevoArticulo.Id_diseño
-        // Agregar más comparaciones según sea necesario
-      );
-    });
-  };
-
-
-  useEffect(() => {
-  const fetchDiseños = async () => {
-    try {
-      const response = await axios.get('http://localhost:4000/api/disenos');
-      const diseñosData = response.data;
-      // Crear la lista de nombres de diseños
-      const nombres = diseñosData.reduce((acc, diseño) => {
-        acc[diseño._id] = diseño.diseno;
-        return acc;
-      }, {});
-      setNombresDiseños(nombres);
-    } catch (error) {
-      console.error('Error fetching diseños:', error);
-    }
-  };
-
-  fetchDiseños();
-}, []);
-
-
-useEffect(() => {
-  const fetchTallas = async () => {
-    try {
-      const response = await axios.get('http://localhost:4000/api/tallas');
-      const tallasData = response.data;
-      // Crear la lista de nombres de tallas
-      const nombres = tallasData.reduce((acc, talla) => {
-        acc[talla._id] = talla.talla;
-        return acc;
-      }, {});
-      setNombresTallas(nombres);
-    } catch (error) {
-      console.error('Error fetching tallas:', error);
-    }
-  };
-
-  fetchTallas();
-}, []);
-
-useEffect(() => {
-  const fetchArticulos = async () => {
-    try {
-      const response = await axios.get('http://localhost:4000/api/articulos');
-      const articulosData = response.data;
-      // Crear la lista de nombres de artículos
-      const nombres = articulosData.reduce((acc, articulo) => {
-        acc[articulo._id] = articulo.nombre;
-        return acc;
-      }, {});
-      setNombresArticulos(nombres);
-    } catch (error) {
-      console.error('Error fetching artículos:', error);
-    }
-  };
-
-  fetchArticulos();
-}, []);
-
-
-useEffect(() => {
-  const fetchMateriales = async () => {
-    try {
-      const response = await axios.get('http://localhost:4000/api/materiales');
-      const materialesData = response.data;
-      // Crear la lista de nombres de materiales
-      const nombres = materialesData.reduce((acc, material) => {
-        acc[material._id] = material.material;
-        return acc;
-      }, {});
-      setNombresMateriales(nombres);
-    } catch (error) {
-      console.error('Error fetching materiales:', error);
-    }
-  };
-
-  fetchMateriales();
-}, []);
-
-
-useEffect(() => {
-  const fetchMarcas = async () => {
-    try {
-      const response = await axios.get('http://localhost:4000/api/marcas');
-      const marcasData = response.data;
-      // Crear la lista de nombres de marcas
-      const nombres = marcasData.reduce((acc, marca) => {
-        acc[marca._id] = marca.marca;
-        return acc;
-      }, {});
-      setNombresMarcas(nombres);
-    } catch (error) {
-      console.error('Error fetching marcas:', error);
-    }
-  };
-
-  fetchMarcas();
-}, []);
-
-
-
-  useEffect(() => {
-    const fetchColores = async () => {
-      try {
-        const response = await axios.get('http://localhost:4000/api/colores');
-        const coloresData = response.data;
-    
-        const nombres = coloresData.reduce((acc, color) => {
-          acc[color._id] = color.color;
-          return acc;
-        }, {});
-        setNombresColores(nombres);
-      } catch (error) {
-        console.error('Error fetching colores:', error);
-      }
-    };
-  
-    fetchColores();
-  }, []);
-
-  useEffect(() => {
-    const fetchEstilos = async () => {
-      try {
-        const response = await axios.get('http://localhost:4000/api/estilos');
-        const estilosData = response.data;
-        // Crear la lista de nombres de estilos
-        const nombres = estilosData.reduce((acc, estilo) => {
-          acc[estilo._id] = estilo.estilo;
-          return acc;
-        }, {});
-        setNombresEstilos(nombres);
-      } catch (error) {
-        console.error('Error fetching estilos:', error);
-      }
-    };
-  
-    fetchEstilos();
-  }, []);
-  
-  
-
-  const getColorNameById = (idColor) => {
-    return nombresColores[idColor] || 'Desconocido';
-  };
-  
-  const getTallaNameById = (idTalla) => {
-    return nombresTallas[idTalla] || 'Desconocido';
-  };
-  
-  const getMarcaNameById = (idMarca) => {
-    return nombresMarcas[idMarca] || 'Desconocido';
-  };
-  
-  const getEstiloNameById = (idEstilo) => {
-    return nombresEstilos[idEstilo] || 'Desconocido';
-  };
-
-  const getMaterialNameById = (idMaterial) => {
-    return nombresMateriales[idMaterial] || 'Desconocido';
-  };
-  
-
-  const getDiseñoNameById = (idDiseño) => {
-  return nombresDiseños[idDiseño] || 'Desconocido';
-};
-
-const getArticuloNameById = (idArticulo) => {
-  return nombresArticulos[idArticulo] || 'Desconocido';
-};
-
-const getPromocionNameById = (idPromocion) => {
-  const promocion = promociones.find((promo) => promo._id === idPromocion);
-  return promocion ? promocion.promocion : 'Sin Promo';
-};
-
-const getBodegaNameById = (idBodega) => {
-  return nombresBodegas[idBodega] || 'Sin Bodega';
-};
-
-
-
-  const handleEditModal = (row) => {
-    setEditItem(row);
-    setEditedQuantity(row.Existencias); // Set initial quantity to current value
-    // Open the edit modal here
-  };
-
-  
-
- const calculateDiscount = (articulo) => {
-  // Assuming the discount percentage is available in the article object
-  if (articulo.Daños) {
-    return 'C$0.00'; // No aplicar descuento si hay daño
-  }
-  const discountPercentage = applyDiscount ? (articulo.Descuento || 0) : 0;
-
-  // Calculate the discount amount
-  const discountAmount = (articulo.Existencias * articulo.Precio_venta * discountPercentage) / 100;
-
-  // Return the formatted discount amount
-  return `C$${discountAmount.toFixed(2)}`;
-};
-
-const applyMaxDiscount = (subtotal, descuentoMaximo) => {
-  // Lógica para aplicar el descuento máximo, por ejemplo:
-  const maxDiscountAmount = (subtotal * descuentoMaximo) / 100;
-  return maxDiscountAmount;
-};
-
-// Luego, en tu función calculateTotal, donde aplicas descuentos, puedes hacer algo como:
-const calculateTotal = () => {
-  let totalVenta = 0;
-  let totalDescuento = 0;
-
-  articulosSeleccionados.forEach((articulo) => {
-    const subtotal = articulo.Existencias * articulo.Precio_venta;
-
-    // Verificar si el checkbox de aplicar descuento está marcado y aplicar descuento máximo
-    const discountPercentage = applyDiscount ? (articulo.Descuento || 0) : 0;
-    const discountAmount = (subtotal * discountPercentage) / 100;
-    const maxDiscountAmount = applyDiscount ? applyMaxDiscount(subtotal, articulo.Descuento_maximo) : 0;
-
-    totalVenta += subtotal;
-    totalDescuento += discountAmount + maxDiscountAmount;
-  });
-
-  const totalConDescuento = totalVenta - totalDescuento - totalPromotionDiscount;
-  
-  // Asegurar que el total no sea negativo
-  const totalFinal = Math.max(totalConDescuento, 0).toFixed(2);
-
-  return totalFinal;
-};
-
-
- 
- const handleEliminarArticulo = (articuloToRemove) => {
-  setArticulosSeleccionados((prevArticulos) => {
-    const updatedArticulos = prevArticulos.filter((articulo) => articulo._id !== articuloToRemove._id);
-
-  
-    const updatedDescuentoTotal = updatedArticulos.reduce((total, articulo) => {
-      const descuento = articulo.Descuento || 0;
-      const descuentoAmount = (articulo.Existencias * articulo.Precio_venta * descuento) / 100;
-      return total + descuentoAmount;
-    }, 0);
-
-    setTotalDescuento(updatedDescuentoTotal);
-
-    return updatedArticulos;
-  });
-};
-
-
-useEffect(() => {
-  const descuentoTotal = articulosSeleccionados.reduce((total, articulo) => {
-    const descuento = applyDiscount ? (articulo.Descuento || 0) : 0;
-    const descuentoAmount = (articulo.Existencias * articulo.Precio_venta * descuento) / 100;
-    const promotionDiscount = applyPromotion ? calculatePromotionDiscount(articulo) : 0;
-    return total + descuentoAmount + promotionDiscount;
-  }, 0);
-
-  setTotalDescuento(descuentoTotal);
-
-  const totalPromoDiscount = applyPromotion
-    ? articulosSeleccionados.reduce((total, articulo) => total + calculatePromotionDiscount(articulo), 0)
-    : 0;
-
-  setTotalPromotionDiscount(totalPromoDiscount);
-}, [articulosSeleccionados, applyDiscount, applyPromotion]);
-  
-  
-  const handleSaveEdit = () => {
-    
-    if (editedQuantity > editItem.Existencias) {
-      toast.error('No hay Stock suficiente',{ position: toast.POSITION.TOP_CENTER });
-      return;
-    }
-
-    setArticulosSeleccionados((prev) =>
-      prev.map((item) =>
-        item.Id_articulo === editItem.Id_articulo
-          ? { ...item, Existencias: editedQuantity }
-          : item
-      )
-    );
-    setEditItem(null);
-  };
-  
   useEffect(() => {
     const fetchData = async () => {
-      try {
-   
-        const categoriasResponse = await axios.get('http://localhost:4000/api/categorias');
-        const categoriasData = categoriasResponse.data;
-        setCategorias(categoriasData);
-
-        const stockResponse = await axios.get('http://localhost:4000/api/stock/');
-        const stockData = stockResponse.data;
-
-        const updatedData = await Promise.all(
-          stockData.map(async (item) => {
-            const articuloResponse = await axios.get(`http://localhost:4000/api/articulos/${item.Id_articulo}`);
-            const articuloData = articuloResponse.data;
-
-            const categoria = categoriasData.find((cat) => cat._id === articuloData.categoria);
-
-            return {
-              ...item,
-              nombre_categoria: categoria ? categoria.categoria : 'Desconocida',
-            };
-          })
-        );
-
-        setData(updatedData);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      }
+        const response = await axios.get('http://localhost:4000/api/stock');
+        const receivedStockData = response.data;
+        setStockData(receivedStockData);
     };
 
     fetchData();
   }, []);
 
+useEffect(() => {
+    const fetchTallas = async () => {
+        const response = await axios.get('http://localhost:4000/api/tallas');
+        setTallas(response.data);
+    };
+    fetchTallas();
+  }, []);
 
-  const handleQuantityChange = (e) => {
-    const value = e.target.value;
-    if (/^\d+$/.test(value) || value === '') {
-      setEditedQuantity(value);
-    }
-  };
-
-  const getPromocionDiscountPercentage = (idPromocion) => {
-    const promocion = promociones.find((promo) => promo._id === idPromocion);
-    return promocion ? `${promocion.descuento}%` : 'Sin Promo';
-  };
-  
-
-
-  const handleShowModal = () => setShowModal(true);
-  const handleCloseModal = () => setShowModal(false);
-
-  const handleAgregarArticulo = (row) => {
-    if (isArticuloAlreadySelected(row)) {
-      toast.warning('El artículo ya está en la lista', { position: toast.POSITION.TOP_CENTER });
-      return;
-    }
-    const promotionDiscount = row.Id_promocion ? getPromocionDiscountPercentage(row.Id_promocion) : 0;
-    setSelectedPromotionDiscount(promotionDiscount);
-    setArticulosSeleccionados([...articulosSeleccionados, row]);
-  };
-
-  const handleDiscountChange = (type) => {
-    if (type === 'discount') {
-      setApplyDiscount(!applyDiscount);
-    } else if (type === 'promotion') {
-      setApplyPromotion(!applyPromotion);
-      setTotalPromotionDiscount(0); // Reiniciar el descuento de la promoción al cambiar el estado
-    }
-  };
-  
-  
-
-  const calculateDiscountWithDamage = (articulo) => {
-    // Asumiendo que el descuento normal está en porcentaje
-    const normalDiscountPercentage = (articulo.Descuento || 0);
-    const normalDiscountAmount = (articulo.Existencias * articulo.Precio_venta * normalDiscountPercentage) / 100;
-  
-    // Asumiendo que el descuento máximo está en porcentaje
-    const maxDiscountPercentage = (articulo.Descuento_maximo || 0);
-    const maxDiscountAmount = (articulo.Existencias * articulo.Precio_venta * maxDiscountPercentage) / 100;
-  
-    // Mostrar el descuento máximo solo si el artículo tiene daños
-    return articulo.Daños ? `C$${maxDiscountAmount.toFixed(2)}` : `C$${normalDiscountAmount.toFixed(2)}`;
-  };
- 
-  const calculatePromotionDiscount = (articulo) => {
-    if (!applyPromotion || !articulo.Id_promocion) {
-      return 0;
-    }
-    const promocion = promociones.find((promo) => promo._id === articulo.Id_promocion);
-    if (!promocion) {
-      return 0;
-    }
-    const discountAmount = (articulo.Existencias * articulo.Precio_venta * promocion.descuento) / 100;
-    return discountAmount;
-  };
-  
-  
- 
-  useEffect(() => {
-    const descuentoTotal = articulosSeleccionados.reduce((total, articulo) => {
-      const descuento = applyDiscount ? (articulo.Descuento || 0) : 0;
-      const descuentoAmount = (articulo.Existencias * articulo.Precio_venta * descuento) / 100;
-      const promotionDiscount = calculatePromotionDiscount(articulo);
-      return total + descuentoAmount + promotionDiscount;
-    }, 0);
-  
-    setTotalDescuento(descuentoTotal);
-  
-    const totalPromoDiscount = articulosSeleccionados.reduce((total, articulo) => {
-      return total + calculatePromotionDiscount(articulo);
-    }, 0);
-    setTotalPromotionDiscount(totalPromoDiscount);
-  }, [articulosSeleccionados, applyDiscount, applyPromotion]);
-  
-
-  const calculateDamageDiscount = () => {
-    const damageDiscountTotal = articulosSeleccionados.reduce((total, articulo) => {
-      if (articulo.Daños) {
-        // Asumiendo que el descuento máximo está en porcentaje
-        const maxDiscountPercentage = (articulo.Descuento_maximo || 0);
-        const maxDiscountAmount = (articulo.Existencias * articulo.Precio_venta * maxDiscountPercentage) / 100;
-        return total + maxDiscountAmount;
-      }
-      return total;
-    }, 0);
-  
-    return damageDiscountTotal.toFixed(2);
-  };
 
   useEffect(() => {
-    const descuentoTotal = articulosSeleccionados.reduce((total, articulo) => {
-      const descuento = applyDiscount ? (articulo.Descuento || 0) : 0;
-      const descuentoAmount = (articulo.Existencias * articulo.Precio_venta * descuento) / 100;
-      const promotionDiscount = calculatePromotionDiscount(articulo);
-      return total + descuentoAmount + promotionDiscount;
-    }, 0);
-  
-    setTotalDescuento(descuentoTotal);
-  
-    const totalPromoDiscount = articulosSeleccionados.reduce((total, articulo) => {
-      return total + calculatePromotionDiscount(articulo);
-    }, 0);
-  
-    setTotalPromotionDiscount(totalPromoDiscount);
-  }, [articulosSeleccionados, applyDiscount, applyPromotion]);
+    const fetchPromotions = async () => {
+        const response = await axios.get('http://localhost:4000/api/promociones');
+        setPromotions(response.data);
+    };
 
-  const filteredData = data.filter((row) => {
-    const attributesToSearch = [
-      getArticuloNameById(row.idArticulo),
-      row.nombre_categoria,
-      getColorNameById(row.Id_color),
-      getMarcaNameById(row.Id_marca),
-      getTallaNameById(row.Id_talla),
-      getEstiloNameById(row.Id_estilo),
-      getMaterialNameById(row.Id_material),
-      getDiseñoNameById(row.Id_diseño),
-      row.Precio_venta.toString(), // Convertir a cadena para permitir búsquedas numéricas
-      row.Existencias.toString(), // Convertir a cadena para permitir búsquedas numéricas
-      // Agrega más atributos según sea necesario
-    ];
-  
-    return attributesToSearch.some(
-      (attribute) => attribute.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  });
-  
-const [cantidad, setCantidad] = useState(0);
+    fetchPromotions();
+  }, []);
 
-const [fecha, setFecha] = useState("");
-const [cliente, setCliente] = useState("");
-const [idVentas, setIdVentas] = useState(""); 
+  const filteredData = stockData.filter(item => (item.Existencias !== null && item.Existencias !== 0) && item.Estado);
 
+  const handleAddToCart = (row) => {
+  const { _id, Id_articulo, Id_categoria, Id_marca, Id_color, Id_estilo, Id_material, Id_talla, Id_diseño, Existencias, Precio_venta, Descuento, Descuento_maximo, Id_promocion } = row;
 
-const realizarVenta = async () => {
-  const ventaUrl = "http://localhost:4000/api/ventas";
-  const detalleUrl = "http://localhost:4000/api/detalleventa";
-  const descuento = parseFloat(document.getElementById('descuentoTotal').innerText.split('C$')[1]);
-  const total = parseFloat(document.getElementById('totalVenta').innerText.split('$')[1]);
+  const isItemInCart = selectedItems.some((item) => item._id === _id);
+  if (isItemInCart) {
+    toast.error('Este Articulo ya a sido seleccionado', { position: toast.POSITION.TOP_CENTER });
+    return;
+  }
 
-  // Obtener datos para la primera petición
-  const data = {
-    cliente: cliente,
-    fecha: fecha,
-    descuento: descuento,
-    total: total,
-    estado: true // Este valor es constante según tu solicitud
+  const newItem = {
+    _id,
+    Id_articulo,
+    Id_categoria,
+    Id_marca,
+    Id_color,
+    Id_estilo,
+    Id_material,
+    Id_talla,
+    Id_diseño,
+    cantidad: 1,
+    precio: Precio_venta,
+    subtotal: Precio_venta,
+    descuento: row.Daños ? Descuento_maximo : Descuento, // Use Descuento_maximo for damaged items
+    Existencias,
+    Id_promocion,
   };
 
-  try {
-    // Realizar la primera petición POST para la venta principal
-    const responseVenta = await fetch(ventaUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(data)
-    });
+  setSelectedItems([...selectedItems, newItem]);
+  setSelectedRow(row);
+};
 
-    if (responseVenta.ok) {
-      const responseDataVenta = await responseVenta.json();
-      const idVentas = responseDataVenta._id;
 
-      console.log("Venta realizada con éxito, ID:", idVentas);
+  const [requestStatus, setRequestStatus] = useState({ loading: false, success: false, error: null });
 
-      // Realizar la segunda petición POST para el detalle de la venta
-      const articulosData = {
-        id_ventas: idVentas,
-        articulos: articulosSeleccionados.map((articulo) => {
-          const descuentoArticulo = calcularDescuentoArticulo(articulo);
-          return {
-            id_articulo: articulo.Id_articulo,
-            id_marca: articulo.Id_marca,
-            id_color: articulo.Id_color,
-            id_estilo: articulo.Id_estilo,
-            id_material: articulo.Id_material,
-            id_talla: articulo.Id_talla,
-            id_diseño: articulo.Id_diseño,
-            cantidad: parseInt(articulo.Existencias),
-            precio: articulo.Precio_venta,
-            subtotal: calculateSubtotal(articulo),
-            descuento: parseFloat(descuentoArticulo),
-            _id: articulo._id
-          };
-        }),
-        total: total // Puedes ajustar el total según tus necesidades
+  const handleRealizarVenta = async () => {
+    setRequestStatus({ loading: true, success: false, error: null });
+    try {
+      const selectedItemsWithNumberQuantity = selectedItems.map(item => ({
+        ...item,
+        cantidad: parseInt(item.cantidad, 10), 
+      }));
+      const ventaData = {
+        items: selectedItemsWithNumberQuantity,
       };
 
-      // Realizar la segunda petición POST para el detalle de la venta
-      const responseDetalle = await fetch(detalleUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(articulosData)
-      });
-      console.log("JSON enviados:", {
-        ventaPrincipal: data,
-        detalleVenta: articulosData
-      });
-
-      if (responseDetalle.ok) {
-        console.log("Detalle de venta registrado con éxito.");
-      } else {
-        console.error("Error al registrar el detalle de la venta. Código de respuesta:", responseDetalle.status);
-      }
-    } else {
-      console.error("Error al realizar la venta. Código de respuesta:", responseVenta.status);
-    }
-  } catch (error) {
-    console.error("Error de red:", error);
-  }
-};
-
-// Función para calcular el descuento de cada artículo
-const calcularDescuentoArticulo = (articulo) => {
-  // Verificar si el artículo tiene descuento regular o máximo
-  const descuentoRegular = articulo.Descuento || 0;
-  const descuentoMaximo = articulo.Descuento_maximo || 0;
-
-  // Calcular descuento de promoción si está disponible
-  const descuentoPromocion = getPromocionDiscountPercentage(articulo.Id_promocion) || 0;
-
-  // Sumar los descuentos
-  const descuentoTotal = descuentoRegular + descuentoMaximo + descuentoPromocion;
-
-  return descuentoTotal;
-};
-
-
-
-
-  const construirTablaPersonalizada = () => {
-    if (articulosSeleccionados.length === 0) {
-      return null;
-    }
-
+  
+      console.log('Data being sent in the POST request:', ventaData);
+      const response = await axios.post('http://localhost:4000/api/realizar-venta', ventaData);
  
-    return (
-<Container style={{marginTop: '10px',   overflowX: 'auto',overflowY:'auto',fontFamily:'Bold'}} >
-<table style={{ textAlign: 'center', fontFamily: 'Arial' }} className="table table-bordered table-striped">
-        <thead>
-          <tr>
-            <th>Artículo</th>
-            <th>Categoría</th>
-            <th>Color</th>
-            <th>Marca</th>
-            <th>Talla</th>
-            <th>Estilo</th>
-            <th>Material</th>
-            <th>Diseño</th>
-            <th>Precio </th>
-            <th>Cantidad</th>
-            <th>IVA</th>
-            <th>Descuento</th>
-            <th>Desc. Promo (%)</th>
-            <th>Subtotal</th>
-            <th>Opciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {articulosSeleccionados.map((articulo) => (
-            <tr key={articulo._id}>
-              <td>{getArticuloNameById(articulo.Id_articulo)}</td>
+      setRequestStatus({ loading: false, success: true, error: null });
+      console.log('Venta realizada con éxito:', response.data);
+    } catch (error) {
 
-              <td>{articulo.nombre_categoria}</td>
-              <td>{getColorNameById(articulo.Id_color)}</td>
+      setRequestStatus({ loading: false, success: false, error: error.message });
+      console.error('Error realizando la venta:', error);
+    }
+  };
+ 
+  useEffect(() => {
+    const fetchColores = async () => {
+        const response = await axios.get('http://localhost:4000/api/colores');
+        setColores(response.data);
+    };
+    fetchColores();
+  }, []);
 
-              <td>{getMarcaNameById(articulo.Id_marca)}</td>
+  useEffect(() => {
+    const fetchArticulos = async () => {
+        const response = await axios.get('http://localhost:4000/api/articulos');
+        setArticulos(response.data);
+    };
+    fetchArticulos();
+  }, []);
 
-              <td>{getTallaNameById(articulo.Id_talla)}</td>
+  useEffect(() => {
+    const fetchCategorias = async () => {
+        const response = await axios.get('http://localhost:4000/api/categorias');
+        setCategorias(response.data);
+    };
+    fetchCategorias();
+  }, []); 
 
-              <td>{getEstiloNameById(articulo.Id_estilo)}</td>
+  useEffect(() => {
+    const fetchEstilos = async () => {
+        const response = await axios.get('http://localhost:4000/api/estilos');
+        setEst(response.data);
+    };
+    fetchEstilos();
+  }, []);
 
-              <td>{getMaterialNameById(articulo.Id_material)}</td>
+  useEffect(() => {
+    const fetchMarcas = async () => {
+        const response = await axios.get('http://localhost:4000/api/marcas');
+        setMarcas(response.data);
+    };
+    fetchMarcas();
+  }, []);
 
-             <td>{getDiseñoNameById(articulo.Id_diseño)}</td>
+  useEffect(() => {
+    const fetchDisenos = async () => {
+        const response = await axios.get('http://localhost:4000/api/disenos');
+        setDisenos(response.data);
+    };
+    fetchDisenos();
+  }, []);
 
-              <td>C${articulo.Precio_venta}</td>
-              <td> {articulo.Existencias}</td>
-              <td>{`C$${((articulo.Precio_venta * 0.15).toFixed(2))}`}</td>
-              <td>{articulo.Daños ? calculateDiscountWithDamage(articulo) : calculateDiscount(articulo)}</td>
-              <td>{getPromocionDiscountPercentage(articulo.Id_promocion)}</td>
-             <td>${calculateSubtotal(articulo)}</td>
+  useEffect(() => {
+    const fetchMateriales = async () => {
+        const response = await axios.get('http://localhost:4000/api/materiales');
+        setMateriales(response.data);
+    };
+    fetchMateriales();
+  }, []);
 
-              <td>
-              <Button
-                variant="outline-primary"
-                style={{ width: '40px', height: '40px',marginRight:'2px' }}
-                onClick={() => handleEditModal(articulo)}
-              >
-                <FaPencilAlt />
-              </Button>
 
-                <Button
-                  variant="outline-danger"
-                  style={{ width: '40px', height: '40px',marginTop:'2px' }}
-                  onClick={() => handleEliminarArticulo(articulo)}
-                >
-                  <MdDeleteForever style={{}} />
-
-                </Button>
-              
-            </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      </Container>
-    );
+  const getMaterialNameById = (materialId) => {
+    const material = materiales.find((m) => m._id === materialId);
+    return material ? material.material : 'Nombre no encontrado';
   };
 
-  const calculateSubtotal = (articulo) => {
-  return (articulo.Existencias * articulo.Precio_venta).toFixed(2);
+
+const obtenerNombreDisenoPorId = (idDiseno) => {
+  const disenoSeleccionado = disenos.find(diseno => diseno._id === idDiseno);
+  return disenoSeleccionado ? disenoSeleccionado.diseno : 'Diseño no encontrado';
 };
+  
+const getNombreArticulo = (idArticulo) => {
+    const articulo = articulos.find((a) => a._id === idArticulo);
+    return articulo ? articulo.nombre : 'Desconocido';
+  }; 
+
+  
+  const handleEditOpen = (item) => {
+    setEditingItem(item);
+    setNewQuantity(item.cantidad);
+  };
+  
+
+  const getDiscountById = (promoId) => {
+    const promotion = promotions.find((p) => p._id === promoId);
+    return promotion ? promotion.descuento : 0;
+  };
 
 
+  const handleEditSave = () => {
+    const newQuantityNumber = parseInt(newQuantity, 10);
+    console.log('Existencias.',editingItem.Existencias);
+    if (newQuantityNumber > editingItem.Existencias) {
+    
+      toast.error('Stock insuficiente',{ position: toast.POSITION.TOP_CENTER });
+      return;
+    }
+  
+
+    const updatedItems = selectedItems.map((item) =>
+      item._id === editingItem._id ? { ...item, cantidad: newQuantityNumber } : item
+    );
+  
+    setSelectedItems(updatedItems);
+    setEditingItem(null);
+  };
+
+  const handleDeleteItem = (itemId) => {
+    const updatedItems = selectedItems.filter(item => item._id !== itemId);
+    setSelectedItems(updatedItems);
+  };
+  
+  
+  
+  const handleEditClose = () => {
+    setEditingItem(null);
+  };
+  
+  const getNombreTalla = (idTalla) => {
+    const tallaEncontrada = tallas.find((talla) => talla._id === idTalla);
+    return tallaEncontrada ? tallaEncontrada.talla : 'Desconocida';
+  };
+  const getColorNameById = (colorId) => {
+    const color = colores.find((c) => c._id === colorId);
+    return color ? color.color : 'Desconocido';
+  };
+  const getNombreCategoriaById = (categoriaId) => {
+    const categoria = categorias.find((c) => c._id === categoriaId);
+    return categoria ? categoria.categoria : 'Desconocido';
+  };
+  const mapEstiloIdToNombre = (id) => {
+    const estilo = est.find((e) => e._id === id);
+    return estilo ? estilo.estilo : 'Desconocido ';
+  };
+
+  
+  const getMarcaNombreById = (id) => {
+    const marca = marcas.find((marca) => marca._id === id);
+    return marca ? marca.marca : '';
+  };
+
+  const tableData = filteredData;
   const columns = [
-    { 
-      name: 'Artículo', 
-      selector: 'Id_articulo', 
-      sortable: true, 
-      cell: (row) => getArticuloNameById(row.Id_articulo), 
-    },
-    { name: 'Categoría', selector: 'nombre_categoria', sortable: true, label: 'Categoría' },
-    { name: 'Color', 
-      selector: 'Id_color', 
+    { name: '_id', selector: '_id', sortable: true },
+    {
+      name: 'Articulo',
+      selector: 'Id_articulo',
       sortable: true,
-      cell: (row) => getColorNameById(row.Id_color), 
+      cell: (row) => getNombreArticulo(row.Id_articulo),
     },
-    { name: 'Marca', 
-      selector: 'Id_marca', 
-      sortable: true,
-      cell: (row) => getMarcaNameById(row.Id_marca), 
-    },
-    { name: 'Talla', 
-      selector: 'Id_talla', 
-      sortable: true,
-      cell: (row) => getTallaNameById(row.Id_talla), 
-    },
-    { name: 'Estilo', 
-      selector: 'Id_estilo', 
-      sortable: true,
-      cell: (row) => getEstiloNameById(row.Id_estilo), 
-    },
-    { name: 'Material', 
-      selector: 'Id_material', 
-      sortable: true,
-      cell: (row) => getMaterialNameById(row.Id_material), 
-    },
-    { name: 'Diseño', 
-      selector: 'Id_diseño', 
-      sortable: true,
-      cell: (row) => getDiseñoNameById(row.Id_diseño), 
-    },
+    { name: 'Categoria', selector: 'Id_categoria', sortable: true, cell: (row) => getNombreCategoriaById(row.Id_categoria) },
+    { name: 'Color', selector: 'Id_color', sortable: true, cell: (row) => getColorNameById(row.Id_color) },
+    { name: 'Marca', selector: 'Id_marca', sortable: true, cell: (row) => getMarcaNombreById(row.Id_marca) },
+    { name: 'Talla', selector: 'Id_talla', sortable: true, cell: (row) => getNombreTalla(row.Id_talla) },
+    { name: 'Estilo', selector: 'Id_estilo', sortable: true, cell: (row) => mapEstiloIdToNombre(row.Id_estilo) },
+    { name: 'Material', selector: 'Id_material', sortable: true, cell: (row) => getMaterialNameById(row.Id_material) },
+    { name: 'Diseño', selector: 'Id_diseño', sortable: true, cell: (row) => obtenerNombreDisenoPorId(row.Id_diseño) },
+    { name: 'Descuento', selector: 'Descuento', sortable: true },
+    { name: 'Descuento_maximo', selector: 'Descuento_maximo', sortable: true },
+    { name: 'Bodega', selector: 'Id_bodega', sortable: true, cell: row => bodegaFormatter(row) },
     { name: 'Precio', selector: 'Precio_venta', sortable: true },
-
-    {name:'Descuento %',selector:'Descuento',sortable:true},
-
     { name: 'Existencias', selector: 'Existencias', sortable: true },
-
-    { name: 'Daño', selector: 'Daños', cell: (row) => (row.Daños ? 'Sí' : 'No') },
-
-    { name: 'Desc Max %', selector: 'Descuento_maximo', sortable: true, cell: (row) => (row.Descuento_maximo ? `${row.Descuento_maximo}%` : 'N/A') },
-
-
-
-    { 
-      name: 'Bodega', 
-      selector: 'Id_bodega', 
-      sortable: true,
-      cell: (row) => getBodegaNameById(row.Id_bodega),
-    },
-
-     { name: 'Promocion', selector: 'Id_promocion', sortable: true, cell: (row) => getPromocionNameById(row.Id_promocion) },
-
+    { name: 'Estado', selector: 'Estado', sortable: true, cell: row => estadoFormatter(row) },
+    { name: 'Daños', selector: 'Daños', sortable: true, cell: row => danosFormatter(row) },
+    { name: 'Descripcion', selector: 'Descripcion', sortable: true },
+    { name: 'Promocion', selector: 'Id_Promocion', sortable: true, cell: row => getDiscountById(row.Id_promocion) },
     {
       name: 'Opciones',
       cell: (row) => (
-        <Button variant="outline-primary" style={{ width: '40px', height: '40px' }} onClick={() => handleAgregarArticulo(row)}>
+<Button
+  variant="primary"
+  style={{ width: '40px', height: '40px', color: 'white' }}
+  onClick={() => handleAddToCart(row)}
+  disabled={selectedRow === row}>
           <FaPlus />
         </Button>
       ),
+      button: true,
     },
   ];
-  
+
+
   return (
     <Container fluid style={estilos.containerStyle}>
       <h2 className=" mt-4 center-text" style={estilos.titulo}>
@@ -837,120 +317,163 @@ const calcularDescuentoArticulo = (articulo) => {
       <Form style={{ width: '95%', backgroundColor: 'white', marginTop: '10px', marginLeft: '3%', marginRight: 'auto', borderRadius: '5px', display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
         <Form.Group controlId="formfecha" style={{ flex: 1, display: 'flex', flexDirection: 'column', marginLeft: '55px' }}>
           <Form.Label style={{ marginLeft: '40px' }}>Fecha de Venta</Form.Label>
-          <Form.Control 
-  type="date" 
-  className="form-control" 
-  style={estilos.inputStyle2} 
-  onChange={(e) => setFecha(e.target.value)}
-/>
+          <Form.Control
+            type="date"
+            className="form-control"
+            style={estilos.inputStyle2}
+          />
         </Form.Group>
         <Form.Group controlId="formproveedor" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
           <Form.Label style={{ marginLeft: '50px' }}>Cliente</Form.Label>
-         <Form.Control 
-  type="text" 
-  style={estilos.inputStyle2} 
-  className="form-control" 
-  onChange={(e) => setCliente(e.target.value)}
-/>
+          <Form.Control
+            type="text"
+            style={estilos.inputStyle2}
+            className="form-control"
+          />
         </Form.Group>
       </Form>
-      <Button style={estilos.search} variant="outline-secondary" onClick={handleShowModal}>
+
+      <Button style={estilos.search} variant="outline-secondary" onClick={handleShowModal} >
         Agregar Articulos
       </Button>
 
-      <Modal show={showModal}  onHide={handleCloseModal} size="xl">
-        <Modal.Header style={{color:'white',backgroundColor:'#4a4a4a'}}  closeButton>
-          <Modal.Title  >Inventario</Modal.Title>
-        </Modal.Header>
-        <Modal.Body style={{color:'white',backgroundColor:'#4a4a4a'}}>
-        <Form.Control
-  type="text"
-  placeholder="Buscar..."
-  value={searchTerm}
-  onChange={(e) => setSearchTerm(e.target.value)}
-/>
+    <div style={{ marginTop: '25px', width: '95%', margin: '0 auto', overflowX: 'auto' }} >
+    <table style={{ textAlign: 'center',marginTop:'10px' }} className="table table-bordered table-striped"  >
+    <thead>
+  <tr>
+    <th>Artículo</th>
+    <th>Categoría</th>
+    <th>Marca</th>
+    <th>Color</th>
+    <th>Estilo</th>
+    <th>Material</th>
+    <th>Talla</th>
+    <th>Diseño</th>
+    <th>Existencias</th>
+    <th>Cantidad</th>
+    <th>Precio</th>
+    <th>Subtotal</th>
+    <th>Descuento</th>
+    <th>Prom Desc%</th>
+    <th>Opciones</th>
+  </tr>
+</thead>
+<tbody>
+  {selectedItems.map((item) => (
+    <tr key={item._id}>
+      <td>{getNombreArticulo(item.Id_articulo)}</td>
 
-        <DataTable
-  columns={columns}
-  data={filteredData}
-  pagination
-  highlightOnHover
-  striped
-  responsive
-  style={{ overflowX: 'auto', overflowY: 'auto', textAlign: 'center', width: '100%' }}
-/>
+      <td>{getNombreCategoriaById(item.Id_categoria)}</td>
+      <td>{getMarcaNombreById(item.Id_marca)}</td>
+      <td>{getColorNameById(item.Id_color)}</td>
+      <td>{mapEstiloIdToNombre(item.Id_estilo)}</td>
+      <td>{getMaterialNameById(item.Id_material)}</td>
+      <td>{getNombreTalla(item.Id_talla)}</td>
+      <td>{obtenerNombreDisenoPorId(item.Id_diseño)}</td>
+      <td>{item.Existencias}</td>
+      <td>{item.cantidad}</td>
+      <td>{item.precio}</td>
+      <td>{item.subtotal}</td>
+      <td>{item.Daños ? 'N/A' : item.descuento}</td>
+      <td>{getDiscountById(item.Id_promocion)}</td>
+      <td>
+        <Button variant="primary" style={{ width: '30px', height: '30px', marginRight: '5px',fontSize:'17px',padding:'0' }}  onClick={() => handleEditOpen(item)}>
+          <FaPencilAlt />
+        </Button>
+        <Button variant="danger" style={{ width: '30px', height: '30px', fontSize: '20px',padding:'0'}}    onClick={() => handleDeleteItem(item._id)}>
+          <MdDeleteForever style={{marginBottom:'5px'   }} />
+        </Button>
+      </td>
+    </tr>
+  ))}
+</tbody>
 
-        </Modal.Body>
-      </Modal>
-
-      <div style={{ marginTop: '20px', width:'95' }}>
-        <h3 style={{color:'white',textAlign:'center'}} >Artículos Seleccionados</h3>
-        {construirTablaPersonalizada()}
+      </table>
       </div>
 
+      <div style={{ margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', maxWidth: '400px', backgroundColor: 'white', padding: '10px', borderRadius: '5px', marginTop: '10px' }}>
+        <div>
+          <Form.Check
+            type="checkbox"
+            label="Aplicar Descuento"
+          />
+        </div>
 
-      <div style={{ margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', maxWidth: '400px', backgroundColor: 'white', padding: '10px', borderRadius: '5px' }}>
-      <div>
-  <Form.Check
-    type="checkbox"
-    label="Aplicar Descuento"
-    checked={applyDiscount}
-    onChange={() => handleDiscountChange('discount')}
-  />
-</div>
+        <div>
+          <Form.Check
+            type="checkbox"
+            label="Aplicar Promocion"
+          />
+        </div>
 
-<div>
-  <Form.Check
-    type="checkbox"
-    label="Aplicar Promocion"
-    checked={applyPromotion}
-    onChange={() => handleDiscountChange('promotion')}
-  />
-</div>
+        <div style={{ marginTop: '10px' }}>
+          <h4 id="totalVenta">Total: C$</h4>
+          <h5 id="descuentoTotal">Descuento Total: C$</h5>
+          <h5>Descuento por Daños: C$</h5>
+          <h5>Promoción Descuento Total: C$</h5>
+        </div>
+      </div>
 
-<div style={{ marginTop: '10px' }}>
-  <h4 id="totalVenta">Total: ${calculateTotal()}</h4>
-<h5 id="descuentoTotal">Descuento Total: C${totalDescuento.toFixed(2)}</h5>
-
-  <h5>Descuento por Daños: C${calculateDamageDiscount()}</h5>
-  <h5>Promoción Descuento Total: C${totalPromotionDiscount.toFixed(2)}</h5>
-</div>
-</div>
-
-
-      <Button variant="success" style={{ width: '150px', height: '50px', marginTop: '20px', marginLeft: '45%' }} onClick={realizarVenta}>
+      <Button variant="success" style={{ width: '150px', height: '50px', marginTop: '20px', marginLeft: '45%' }} onClick={handleRealizarVenta} >
         Realizar Venta
       </Button>
-
       <Footer />
-
-      <Modal show={!!editItem} onHide={() => setEditItem(null)}>
-      <Modal.Header style={{backgroundColor:'#4a4a4a',color:'white'}} closeButton>
-        <Modal.Title>Editar Cantidad</Modal.Title>
-      </Modal.Header  >
-      <Modal.Body style={{backgroundColor:'#4a4a4a',color:'white'}}>
-        <Form.Group >
-          <Form.Label >Cantidad:</Form.Label>
-          <Form.Control
-            type="number"
-            value={editedQuantity}
-              onChange={handleQuantityChange}
+      <Modal show={showModal} onHide={handleCloseModal} size="xl">
+        <Modal.Header closeButton>
+          <Modal.Title>Agregar Articulos</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <DataTable
+            columns={columns}
+            data={tableData}
+            pagination
+            responsive
+            conditionalRowStyles={conditionalRowStyles}
           />
-        </Form.Group>
-      </Modal.Body>
-      <Modal.Footer style={{backgroundColor:'#4a4a4a',color:'white'}}>
-      <Button style={{width:'100px',height:'50px'}}  variant="primary" onClick={handleSaveEdit}>
-          Guardar
-        </Button>
-        <Button style={{width:'100px',height:'50px'}} variant="secondary" onClick={() => setEditItem(null)}>
-          Cancelar
-        </Button>
-        
-      </Modal.Footer>
-    </Modal>
-    <ToastContainer />
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" style={{ width: '100px', height: '40px' }} onClick={handleCloseModal}>
+            Cerrar
+          </Button>
+        </Modal.Footer>
+      </Modal>
+      <Modal show={editingItem !== null} onHide={handleEditClose}>
+  <Modal.Header closeButton>
+    <Modal.Title style={{textAlign:'center'}}>Editar Cantidad</Modal.Title>
+  </Modal.Header>
+  <Modal.Body>
+    <Form.Group controlId="formNewQuantity">
+      <Form.Label>Cantidad</Form.Label>
+      <Form.Control
+        type="number"
+        value={newQuantity}
+        onChange={(e) => setNewQuantity(e.target.value)}
+      />
+    </Form.Group>
+  </Modal.Body>
+  <Modal.Footer>
+    <Button variant="primary" style={{width:'100px',height:'40px'}} onClick={handleEditSave}>
+      Guardar
+    </Button>
+    <Button variant="secondary" style={{width:'100px',height:'40px'}} onClick={handleEditClose}>
+      Cancelar
+    </Button>
+  </Modal.Footer>
+</Modal>
+
+      <ToastContainer />
     </Container>
   );
 };
 
 export default VentasView;
+
+
+const conditionalRowStyles = [
+  {
+    when: row => row.Daños === true,
+    style: {
+      backgroundColor: '#F64663',
+    },
+  },
+];
