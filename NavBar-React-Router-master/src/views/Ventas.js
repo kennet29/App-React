@@ -29,6 +29,39 @@ const VentasView = () => {
   const [materiales, setMateriales] = useState([]);
   const [disenos, setDisenos] = useState([]);
   const [promotions, setPromotions] = useState([]);
+
+  const [total, setTotal] = useState(0);
+  const [totalDiscount, setTotalDiscount] = useState(0);
+  const [damageDiscount, setDamageDiscount] = useState(0);
+  const [promotionDiscount, setPromotionDiscount] = useState(0);
+
+  
+  const calculateTotalsAndDiscounts = () => {
+    let newTotal = 0;
+    let newTotalDiscount = 0;
+    let newDamageDiscount = 0;
+    let newPromotionDiscount = 0;
+  
+    selectedItems.forEach((item) => {
+      newTotal += item.subtotal;
+      newTotalDiscount += item.Daños ? 0 : item.descuento;
+      newDamageDiscount += item.Daños ? item.descuento : 0;
+      newPromotionDiscount += getDiscountById(item.Id_promocion);
+    });
+  
+    setTotal(newTotal);
+    setTotalDiscount(newTotalDiscount);
+    setDamageDiscount(newDamageDiscount);
+    setPromotionDiscount(newPromotionDiscount);
+  };
+
+  
+  // Inside the component, after setting the selected items state
+useEffect(() => {
+  calculateTotalsAndDiscounts();
+}, [selectedItems]);
+
+
   const [editingItem, setEditingItem] = useState(null);
   const [newQuantity, setNewQuantity] = useState(0);
   const handleShowModal = () => {
@@ -91,13 +124,20 @@ useEffect(() => {
     Id_material,
     Id_talla,
     Id_diseño,
-    cantidad: 1,
+    cantidad: 1, // You may adjust this based on your logic for the quantity
     precio: Precio_venta,
-    subtotal: Precio_venta,
     descuento: row.Daños ? Descuento_maximo : Descuento, // Use Descuento_maximo for damaged items
     Existencias,
     Id_promocion,
+    subtotal: 0, // Initialize subtotal
   };
+  
+  // Calculate subtotal based on quantity, price, and discount
+  newItem.subtotal = newItem.cantidad * newItem.precio - newItem.descuento;
+  
+  // If you want to ensure the subtotal is not negative
+  newItem.subtotal = Math.max(newItem.subtotal, 0);
+  
 
   setSelectedItems([...selectedItems, newItem]);
   setSelectedRow(row);
@@ -106,29 +146,85 @@ useEffect(() => {
 
   const [requestStatus, setRequestStatus] = useState({ loading: false, success: false, error: null });
 
-  const handleRealizarVenta = async () => {
-    setRequestStatus({ loading: true, success: false, error: null });
-    try {
-      const selectedItemsWithNumberQuantity = selectedItems.map(item => ({
-        ...item,
-        cantidad: parseInt(item.cantidad, 10), 
-      }));
-      const ventaData = {
-        items: selectedItemsWithNumberQuantity,
-      };
+
+
+const handleRealizarVenta = async () => {
+  setRequestStatus({ loading: true, success: false, error: null });
+
+  try {
+    // Obtener valores de fecha y cliente del formulario
+    const fechaVenta = document.getElementById('fechaVenta').value;
+    const clienteVenta = document.getElementById('clienteVenta').value;
+
+    // Validar que se haya ingresado la fecha y el cliente
+    if (!fechaVenta || !clienteVenta) {
+      // Puedes manejar esto según tus necesidades, por ejemplo, mostrando un mensaje al usuario.
+      console.error('Por favor, ingrese la fecha y el cliente.');
+      return;
+    }
+
+    // Construir la data de la venta
+    const ventaData = {
+      cliente: clienteVenta,
+      fecha: fechaVenta,
+      descuento: totalDiscount + promotionDiscount, // Sumar los dos descuentos
+      subtotal: total - (totalDiscount + promotionDiscount), // Restar los dos descuentos del total
+      total: total,           // Ajusta según tu lógica de total
+      estado: true,
+    };
+
+    // Mostrar el JSON que se enviará en la primera petición POST
+    console.log('JSON enviado en la primera petición de venta:', ventaData);
+
+    // Realizar la primera petición POST a la URL de ventas
+    const responseVenta = await axios.post('http://localhost:4000/api/ventas', ventaData);
+
+    // Extraer el ID de la venta creada
+    const ventaId = responseVenta.data._id;
+    console.log('ID de la venta creada:', ventaId);
+
+    // Construir la data de los artículos asociados a la venta (en el formato especificado)
+    const articulosVentaData = {
+      id_ventas: ventaId,
+      articulos: selectedItems.map(({ Existencias, Id_articulo, Id_categoria, Id_color, Id_diseño, Id_estilo, Id_marca, Id_material, Id_promocion, Id_talla, ...rest }) => ({
+        ...rest,
+        id_articulo: Id_articulo,
+        id_categoria: Id_categoria,
+        id_color: Id_color,
+        id_diseño: Id_diseño,
+        id_estilo: Id_estilo,
+        id_marca: Id_marca,
+        id_material: Id_material,
+        id_promocion: Id_promocion,
+        id_talla: Id_talla,
+        cantidad: parseInt(rest.cantidad, 10),
+        subtotal: rest.subtotal,
+        descuento: rest.danos ? 0 : rest.descuento, // Ajustar según tu lógica de descuento
+        _id: rest._id, // Mantener el ID original
+      })),
+      total: total - (totalDiscount + promotionDiscount), // Restar los descuentos al total
+    };
+
+    // Mostrar el JSON que se enviará en la segunda petición POST
+    console.log('JSON enviado en la segunda petición de artículos:', articulosVentaData);
+
+    // Realizar la segunda petición POST a la URL correspondiente para los artículos
+    const responseArticulos = await axios.post('http://localhost:4000/api/detalleventa', articulosVentaData);
+    console.log('Segunda petición de artículos realizada con éxito:', responseArticulos.data);
+
+    setRequestStatus({ loading: false, success: true, error: null });
+    console.log('Venta realizada con éxito');
+  } catch (error) {
+    setRequestStatus({ loading: false, success: false, error: error.message });
+    console.error('Error realizando la venta:', error);
+  }
+};
+
 
   
-      console.log('Data being sent in the POST request:', ventaData);
-      const response = await axios.post('http://localhost:4000/api/realizar-venta', ventaData);
- 
-      setRequestStatus({ loading: false, success: true, error: null });
-      console.log('Venta realizada con éxito:', response.data);
-    } catch (error) {
-
-      setRequestStatus({ loading: false, success: false, error: error.message });
-      console.error('Error realizando la venta:', error);
-    }
-  };
+  
+  
+  
  
   useEffect(() => {
     const fetchColores = async () => {
@@ -218,21 +314,20 @@ const getNombreArticulo = (idArticulo) => {
 
   const handleEditSave = () => {
     const newQuantityNumber = parseInt(newQuantity, 10);
-    console.log('Existencias.',editingItem.Existencias);
+  
     if (newQuantityNumber > editingItem.Existencias) {
-    
       toast.error('Stock insuficiente',{ position: toast.POSITION.TOP_CENTER });
       return;
     }
   
-
     const updatedItems = selectedItems.map((item) =>
-      item._id === editingItem._id ? { ...item, cantidad: newQuantityNumber } : item
+      item._id === editingItem._id ? { ...item, cantidad: newQuantityNumber, subtotal: newQuantityNumber * item.precio - item.descuento } : item
     );
   
     setSelectedItems(updatedItems);
     setEditingItem(null);
   };
+  
 
   const handleDeleteItem = (itemId) => {
     const updatedItems = selectedItems.filter(item => item._id !== itemId);
@@ -315,17 +410,19 @@ const getNombreArticulo = (idArticulo) => {
         Registro de Ventas
       </h2>
       <Form style={{ width: '95%', backgroundColor: 'white', marginTop: '10px', marginLeft: '3%', marginRight: 'auto', borderRadius: '5px', display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
-        <Form.Group controlId="formfecha" style={{ flex: 1, display: 'flex', flexDirection: 'column', marginLeft: '55px' }}>
+        <Form.Group style={{ flex: 1, display: 'flex', flexDirection: 'column', marginLeft: '55px' }}>
           <Form.Label style={{ marginLeft: '40px' }}>Fecha de Venta</Form.Label>
           <Form.Control
+            id="fechaVenta"
             type="date"
             className="form-control"
             style={estilos.inputStyle2}
           />
         </Form.Group>
-        <Form.Group controlId="formproveedor" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <Form.Group  style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
           <Form.Label style={{ marginLeft: '50px' }}>Cliente</Form.Label>
           <Form.Control
+           id="clienteVenta" 
             type="text"
             style={estilos.inputStyle2}
             className="form-control"
@@ -407,11 +504,11 @@ const getNombreArticulo = (idArticulo) => {
         </div>
 
         <div style={{ marginTop: '10px' }}>
-          <h4 id="totalVenta">Total: C$</h4>
-          <h5 id="descuentoTotal">Descuento Total: C$</h5>
-          <h5>Descuento por Daños: C$</h5>
-          <h5>Promoción Descuento Total: C$</h5>
-        </div>
+  <h4>Total: C${total}</h4>
+  <h5>Descuento Total: C${totalDiscount}</h5>
+  <h5>Promoción Descuento Total: C${promotionDiscount}</h5>
+</div>
+
       </div>
 
       <Button variant="success" style={{ width: '150px', height: '50px', marginTop: '20px', marginLeft: '45%' }} onClick={handleRealizarVenta} >
