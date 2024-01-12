@@ -4,7 +4,9 @@ import estilos from '../css/ingresos-estilos';
 import '../css/detalle-ingresos.css';
 import axios from 'axios';
 import Footer from '../component/footer/footer';
-
+import MyNavbar from '../component/Navbar';
+import { toast } from 'react-toastify';
+import { ToastContainer } from 'react-toastify';
 
   const IngresosView = () => {
   const [articulos, setArticulos] = useState([]);
@@ -399,6 +401,7 @@ const getNombreCategoriaById = (categoriaId) => {
             };
             console.log('Datos del stock a enviar:', stockData);
             const responseStock = await axios.post('http://localhost:4000/api/stock', stockData);
+            toast.success('Venta realizada Exitosamente',{position :toast.POSITION.TOP_CENTER})
             console.log('Stock creado correctamente:', responseStock);
         }
 
@@ -439,6 +442,7 @@ const getNombreCategoriaById = (categoriaId) => {
 
 
     <Container fluid style={estilos.containerStyle}>
+      <MyNavbar/>
       <Form style={{ width: '95%', backgroundColor: 'white', marginTop: '10px', marginLeft: 'auto', marginRight: 'auto', borderRadius: '5px', display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
         <Form.Group controlId="formFechaVenta" style={{ flex: 1, display: 'flex', flexDirection: 'column', marginLeft: '35px' }}>
           <Form.Label style={{ marginBottom: '5px' }}>Fecha de Venta</Form.Label>
@@ -860,6 +864,7 @@ const getNombreCategoriaById = (categoriaId) => {
         </Modal.Footer>
       </Modal>
       <Footer />
+      <ToastContainer/>
     </Container>
 
   );

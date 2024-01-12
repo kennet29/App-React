@@ -22,6 +22,7 @@ import StockView from "./views/Stock.js";
 import HistorialIngresos from "./views/HistorialIngresos.js";
 import HistorialVentas from "./views/HistorialVentas.js";
 import DetalleIngresosView from "./views/Detalle-ingresos.js";
+import UserInfo from "./views/ListUser.js";
 
 
 
@@ -46,11 +47,12 @@ function App() {
           <Route path='/articulos' component={ArticulosView}  />
           <Route path='/ventas' component={VentasView}/>
           <Route path='/ingresos' component={IngresosView} exact />
-          <Route path='/users' component={UsuariosView}></Route>
+          <Route path='/createuser' component={UsuariosView}></Route>
           <Route path='/stock' component={StockView}></Route>
           <Route path='/historial-ingresos' component={HistorialIngresos}></Route>
           <Route path='/historial-Ventas' component={HistorialVentas}></Route>
           <Route path='/ingresos-detalles' component={DetalleIngresosView} ></Route>
+          <Route path='/listuser' component={UserInfo} exact />   
         </Switch>
       </Router>
     </>

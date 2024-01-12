@@ -95,8 +95,9 @@ const UsuariosView = () => {
   
 
   return (
-    <Styles.AppContainer style={{ height: '700px' }}>
+    <Styles.AppContainer style={{ height: '700px', backgroundImage:'linear-gradient(to right top, #80285a, #742a62, #652d69, #54306e, #3f3371, #323d7a, #204781, #005086, #006290, #007393, #008391, #04928b)',color:'white' }}>
       <Navbar />
+      <h1>Crear Usuario</h1>
       <Form
         style={{
           textAlign: 'center',

@@ -9,6 +9,7 @@ import { FaPlus, FaPencilAlt } from 'react-icons/fa';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { MdDeleteForever } from "react-icons/md";
+import MyNavbar from '../component/Navbar';
 
 
 const VentasView = () => {
@@ -29,7 +30,7 @@ const VentasView = () => {
   const [materiales, setMateriales] = useState([]);
   const [disenos, setDisenos] = useState([]);
   const [promotions, setPromotions] = useState([]);
-
+  
   const [total, setTotal] = useState(0);
   const [totalDiscount, setTotalDiscount] = useState(0);
   const [damageDiscount, setDamageDiscount] = useState(0);
@@ -146,30 +147,38 @@ useEffect(() => {
 
   const [requestStatus, setRequestStatus] = useState({ loading: false, success: false, error: null });
 
+  const limpiarTabla = () => {
+    setSelectedItems([]);
+    
+    document.getElementById('fechaVenta').value = '';
+    document.getElementById('clienteVenta').value = '';
 
+    setTotal(0);
+    setTotalDiscount(0);
+    setPromotionDiscount(0);
+  };
 
 const handleRealizarVenta = async () => {
   setRequestStatus({ loading: true, success: false, error: null });
 
   try {
-    // Obtener valores de fecha y cliente del formulario
+    
     const fechaVenta = document.getElementById('fechaVenta').value;
     const clienteVenta = document.getElementById('clienteVenta').value;
 
-    // Validar que se haya ingresado la fecha y el cliente
+    
     if (!fechaVenta || !clienteVenta) {
-      // Puedes manejar esto según tus necesidades, por ejemplo, mostrando un mensaje al usuario.
-      console.error('Por favor, ingrese la fecha y el cliente.');
+      toast.error('Por favor, ingrese la fecha y el cliente.',toast.POSITION.TOP_CENTER);
       return;
     }
 
-    // Construir la data de la venta
+
     const ventaData = {
       cliente: clienteVenta,
       fecha: fechaVenta,
       descuento: totalDiscount + promotionDiscount, // Sumar los dos descuentos
       subtotal: total - (totalDiscount + promotionDiscount), // Restar los dos descuentos del total
-      total: total,           // Ajusta según tu lógica de total
+      total: total,     
       estado: true,
     };
 
@@ -218,6 +227,33 @@ const handleRealizarVenta = async () => {
     setRequestStatus({ loading: false, success: false, error: error.message });
     console.error('Error realizando la venta:', error);
   }
+
+// ... (tu código existente)
+
+for (const item of selectedItems) {
+  const updatedExistencias = item.Existencias - item.cantidad;
+  const stockUpdateData = {
+    Existencias: updatedExistencias,
+    estado: updatedExistencias === 0 ? false : true,
+  };
+
+  const stockUpdateUrl = `http://localhost:4000/api/stock/${item._id}`;
+
+  try {
+    // Realiza la solicitud PUT para actualizar el stock
+    await axios.put(stockUpdateUrl, stockUpdateData);
+    limpiarTabla();
+    toast('Venta realizda',toast.POSITION.TOP_CENTER)
+    console.log(`Stock actualizado para el artículo con _id ${item.Id_articulo}`);
+  } catch (error) {
+    console.error('Error actualizando el stock:', error);
+    // Maneja el error según sea necesario
+  }
+}
+
+
+
+
 };
 
 
@@ -405,7 +441,10 @@ const getNombreArticulo = (idArticulo) => {
 
 
   return (
+    
     <Container fluid style={estilos.containerStyle}>
+
+      <MyNavbar style={{height:'100%',width:'100%'}}> </MyNavbar>
       <h2 className=" mt-4 center-text" style={estilos.titulo}>
         Registro de Ventas
       </h2>
@@ -451,7 +490,7 @@ const getNombreArticulo = (idArticulo) => {
     <th>Precio</th>
     <th>Subtotal</th>
     <th>Descuento</th>
-    <th>Prom Desc%</th>
+    <th>Prom Desc</th>
     <th>Opciones</th>
   </tr>
 </thead>
@@ -470,8 +509,8 @@ const getNombreArticulo = (idArticulo) => {
       <td>{item.Existencias}</td>
       <td>{item.cantidad}</td>
       <td>{item.precio}</td>
-      <td>{item.subtotal}</td>
-      <td>{item.Daños ? 'N/A' : item.descuento}</td>
+      <td>{item.subtotal.toFixed(2)}</td>
+      <td>{item.Daños ? 'Sin daños' : item.descuento}</td>
       <td>{getDiscountById(item.Id_promocion)}</td>
       <td>
         <Button variant="primary" style={{ width: '30px', height: '30px', marginRight: '5px',fontSize:'17px',padding:'0' }}  onClick={() => handleEditOpen(item)}>
@@ -489,22 +528,10 @@ const getNombreArticulo = (idArticulo) => {
       </div>
 
       <div style={{ margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', maxWidth: '400px', backgroundColor: 'white', padding: '10px', borderRadius: '5px', marginTop: '10px' }}>
-        <div>
-          <Form.Check
-            type="checkbox"
-            label="Aplicar Descuento"
-          />
-        </div>
-
-        <div>
-          <Form.Check
-            type="checkbox"
-            label="Aplicar Promocion"
-          />
-        </div>
+       
 
         <div style={{ marginTop: '10px' }}>
-  <h4>Total: C${total}</h4>
+  <h4>Total: C${total.toFixed(2)}</h4>
   <h5>Descuento Total: C${totalDiscount}</h5>
   <h5>Promoción Descuento Total: C${promotionDiscount}</h5>
 </div>
@@ -534,9 +561,10 @@ const getNombreArticulo = (idArticulo) => {
           </Button>
         </Modal.Footer>
       </Modal>
+      
       <Modal show={editingItem !== null} onHide={handleEditClose}>
   <Modal.Header closeButton>
-    <Modal.Title style={{textAlign:'center'}}>Editar Cantidad</Modal.Title>
+    <Modal.Title style={{ textAlign: 'center' }}>Editar Cantidad</Modal.Title>
   </Modal.Header>
   <Modal.Body>
     <Form.Group controlId="formNewQuantity">
@@ -545,18 +573,28 @@ const getNombreArticulo = (idArticulo) => {
         type="number"
         value={newQuantity}
         onChange={(e) => setNewQuantity(e.target.value)}
+        onKeyPress={(e) => {
+          // Permite solo números y teclas de control (por ejemplo, borrar)
+          const validKey = /[0-9]|[\b]/.test(e.key);
+          if (!validKey) {
+            e.preventDefault();
+          }
+        }}
       />
     </Form.Group>
   </Modal.Body>
   <Modal.Footer>
-    <Button variant="primary" style={{width:'100px',height:'40px'}} onClick={handleEditSave}>
+    <Button variant="primary" style={{ width: '100px', height: '40px' }} onClick={handleEditSave}>
       Guardar
     </Button>
-    <Button variant="secondary" style={{width:'100px',height:'40px'}} onClick={handleEditClose}>
+    <Button variant="secondary" style={{ width: '100px', height: '40px' }} onClick={handleEditClose}>
       Cancelar
     </Button>
   </Modal.Footer>
 </Modal>
+
+
+
 
       <ToastContainer />
     </Container>
