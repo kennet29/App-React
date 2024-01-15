@@ -21,9 +21,17 @@ const Menu = () => {
             <div className="card-icon"><FontAwesomeIcon icon={faSackDollar} /></div>
             <div className="card-title">Ventas</div>
             <div className="card-description"></div>
-            <NavLink to="/ventas" className="card-link btn btn-primary custom-btn">
-              Realizar una venta <FontAwesomeIcon icon={faArrowRight} />
-            </NavLink>
+            <ButtonGroup role="group" aria-label="Button group with nested dropdown"  >
+      <Dropdown as={ButtonGroup}>
+        <Dropdown.Toggle variant="primary" id="dropdown-basic" style={{width:'225px',height:'30px',padding:'0'}}>
+          Opciones
+        </Dropdown.Toggle>
+        <Dropdown.Menu style={{backgroundColor:'#4a4a4a',color:'white'}}>
+          <Dropdown.Item style={{color:'white'}} href="/ventas">Realizar Venta</Dropdown.Item>
+          <Dropdown.Item style={{color:'white'}} href="/historial-ventas">Historial Ventas</Dropdown.Item>
+        </Dropdown.Menu>
+      </Dropdown>
+    </ButtonGroup>
           </div>
         </div>
 
@@ -32,9 +40,17 @@ const Menu = () => {
             <div className="card-icon"><FontAwesomeIcon icon={faBoxesPacking} /></div>
             <div className="card-title">Ingresos</div>
             <div className="card-description"> </div>
-            <NavLink to="/ingresos" className="card-link btn btn-primary custom-btn">
-              Ir a Ingresos <FontAwesomeIcon icon={faArrowRight} />
-            </NavLink>
+            <ButtonGroup role="group" aria-label="Button group with nested dropdown"  >
+      <Dropdown as={ButtonGroup}>
+        <Dropdown.Toggle variant="primary" id="dropdown-basic" style={{width:'225px',height:'30px',padding:'0'}}>
+          Opciones
+        </Dropdown.Toggle>
+        <Dropdown.Menu style={{backgroundColor:'#4a4a4a',color:'white'}}>
+          <Dropdown.Item style={{color:'white'}} href="/ingresos">Realizar Compra</Dropdown.Item>
+          <Dropdown.Item style={{color:'white'}} href="/historial-ingresos">Historial Compras</Dropdown.Item>
+        </Dropdown.Menu>
+      </Dropdown>
+    </ButtonGroup>
           </div>
         </div>
         <div className="col-md-3">
