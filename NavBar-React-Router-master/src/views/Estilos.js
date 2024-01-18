@@ -4,11 +4,14 @@ import * as Styles from '../css/styles_colores';
 import { FaEdit,FaTrash } from 'react-icons/fa';
 import Footer from '../component/footer/footer';
 import Navbar from '../component/Navbar';
-
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import Cookies from 'js-cookie';
 
 const EstilosView = () => {
+  const [cookieData, setCookieData] = useState({
+    miCookie: Cookies.get('miCookie') || null, // Puedes ajustar el nombre de la cookie
+  });
   const [estilos, setEstilos] = useState([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
@@ -32,12 +35,6 @@ const EstilosView = () => {
     setShowDeleteConfirmation(false);
     setDeleteItemId(null);
   };
-  
-  const handleNotificacion = () => {
-   
-    toast.success('Operación exitosa', { position: toast.POSITION.TOP_CENTER });
-  };
-
 
   const handleClose = () => {
     setShowCreateModal(false);
@@ -75,11 +72,13 @@ const EstilosView = () => {
   };
 
   const handleDeleteConfirmed = async (estiloId) => {
+    const token = Cookies.get('token'); 
     try {
       const response = await fetch(`${url}/${estiloId}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
+          'x-access-token': token,
         },
       });
   
@@ -87,7 +86,7 @@ const EstilosView = () => {
         console.log(`Estilo con ID ${estiloId} eliminado correctamente.`);
         showData(); // Update the styles list after deletion
         toast.success('Estilo eliminado correctamente', { position: toast.POSITION.TOP_CENTER });
-      } else {
+      } else  {
         console.error(`Error al eliminar el estilo con ID ${estiloId}.`);
       }
     } catch (error) {
@@ -128,10 +127,12 @@ const EstilosView = () => {
       console.log('Creating new style with JSON:', JSON.stringify(newEstilo));
   
       const createUrl = 'http://localhost:4000/api/estilos';
+      const token = Cookies.get('token'); 
       const response = await fetch(createUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'x-access-token': token,
         },
         body: JSON.stringify(newEstilo),
       });
@@ -158,10 +159,12 @@ const EstilosView = () => {
   const handleUpdateSubmit = async () => {
     try {
       const updateUrl = `http://localhost:4000/api/estilos/${selectedEstilo._id}`;
+      const token = Cookies.get('token'); 
       const response = await fetch(updateUrl, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'x-access-token': token,
         },
         body: JSON.stringify(selectedEstilo),
       });

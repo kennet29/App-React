@@ -6,15 +6,19 @@ import Navbar from '../component/Navbar';
 import { FaTrash,FaEdit } from 'react-icons/fa';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import Cookies from 'js-cookie';
 
 const TallasView = () => {
+  const [cookieData, setCookieData] = useState({
+    miCookie: Cookies.get('miCookie') || null, // Puedes ajustar el nombre de la cookie
+  });
   const [tallas, setTallas] = useState([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [filterText, setFilterText] = useState('');
   const [resetPaginationToggle, setResetPaginationToggle] = useState(false);
   const [showDeleteConfirmationModal, setShowDeleteConfirmationModal] = useState(false);
-const [tallaToDeleteId, setTallaToDeleteId] = useState(null);
+  const [tallaToDeleteId, setTallaToDeleteId] = useState(null);
 
   const [newTalla, setNewTalla] = useState({
     talla: '',
@@ -61,10 +65,12 @@ const [tallaToDeleteId, setTallaToDeleteId] = useState(null);
 
   const handleConfirmedDelete = async (tallaId) => {
     try {
+      const token = Cookies.get('token');
       const response = await fetch(`${url}/${tallaId}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
+          'x-access-token': token, 
         },
       });
   
@@ -110,10 +116,12 @@ const [tallaToDeleteId, setTallaToDeleteId] = useState(null);
 
   const handleCreate = async () => {
     try {
+      const token = Cookies.get('token'); 
       const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'x-access-token': token, 
         },
         body: JSON.stringify(newTalla),
       });
@@ -135,10 +143,12 @@ const [tallaToDeleteId, setTallaToDeleteId] = useState(null);
 
   const handleUpdateSubmit = async () => {
     try {
+      const token = Cookies.get('token'); 
       const response = await fetch(`${url}/${selectedTalla._id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'x-access-token': token, 
         },
         body: JSON.stringify(selectedTalla),
       });

@@ -6,9 +6,13 @@ import { FaTrash,FaEdit } from 'react-icons/fa';
 import Navbar from '../component/Navbar';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import Cookies from 'js-cookie';
 
 
 const BodegasView = () => {
+  const [cookieData, setCookieData] = useState({
+    miCookie: Cookies.get('miCookie') || null, 
+  });
   const [bodegas, setBodegas] = useState([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [filterText, setFilterText] = useState('');
@@ -56,16 +60,16 @@ const BodegasView = () => {
     setShowDeleteConfirmation(true);
   };
   
-  // ...
-  
-  // Add a new function to handle deletion confirmation
+
   const handleDeleteConfirm = async () => {
     if (deletingBodegaId) {
       try {
+        const token = Cookies.get('token');
         const response = await fetch(`http://localhost:4000/api/bodegas/${deletingBodegaId}`, {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json',
+            'x-access-token': token, 
           },
         });
   
@@ -73,9 +77,15 @@ const BodegasView = () => {
           setBodegas((prevBodegas) => prevBodegas.filter((bodega) => bodega._id !== deletingBodegaId));
           toast.success('Bodega Eliminado correctamente', { position: toast.POSITION.TOP_CENTER });
           console.log(`Bodega con ID ${deletingBodegaId} borrada exitosamente.`);
-        } else {
+        }else if (response.status === 403) {
+          console.error('Permisos insuficientes para borrar la bodega.');
+          toast.error('Permisos insuficientes para borrar el artículo', { position: toast.POSITION.TOP_CENTER });
+        }
+        
+        else {
           console.error(`Error borrando la bodega con ID ${deletingBodegaId}`);
         }
+        
       } catch (error) {
         console.error('Error en la solicitud DELETE:', error);
       }
@@ -125,12 +135,14 @@ const BodegasView = () => {
       estado,
       descripcion,
     };
-
+ 
     try {
+      const token = Cookies.get('token');
       const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'x-access-token': token, // Include the token in the header
         },
         body: JSON.stringify(nuevaBodega),
       });
@@ -140,9 +152,10 @@ const BodegasView = () => {
         setBodegas((prevBodegas) => [...prevBodegas, nuevaBodegaCreada]);
         toast.success('Bodega creada exitosamente', { position: toast.POSITION.TOP_CENTER });
         console.log('Bodega creada exitosamente.');
-        handleNotificacion();
-      } else {
-        console.error('Error al crear la bodega.');
+   
+      } else if (response.status === 403) {
+        console.error('Permisos insuficientes para borrar el artículo.');
+        toast.error('Permisos insuficientes para borrar el artículo', { position: toast.POSITION.TOP_CENTER });
       }
     } catch (error) {
       console.error('Error en la solicitud POST:', error);
@@ -159,10 +172,12 @@ const BodegasView = () => {
     };
 
     try {
+      const token = Cookies.get('token');
       const response = await fetch(`http://localhost:4000/api/bodegas/${updatingBodega._id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'x-access-token': token,
         },
         body: JSON.stringify(updatedBodega),
       });

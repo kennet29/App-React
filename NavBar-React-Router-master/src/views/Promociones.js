@@ -7,8 +7,12 @@ import Navbar from '../component/Navbar';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { format } from 'date-fns';
+import Cookies from 'js-cookie';
 
 const PromocionesView = () => {
+  const [cookieData, setCookieData] = useState({
+    miCookie: Cookies.get('miCookie') || null, 
+  });
   const [promociones, setPromociones] = useState([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
@@ -72,10 +76,12 @@ const PromocionesView = () => {
 
   const handleConfirmDelete = async () => {
     try {
+      const token = Cookies.get('token');
       const response = await fetch(`${url}/${selectedPromocion._id}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
+          'x-access-token': token,
         },
       });
 
@@ -124,10 +130,12 @@ const PromocionesView = () => {
 
   const handleCreate = async () => {
     try {
+      const token = Cookies.get('token');
       const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'x-access-token': token,
         },
         body: JSON.stringify(newPromocion),
       });
@@ -153,10 +161,12 @@ const PromocionesView = () => {
 
   const handleUpdateSubmit = async () => {
     try {
+      const token = Cookies.get('token');
       const response = await fetch(`${url}/${selectedPromocion._id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'x-access-token': token,
         },
         body: JSON.stringify(selectedPromocion),
       });

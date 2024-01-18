@@ -6,9 +6,15 @@ import Navbar from '../component/Navbar';
 import Footer from '../component/footer/footer';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import Cookies from 'js-cookie';
 
 const MarcasView = () => {
+    const [cookieData, setCookieData] = useState({
+    miCookie: Cookies.get('miCookie') || null, // Puedes ajustar el nombre de la cookie
+  });
+  
   const [marcas, setMarcas] = useState([]);
+  
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [filterText, setFilterText] = useState('');
@@ -60,8 +66,14 @@ const MarcasView = () => {
   
   const handleDeleteConfirmed = async (marcaId) => {
     try {
+      const token = Cookies.get('token');
       const response = await fetch(`${url}/${marcaId}`, {
         method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-access-token': token, // Include the token in the header
+        },
+        
       });
   
       if (response.ok) {
@@ -97,6 +109,7 @@ const MarcasView = () => {
   }, [filterText, resetPaginationToggle]);
 
  const handleCreate = async () => {
+  const token = Cookies.get('token');
   try {
     console.log('JSON que se envía en la creación:', JSON.stringify(newMarca)); 
     const newMarcaToSend = {
@@ -108,6 +121,7 @@ const MarcasView = () => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'x-access-token': token, // Include the token in the header
       },
       body: JSON.stringify(newMarcaToSend),
     });
@@ -131,7 +145,8 @@ const MarcasView = () => {
 
 const handleUpdateSubmit = async () => {
   try {
-    console.log('JSON que se envía en la actualización:', JSON.stringify(selectedMarca));
+    const token = Cookies.get('token');
+  
     const selectedMarcaToSend = {
       ...selectedMarca,
       estado: selectedMarca.estado === 'Activo',
@@ -141,6 +156,7 @@ const handleUpdateSubmit = async () => {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
+        'x-access-token': token, // Include the token in the header
       },
       body: JSON.stringify(selectedMarcaToSend),
     });

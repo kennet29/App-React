@@ -6,9 +6,12 @@ import { FaTrash,FaEdit } from 'react-icons/fa';
 import Navbar from '../component/Navbar';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-
+import Cookies from 'js-cookie';
 
 const CategoriasView = () => {
+  const [cookieData, setCookieData] = useState({
+    miCookie: Cookies.get('miCookie') || null, 
+  });
   const [categorias, setCategorias] = useState([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
@@ -23,11 +26,6 @@ const CategoriasView = () => {
     descripcion: '',
   });
   const [selectedCategoria, setSelectedCategoria] = useState(null);
-
-  const handleNotificacion = () => {
-   
-    toast.success('Operación exitosa', { position: toast.POSITION.TOP_CENTER });
-  };
 
 
   const handleClose = () => {
@@ -69,15 +67,20 @@ const CategoriasView = () => {
   const handleConfirmDelete = async () => {
     try {
       const deleteUrl = `http://localhost:4000/api/categorias/${categoryToDelete}`;
+      const token = Cookies.get('token'); // Get the token from cookies
+
       const response = await fetch(deleteUrl, {
         method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-access-token': token, // Include the token in the header
+        },
       });
+      console.log('Data sent in handleConfirmDelete:', JSON.stringify({ categoriaId: categoryToDelete }));
 
       if (response.ok) {
         console.log(`Categoría con ID ${categoryToDelete} eliminada exitosamente.`);
-        // Show a success toast
         toast.success('Categoría eliminada exitosamente', { position: toast.POSITION.TOP_CENTER });
-        // After successful deletion, update the UI by fetching and displaying the updated data
         showData();
       } else {
         console.error(`Error al intentar borrar la categoría con ID ${categoryToDelete}.`);
@@ -114,28 +117,29 @@ const CategoriasView = () => {
     );
   }, [filterText, resetPaginationToggle]);
 
+ 
   const handleCreate = async () => {
     try {
       const createUrl = 'http://localhost:4000/api/categorias';
+      const token = Cookies.get('token');
       const response = await fetch(createUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'x-access-token': token,
         },
         body: JSON.stringify(newCategoria),
       });
   
       if (response.ok) {
-        console.log('Categoría creada exitosamente.');
-        handleNotificacion('Categoría creada exitosamente');
+        toast.success('Categoría creada exitosamente', { position: toast.POSITION.TOP_CENTER });
+        // After creating the category, refresh the data
         showData();
       } else {
         console.error('Error al intentar crear la categoría.');
-        toast.error('Por favor complete todos los campos', { position: toast.POSITION.TOP_CENTER });
       }
     } catch (error) {
       console.error('Error en la solicitud de creación:', error);
-      // Puedes mostrar una notificación de error si lo deseas
       toast.error('Error en la solicitud de creación', { position: toast.POSITION.TOP_CENTER });
     }
   
@@ -143,13 +147,20 @@ const CategoriasView = () => {
   };
   
 
+  useEffect(() => {
+    showData();
+  }, []);
+  
+
   const handleUpdateSubmit = async () => {
     try {
       const updateUrl = `http://localhost:4000/api/categorias/${selectedCategoria._id}`;
+      const token = Cookies.get('token');
       const response = await fetch(updateUrl, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'x-access-token': token,
         },
         body: JSON.stringify(selectedCategoria),
       });

@@ -6,8 +6,13 @@ import { FaTrash, FaEdit } from 'react-icons/fa';
 import Navbar from '../component/Navbar';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import Cookies from 'js-cookie';
+
 
 const MaterialesView = () => {
+  const [cookieData, setCookieData] = useState({
+    miCookie: Cookies.get('miCookie') || null, // Puedes ajustar el nombre de la cookie
+  });
   const [materiales, setMateriales] = useState([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
@@ -61,11 +66,13 @@ const MaterialesView = () => {
   };
 
   const handleConfirmDelete = async (materialId) => {
+    const token = Cookies.get('token');
     try {
       const response = await fetch(`${url}/${materialId}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
+          'x-access-token': token, // Include the token in the header
         },
       });
 
@@ -110,11 +117,13 @@ const MaterialesView = () => {
   }, [filterText, resetPaginationToggle]);
 
   const handleCreate = async () => {
+    const token = Cookies.get('token');
     try {
       const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'x-access-token': token,
         },
         body: JSON.stringify(newMaterial),
       });
@@ -135,10 +144,12 @@ const MaterialesView = () => {
 
   const handleUpdateSubmit = async () => {
     try {
+      const token = Cookies.get('token'); 
       const response = await fetch(`${url}/${selectedMaterial._id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'x-access-token': token,
         },
         body: JSON.stringify(selectedMaterial),
       });

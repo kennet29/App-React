@@ -9,7 +9,7 @@ import { IoColorPaletteOutline } from "react-icons/io5";
 import { GiClothes } from "react-icons/gi";
 import { FaTags } from "react-icons/fa";
 import { GiRolledCloth } from "react-icons/gi";
-
+import { FaTshirt } from "react-icons/fa";
 import { FcShipped } from "react-icons/fc";
 import { FcOvertime } from "react-icons/fc";
 import { FcCurrencyExchange } from "react-icons/fc";
@@ -43,15 +43,15 @@ const MyNavbar = () => {
 
           <Nav.Link  href="/configuracion" to="/configuracion" >Configuración</Nav.Link>
           <NavDropdown title="Ventas">
-            <NavDropdown.Item > <FcCurrencyExchange style={{ fontSize: '30px' }}></FcCurrencyExchange>Realizar Venta</NavDropdown.Item>
-            <NavDropdown.Item href="#"> <FcOvertime style={{ fontSize: '30px' }} />Historial</NavDropdown.Item>
-            <NavDropdown.Item href="#"> <FcPaid style={{ fontSize: '30px' }} /> Devolucion</NavDropdown.Item>
+            <NavDropdown.Item href="/ventas"> <FcCurrencyExchange style={{ fontSize: '30px' }}></FcCurrencyExchange>Realizar Venta</NavDropdown.Item>
+            <NavDropdown.Item href="/historial-ventas"> <FcOvertime style={{ fontSize: '30px' }} />Historial</NavDropdown.Item>
+
           </NavDropdown>
 
           <NavDropdown title="Ingresos">
-            <NavDropdown.Item href="#"> <FcCurrencyExchange style={{ fontSize: '30px' }} /> Nueva Compra</NavDropdown.Item>
-            <NavDropdown.Item href="#"> <FcOvertime style={{ fontSize: '30px' }} />Historial</NavDropdown.Item>
-            <NavDropdown.Item href="#"> <FcPaid style={{ fontSize: '30px' }} /> Devolucion</NavDropdown.Item>
+            <NavDropdown.Item href="/ingresos"> <FcCurrencyExchange style={{ fontSize: '30px' }} /> Nueva Compra</NavDropdown.Item>
+            <NavDropdown.Item href="/historial-ingresos"> <FcOvertime style={{ fontSize: '30px' }} />Historial</NavDropdown.Item>
+         
           </NavDropdown>
 
           <NavDropdown title="Catalogos">
@@ -72,7 +72,7 @@ const MyNavbar = () => {
 
            
 
-            <NavDropdown.Item href="#">
+            <NavDropdown.Item href="/disenos">
               <NavLink to="/disenos" style={{ color: 'black' }} className="nav-link">
                 <TbColorSwatch style={{ color: 'black', fontSize: '20px' }} />Diseños
               </NavLink>
@@ -80,7 +80,7 @@ const MyNavbar = () => {
 
            
 
-            <NavDropdown.Item href="#">
+            <NavDropdown.Item href="/estilos">
               <NavLink to="/estilos" style={{ color: 'black' }} className="nav-link">
                 <GiClothes style={{ color: 'black', fontSize: '20px' }} />Estilos
               </NavLink>
@@ -88,7 +88,7 @@ const MyNavbar = () => {
 
            
 
-            <NavDropdown.Item href="#">
+            <NavDropdown.Item href="/tallas ">
               <NavLink to="/tallas" style={{ color: 'black' }} className="nav-link">
                 <FcAlphabeticalSortingAz style={{ fontSize: '20px' }} />Tallas
               </NavLink>
@@ -96,7 +96,7 @@ const MyNavbar = () => {
 
           
 
-            <NavDropdown.Item href="#">
+            <NavDropdown.Item href="/marcas">
               <NavLink to="/marcas" style={{ color: 'black' }} className="nav-link">
                 <FaTags style={{ color: 'black', fontSize: '20px' }} />Marcas
               </NavLink>
@@ -104,7 +104,7 @@ const MyNavbar = () => {
 
            
 
-            <NavDropdown.Item href="#">
+            <NavDropdown.Item href="/materiales">
               <NavLink to="/materiales" style={{ color: 'black' }} className="nav-link">
                 <GiRolledCloth style={{ color: 'darkred', fontSize: '20px' }} /> Materiales
               </NavLink>
@@ -112,7 +112,7 @@ const MyNavbar = () => {
 
            
 
-            <NavDropdown.Item href="#">
+            <NavDropdown.Item href="/promociones">
               <NavLink to="/promociones" style={{ color: 'black' }} className="nav-link">
                 <FcCalendar  style={{ color: 'black', fontSize: '20px' }} /> Promociones
               </NavLink>
@@ -120,13 +120,23 @@ const MyNavbar = () => {
 
            
 
-            <NavDropdown.Item href="#">
+            <NavDropdown.Item href="/proveedores">
               <NavLink to="/proveedores" style={{ color: 'black' }} className="nav-link">
                 <FcShipped style={{ color: 'black', fontSize: '20px' }} />Proveedores
               </NavLink>
             </NavDropdown.Item>
 
+
+            <NavDropdown.Item href="/articulos">
+              <NavLink to="/articulos" style={{ color: 'black' }} className="nav-link">
+                < FaTshirt style={{ color: 'black', fontSize: '20px' }} /> Articulos
+              </NavLink>
+            </NavDropdown.Item>
+
           </NavDropdown>
+
+
+          
         </Nav>
 
       </Navbar.Collapse>

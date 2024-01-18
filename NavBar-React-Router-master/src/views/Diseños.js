@@ -7,8 +7,12 @@ import Navbar from '../component/Navbar';
 
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import Cookies from 'js-cookie';
 
 const DisenosView = () => {
+  const [cookieData, setCookieData] = useState({
+    miCookie: Cookies.get('miCookie') || null, // Puedes ajustar el nombre de la cookie
+  });
   const [disenos, setDisenos] = useState([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
@@ -35,10 +39,7 @@ const DisenosView = () => {
     setSelectedDiseno(null);
   };
 
-  const handleNotificacion = () => {
-   
-    toast.success('Operación exitosa', { position: toast.POSITION.TOP_CENTER });
-  };
+ 
 
   const handleShow = () => setShowCreateModal(true);
 
@@ -67,10 +68,12 @@ const DisenosView = () => {
 
   const handleDeleteConfirmed = async () => {
     try {
+      const token = Cookies.get('token'); 
       const response = await fetch(`${url}/${deleteItemId}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
+          'x-access-token': token,
         },
       });
 
@@ -78,6 +81,9 @@ const DisenosView = () => {
         console.log(`Diseño con ID ${deleteItemId} eliminado correctamente`);
         showData(); // Refresh the data after deletion
         toast.success('Diseño eliminado correctamente', { position: toast.POSITION.TOP_CENTER });
+      }  else if (response.status === 403) {
+        console.error('Permisos insuficientes para borrar .');
+        toast.error('Permisos insuficientes para borrar el artículo', { position: toast.POSITION.TOP_CENTER });
       } else {
         console.error(`Error al eliminar el diseño con ID ${deleteItemId}`);
         toast.error('Error al eliminar el diseño', { position: toast.POSITION.TOP_CENTER });
@@ -118,20 +124,21 @@ const DisenosView = () => {
   const handleCreate = async () => {
     try {
       const createUrl = 'http://localhost:4000/api/disenos';
-  
+      const token = Cookies.get('token'); 
       console.log('JSON que se envía al crear:', JSON.stringify(newDiseno));
   
       const response = await fetch(createUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'x-access-token': token,
         },
         body: JSON.stringify(newDiseno),
       });
   
       if (response.ok) {
         console.log('Diseño creado exitosamente.');
-        handleNotificacion();
+      
         showData();
       } else {
         toast.error('Por favor complete todos los campos', { position: toast.POSITION.TOP_CENTER });
@@ -150,11 +157,12 @@ const DisenosView = () => {
       const updateUrl = `http://localhost:4000/api/disenos/${selectedDiseno._id}`;
   
       console.log('JSON que se envía al actualizar:', JSON.stringify(selectedDiseno));
-  
+      const token = Cookies.get('token'); 
       const response = await fetch(updateUrl, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'x-access-token': token,
         },
         body: JSON.stringify(selectedDiseno),
       });

@@ -1,351 +1,120 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { Form, Button, Modal } from 'react-bootstrap';
-import * as Styles from '../css/styles_colores';
+import React, { useState, useEffect } from 'react';
+import DataTable from 'react-data-table-component';
+import MyNavbar from '../component/Navbar';
 import Footer from '../component/footer/footer';
-import {FaEdit } from 'react-icons/fa';
-import Navbar from '../component/Navbar';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import { FcPrint } from "react-icons/fc";
+import { FaEye } from "react-icons/fa";
+import { MdPrint } from "react-icons/md";
+import { Container, Form, Button, Row, Col, Modal, Alert } from 'react-bootstrap'; // Asegúrate de importar la librería de modales que estás utilizando
 
 const HistorialIngresosView = () => {
-  const [ingresos, setIngresos] = useState([]);
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [showUpdateModal, setShowUpdateModal] = useState(false);
-  const [filterText, setFilterText] = useState('');
-  const [resetPaginationToggle, setResetPaginationToggle] = useState(false);
-  const [newIngreso, setNewIngreso] = useState({
-    id_usuario: '',
-    id_proveedor: '',
-    fecha: '',
-    iva: 0,
-    descuento: 0,
-    subtotal: 0,
-    total: 0,
-  });
-  const [selectedIngreso, setSelectedIngreso] = useState(null);
+  const [data, setData] = useState([]);
+  const [selectedRecord, setSelectedRecord] = useState(null);
+  const [modalVisible, setModalVisible] = useState(false); // Nuevo estado para controlar la visibilidad del modal
 
-  const handleClose = () => {
-    setShowCreateModal(false);
-    setShowUpdateModal(false);
-    setNewIngreso({
-      id_usuario: '',
-      id_proveedor: '',
-      fecha: '',
-      iva: 0,
-      descuento: 0,
-      subtotal: 0,
-      total: 0,
-    });
-    setSelectedIngreso(null);
+  useEffect(() => {
+    fetch('http://localhost:4000/api/detalleingreso')
+      .then(response => response.json())
+      .then(data => {
+        const formattedData = data.map(item => ({
+          _id: item._id,
+          id_ingreso: item.id_ingreso,
+          total: item.total,
+          // Utiliza directamente los artículos del arreglo presente en la respuesta
+          articulos: item.articulos,
+        }));
+
+        setData(formattedData);
+      })
+      .catch(error => {
+        console.error('Error fetching data:', error);
+      });
+  }, []);
+
+ 
+
+  const handlePrint = (row) => {
+    // Al hacer clic en el botón, guarda la información del registro seleccionado
+    setSelectedRecord(row);
+    // Abre el modal
+    setModalVisible(true);
   };
 
-  const getNameById = async (id) => {
-    try {
-      const response = await fetch(`http://localhost:4000/api/proveedores/${id}`);
-      const data = await response.json();
-      return data.nombre || 'Proveedor no encontrado'; // O un valor predeterminado
-    } catch (error) {
-      console.error('Error fetching name by ID:', error);
-      return 'Proveedor no encontrado'; // O un valor predeterminado
-    }
+  const handleViewDetails = (row) => {
+    // Implementa la lógica para ver detalles
   };
 
-  const handleNotificacion = () => {
-    toast.success('Operación exitosa', { position: toast.POSITION.TOP_CENTER });
+  const closeModal = () => {
+    // Cierra el modal al hacer clic fuera del contenido o en el botón de cerrar
+    setModalVisible(false);
   };
-
-  const handleShow = () => setShowCreateModal(true);
-
-  const handleUpdate = (ingresoId) => {
-    const selected = ingresos.find((ingreso) => ingreso._id === ingresoId);
-    setSelectedIngreso(selected);
-    setShowUpdateModal(true);
-  };
-
-
-
-  const showData = async () => {
-    try {
-      const response = await fetch('http://localhost:4000/api/ingresos');
-      const data = await response.json();
-
-    
-      const ingresosWithProveedorNames = await Promise.all(
-        data.map(async (ingreso) => {
-          const nombreProveedor = await getNameById(ingreso.id_proveedor);
-
-          return {
-            ...ingreso,
-            id_proveedor: nombreProveedor,
-          };
-        })
-      );
-
-      setIngresos(ingresosWithProveedorNames);
-    } catch (error) {
-      console.error('Error fetching data:', error);
-    }
-  };
-
-  const filteredItems = ingresos.filter(
-    (item) =>
-      item.id_proveedor && item.id_proveedor.toLowerCase().includes(filterText.toLowerCase())
-  );
-
 
   const columns = [
- 
-    {
-      name: 'ID Usuario',
-      selector: (row) => row.id_usuario,
-      sortable: true,
-      center: true,
-    },
-    {
-        name: 'Proveedor',
-      selector: (row) => row.id_proveedor,
-      sortable: true,
-      center: true,
-    },
-    {
-        name: 'Fecha',
-        selector: (row) => {
-          const date = new Date(row.fecha);
-          return date.toLocaleDateString('es-ES');
-        },
-        sortable: true,
-        center: true,
-      },
-    {
-      name: 'IVA',
-      selector: (row) => row.iva,
-      sortable: true,
-      center: true,
-    },
-    {
-      name: 'Descuento',
-      selector: (row) => row.descuento,
-      sortable: true,
-      center: true,
-    },
-    {
-      name: 'Subtotal',
-      selector: (row) => row.subtotal,
-      sortable: true,
-      center: true,
-    },
-    {
-        
-      name: 'Total',
-      selector: (row) => row.total.toFixed(2),
-      sortable: true,
-      center: true,  
-    },
+    { name: '_id', selector: '_id', sortable: true },
+    { name: 'id_ingreso', selector: 'id_ingreso', sortable: true },
+    { name: 'proveedor_nombre', selector: 'proveedor_nombre', sortable: true },
+    { name: 'total', selector: 'total', sortable: true },
     {
       name: 'Acciones',
-      cell: (row) => (
+      cell: row => (
         <div>
-          <Styles.ActionButton onClick={() => handleUpdate(row._id)} update>
-            <FaEdit />
-          </Styles.ActionButton>
-          <Styles.PrintButton     update>
-          <FcPrint  />
-          </Styles.PrintButton>
+          <button style={{ width: '35px', height: '35px', backgroundColor: 'blue', marginRight: '2px', borderRadius: '5px', color: 'white' }} onClick={() => handlePrint(row)}><FaEye /></button>
+          <button style={{ width: '35px', height: '35px', backgroundColor: 'blue', borderRadius: '5px', color: 'white' }} onClick={() => handleViewDetails(row)}><MdPrint /></button>
         </div>
       ),
-      center: true,
     },
   ];
 
-  const subHeaderComponentMemo = useMemo(() => {
-    return (
-      <div style={{ display: 'flex', margin: '0 auto', marginBottom: '10px' }}>
-        <input
-          type="text"
-          placeholder="Buscar por ID Usuario"
-          value={filterText}
-          onChange={(e) => setFilterText(e.target.value)}
+  return (
+    <div>
+      <MyNavbar />
+      <div style={{ width: '90%', margin: 'auto', borderRadius: '5px', border: '2px solid black', textAlign: 'center' }}>
+        <DataTable
+          title="Historial de Ingresos"
+          columns={columns}
+          data={data}
+          pagination
         />
       </div>
-    );
-  }, [filterText, resetPaginationToggle]);
 
-  const handleCreate = async () => {
-    try {
-      const createUrl = 'http://localhost:4000/api/ingresos';
-      const response = await fetch(createUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(newIngreso),
-      });
-
-      if (response.ok) {
-        console.log('Ingreso creado exitosamente.');
-        handleNotificacion();
-        showData();
-      } else {
-        console.error('Error al intentar crear el ingreso.');
-      }
-    } catch (error) {
-      console.error('Error en la solicitud de creación:', error);
-    }
-
-    handleClose();
-  };
-
-  const handleUpdateSubmit = async () => {
-    try {
-      const updateUrl = `http://localhost:4000/api/ingresos/${selectedIngreso._id}`;
-      const response = await fetch(updateUrl, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(selectedIngreso),
-      });
-
-      if (response.ok) {
-        console.log('Ingreso actualizado exitosamente.');
-        showData();
-      } else {
-        console.error('Error al intentar actualizar el ingreso.');
-      }
-    } catch (error) {
-      console.error('Error en la solicitud de actualización:', error);
-    }
-
-    handleClose();
-  };
-
-  useEffect(() => {
-    showData();
-  }, []);
-
-  return (
-    <Styles.AppContainer>
-      <Navbar />
-     
-      <Styles.StyledDataTable
-        columns={columns}
-        data={ingresos}
-        pagination
-        paginationResetDefaultPage={resetPaginationToggle}
-        subHeader
-        subHeaderComponent={subHeaderComponentMemo}
-        persistTableHead
-      />
-
-      
-
-      <Styles.StyledModal show={showUpdateModal} onHide={handleClose}>
+      <Modal
+        size="xl"
+        show={modalVisible}
+        onHide={closeModal}
+      >
         <Modal.Header closeButton>
-          <Modal.Title>Actualizar Ingreso</Modal.Title>
+          <Modal.Title>Detalle del Ingreso</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <Form>
-            
-            <Form.Group controlId="formIdProveedor">
-              <Form.Label>ID Proveedor</Form.Label>
-              <Form.Control
-                type="text"
-                placeholder="Ingrese el ID Proveedor"
-                value={selectedIngreso ? selectedIngreso.id_proveedor : ''}
-                onChange={(e) =>
-                  setSelectedIngreso({
-                    ...selectedIngreso,
-                    id_proveedor: e.target.value,
-                  })
-                }
+          {selectedRecord && (
+            <div>
+              <h5>ID de Ingreso: {selectedRecord.id_ingreso}</h5>
+              <h5>Total: {selectedRecord.total}</h5>
+
+              {/* Replace the plain list with a DataTable */}
+              <DataTable
+                title="Artículos"
+                columns={[
+                  { name: 'ID de Artículo', selector: 'id_articulo', sortable: true },
+                  { name: 'Cantidad', selector: 'cantidad', sortable: true },
+                  { name: 'Precio Proveedor', selector: 'precio_proveedor', sortable: true },
+                  { name: 'Subtotal', selector: 'subtotal', sortable: true },
+                ]}
+                data={selectedRecord.articulos}
+                pagination
               />
-            </Form.Group>
-            <Form.Group controlId="formFecha">
-              <Form.Label>Fecha</Form.Label>
-              <Form.Control
-                type="text"
-                placeholder="Ingrese la fecha"
-                value={selectedIngreso ? selectedIngreso.fecha : ''}
-                onChange={(e) =>
-                  setSelectedIngreso({
-                    ...selectedIngreso,
-                    fecha: e.target.value,
-                  })
-                }
-              />
-            </Form.Group>
-            <Form.Group controlId="formIVA">
-              <Form.Label>IVA</Form.Label>
-              <Form.Control
-                type="number"
-                placeholder="Ingrese el IVA"
-                value={selectedIngreso ? selectedIngreso.iva : 0}
-                onChange={(e) =>
-                  setSelectedIngreso({
-                    ...selectedIngreso,
-                    iva: e.target.value,
-                  })
-                }
-              />
-            </Form.Group>
-            <Form.Group controlId="formDescuento">
-              <Form.Label>Descuento</Form.Label>
-              <Form.Control
-                type="number"
-                placeholder="Ingrese el descuento"
-                value={selectedIngreso ? selectedIngreso.descuento : 0}
-                onChange={(e) =>
-                  setSelectedIngreso({
-                    ...selectedIngreso,
-                    descuento: e.target.value,
-                  })
-                }
-              />
-            </Form.Group>
-            <Form.Group controlId="formSubtotal">
-              <Form.Label>Subtotal</Form.Label>
-              <Form.Control
-                type="number"
-                placeholder="Ingrese el subtotal"
-                value={selectedIngreso ? selectedIngreso.subtotal : 0}
-                onChange={(e) =>
-                  setSelectedIngreso({
-                    ...selectedIngreso,
-                    subtotal: e.target.value,
-                  })
-                }
-              />
-            </Form.Group>
-            <Form.Group controlId="formTotal">
-              <Form.Label>Total</Form.Label>
-              <Form.Control
-                type="number"
-                placeholder="Ingrese el total"
-                value={selectedIngreso ? selectedIngreso.total : 0}
-                onChange={(e) =>
-                  setSelectedIngreso({
-                    ...selectedIngreso,
-                    total: e.target.value,
-                  })
-                }
-              />
-            </Form.Group>
-          </Form>
+            </div>
+          )}
         </Modal.Body>
-        <Styles.ModalFooter>
-          <Button className="otros" variant="primary" onClick={handleUpdateSubmit}>
-            Guardar cambios
-          </Button>
-          <Button className="otros" variant="secondary" onClick={handleClose}>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={closeModal}>
             Cerrar
           </Button>
-        </Styles.ModalFooter>
-      </Styles.StyledModal>
+        </Modal.Footer>
+      </Modal>
+
 
       <Footer />
-      <ToastContainer />
-    </Styles.AppContainer>
+    </div>
   );
 };
 

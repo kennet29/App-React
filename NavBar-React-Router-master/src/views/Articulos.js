@@ -6,9 +6,14 @@ import { FaTrash, FaEdit } from 'react-icons/fa';
 import Navbar from '../component/Navbar';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import Cookies from 'js-cookie';
 
 
 const ArticulosView = () => {
+  const [cookieData, setCookieData] = useState({
+    miCookie: Cookies.get('miCookie') || null, // Puedes ajustar el nombre de la cookie
+  });
+  
   const [articulos, setArticulos] = useState([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
@@ -23,12 +28,6 @@ const ArticulosView = () => {
    
   });
   const [selectedArticulo, setSelectedArticulo] = useState(null);
-
-
-  const handleNotificacion = () => {
-   
-    toast.success('Operación exitosa', { position: toast.POSITION.TOP_CENTER });
-  };
 
   const handleClose = () => {
     setShowCreateModal(false);
@@ -57,14 +56,9 @@ const ArticulosView = () => {
     try {
       const articulosResponse = await fetch('http://localhost:4000/api/articulos');
       const articulosData = await articulosResponse.json();
-      
-      // Map categoria IDs to categoria objects
-      // Associate categoria object with each articulo
       const articulosWithCategoria = articulosData.map((articulo) => ({
         ...articulo,
       }));
-  
-      // Update state with fetched data
       setArticulos(articulosWithCategoria);
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -77,31 +71,39 @@ const ArticulosView = () => {
     setShowDeleteConfirmation(true);
   };
 
-  const handleDeleteConfirmed = async () => {
-    try {
-      const deleteUrl = `http://localhost:4000/api/articulos/${deleteItemId}`;
-      const response = await fetch(deleteUrl, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+ const handleDeleteConfirmed = async () => {
+  try {
+    const deleteUrl = `http://localhost:4000/api/articulos/${deleteItemId}`;
+    const token = Cookies.get('token'); // Get the token from cookies
 
-      if (response.ok) {
-        console.log(`Articulo con ID ${deleteItemId} borrado exitosamente.`);
-        showArticulos();
-        toast.success('Artículo eliminado correctamente', { position: toast.POSITION.TOP_CENTER });
-      } else {
-        console.error(`Error al borrar el articulo con ID ${deleteItemId}.`);
-        toast.error('Error al intentar eliminar el artículo', { position: toast.POSITION.TOP_CENTER });
-      }
-    } catch (error) {
-      console.error('Error al realizar la solicitud DELETE:', error);
+    const response = await fetch(deleteUrl, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-access-token': token, // Include the token in the header
+      },
+    });
+
+    if (response.ok) {
+      console.log(`Articulo con ID ${deleteItemId} borrado exitosamente.`);
+      showArticulos();
+      toast.success('Artículo eliminado correctamente', { position: toast.POSITION.TOP_CENTER });
+    } else if (response.status === 403) {
+      console.error('Permisos insuficientes para borrar el artículo.');
+      toast.error('Permisos insuficientes para borrar el artículo', { position: toast.POSITION.TOP_CENTER });
+    } else {
+      console.error(`Error al borrar el articulo con ID ${deleteItemId}.`);
       toast.error('Error al intentar eliminar el artículo', { position: toast.POSITION.TOP_CENTER });
-    } finally {
-      closeDeleteConfirmationModal();
     }
-  };
+  } catch (error) {
+    console.error('Error al realizar la solicitud DELETE:', error);
+    toast.error('Error al intentar eliminar el artículo', { position: toast.POSITION.TOP_CENTER });
+  } finally {
+    closeDeleteConfirmationModal();
+  }
+};
+
+
 
   const closeDeleteConfirmationModal = () => {
     setShowDeleteConfirmation(false);
@@ -135,55 +137,64 @@ const ArticulosView = () => {
 
   const handleCreate = async () => {
     try {
+      // Check if the required cookie is available
+      const miCookie = Cookies.get('miCookie');
+      const token = Cookies.get('token');
+  
+      console.log('miCookie:', miCookie);
+  
+      // Continue with the rest of your code
       const createUrl = 'http://localhost:4000/api/articulos';
       const response = await fetch(createUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'x-access-token': token, // Include the token in the header
         },
         body: JSON.stringify(newArticulo),
       });
-
-      if (response.ok) {
-        handleNotificacion();
-        showArticulos();
-      } else {
-        toast.error('Por favor complete los campos',{ position: toast.POSITION.TOP_CENTER });
-        console.error('Error al intentar crear el articulo.');
-      }
+  
+      // ... (your existing code)
     } catch (error) {
       console.error('Error en la solicitud de creación:', error);
     }
-
+  
+    
     handleClose();
   };
 
-  const handleUpdateSubmit = async () => {
-    try {
-      const updateUrl = `http://localhost:4000/api/articulos/${selectedArticulo._id}`;
-      const response = await fetch(updateUrl, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(selectedArticulo),
-      });
 
-      if (response.ok) {
-        console.log('Articulo actualizado exitosamente.');
-        showArticulos();
-        toast.success('Artículo actualizado correctamente', { position: toast.POSITION.TOP_CENTER });
-      } else {
-        console.error('Error al intentar actualizar el articulo.');
-        toast.error('Error al intentar actualizar el artículo', { position: toast.POSITION.TOP_CENTER });
-      }
-    } catch (error) {
-      console.error('Error en la solicitud de actualización:', error);
-      toast.error('Error en la solicitud de actualización', { position: toast.POSITION.TOP_CENTER });
+  
+const handleUpdateSubmit = async () => {
+  try {
+    const updateUrl = `http://localhost:4000/api/articulos/${selectedArticulo._id}`;
+    const token = Cookies.get('token'); // Get the token from cookies
+
+    const response = await fetch(updateUrl, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-access-token': token, // Include the token in the header
+      },
+      body: JSON.stringify(selectedArticulo),
+    });
+
+    if (response.ok) {
+      console.log('Articulo actualizado exitosamente.');
+      showArticulos();
+      toast.success('Artículo actualizado correctamente', { position: toast.POSITION.TOP_CENTER });
+    } else {
+      console.error('Error al intentar actualizar el articulo.');
+      toast.error('Error al intentar actualizar el artículo', { position: toast.POSITION.TOP_CENTER });
     }
+  } catch (error) {
+    console.error('Error en la solicitud de actualización:', error);
+    toast.error('Error en la solicitud de actualización', { position: toast.POSITION.TOP_CENTER });
+  }
 
-    handleClose();
-  };
+  handleClose();
+};
+
 
   useEffect(() => {
     showArticulos();

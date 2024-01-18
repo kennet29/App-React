@@ -6,8 +6,14 @@ import { FaTrash,FaEdit } from 'react-icons/fa';
 import MyNavbar from '../component/Navbar';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import Cookies from 'js-cookie'; // Import the Cookies library
+
 
 const ColoresView = () => {
+  const [cookieData, setCookieData] = useState({
+    miCookie: Cookies.get('miCookie') || null, // Puedes ajustar el nombre de la cookie
+  });
+  
   const [colors, setColors] = useState([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
@@ -33,10 +39,7 @@ const ColoresView = () => {
     setSelectedColor(null);
   };
 
-  const handleNotificacion = () => {
-   
-    toast.success('Operación exitosa', { position: toast.POSITION.TOP_CENTER });
-  };
+  
 
   const handleShow = () => setShowCreateModal(true);
 
@@ -70,6 +73,7 @@ const ColoresView = () => {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
+          'x-access-token': Cookies.get('token'), // Include the token in the headers
         },
       });
 
@@ -78,13 +82,17 @@ const ColoresView = () => {
         toast.success('Color Eliminado', { position: toast.POSITION.TOP_CENTER });
         showData();
       } else {
-        toast.error('Error al borrar el Color', { position: toast.POSITION.TOP_CENTER });
-        console.error(`Error al borrar el color con ID ${deleteColorId}.`);
+        if (response.status === 403) {
+          console.error('Permisos insuficientes para eliminar el color.');
+          toast.error('Permisos insuficientes para eliminar el color', { position: toast.POSITION.TOP_CENTER });
+        } else {
+          toast.error('Error al borrar el Color', { position: toast.POSITION.TOP_CENTER });
+          console.error(`Error al borrar el color con ID ${deleteColorId}.`);
+        }
       }
     } catch (error) {
       console.error('Error al realizar la solicitud DELETE:', error);
     } finally {
-      // Close the delete confirmation modal
       setShowDeleteModal(false);
     }
   };
@@ -124,15 +132,18 @@ const ColoresView = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'x-access-token': Cookies.get('token'), // Include the token in the headers
         },
         body: JSON.stringify(newColor),
       });
 
       if (response.ok) {
-        toast.error('Color creado exitosamente.', { position: toast.POSITION.TOP_CENTER });
+        toast.success('Color creado exitosamente.', { position: toast.POSITION.TOP_CENTER });
         console.log('Color creado exitosamente.');
-        handleNotificacion();
+      
         showData();
+        // Save a color-related cookie after successful creation
+        Cookies.set('colorCookie', 'colorValue', { expires: 1 });
       } else {
         toast.error('Por favor complete todos los campos', { position: toast.POSITION.TOP_CENTER });
         console.error('Error al intentar crear el color.');
@@ -147,26 +158,34 @@ const ColoresView = () => {
   const handleUpdateSubmit = async () => {
     try {
       const updateUrl = `http://localhost:4000/api/colores/${selectedColor._id}`;
+      const token = Cookies.get('token'); // Get the token from cookies
+  
       const response = await fetch(updateUrl, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'x-access-token': token, // Include the token in the headers
         },
         body: JSON.stringify(selectedColor),
       });
-
+  
       if (response.ok) {
-        toast.success('Por favor complete todos los campos', { position: toast.POSITION.TOP_CENTER });
+        toast.success('Color actualizado exitosamente.', { position: toast.POSITION.TOP_CENTER });
         console.log('Color actualizado exitosamente.');
         showData();
       } else {
-        toast.error('Por favor complete todos los campos', { position: toast.POSITION.TOP_CENTER });
-        console.error('Error al intentar actualizar el color.');
+        if (response.status === 403) {
+          console.error('Permisos insuficientes para actualizar el color.');
+          toast.error('Permisos insuficientes para actualizar el color', { position: toast.POSITION.TOP_CENTER });
+        } else {
+          toast.error('Por favor complete todos los campos', { position: toast.POSITION.TOP_CENTER });
+          console.error('Error al intentar actualizar el color.');
+        }
       }
     } catch (error) {
       console.error('Error en la solicitud de actualización:', error);
     }
-
+  
     handleClose();
   };
 
@@ -298,8 +317,6 @@ const ColoresView = () => {
                 }
               />
             </Form.Group>
-
-
             <Form.Group controlId="formEstado">
   <Form.Label>Estado</Form.Label>
   <Form.Control
@@ -312,9 +329,6 @@ const ColoresView = () => {
     <option value="false">Inactivo</option>
   </Form.Control>
 </Form.Group>
-
-
-
             <Form.Group controlId="formDescripcion">
               <Form.Label>Descripción</Form.Label>
               <Form.Control

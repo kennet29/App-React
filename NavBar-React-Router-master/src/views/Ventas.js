@@ -481,11 +481,11 @@ const getNombreArticulo = (idArticulo) => {
     <th>Categoría</th>
     <th>Marca</th>
     <th>Color</th>
-    <th>Estilo</th>
-    <th>Material</th>
+
+ 
     <th>Talla</th>
-    <th>Diseño</th>
-    <th>Existencias</th>
+
+ 
     <th>Cantidad</th>
     <th>Precio</th>
     <th>Subtotal</th>
@@ -502,11 +502,11 @@ const getNombreArticulo = (idArticulo) => {
       <td>{getNombreCategoriaById(item.Id_categoria)}</td>
       <td>{getMarcaNombreById(item.Id_marca)}</td>
       <td>{getColorNameById(item.Id_color)}</td>
-      <td>{mapEstiloIdToNombre(item.Id_estilo)}</td>
-      <td>{getMaterialNameById(item.Id_material)}</td>
+      
+     
       <td>{getNombreTalla(item.Id_talla)}</td>
-      <td>{obtenerNombreDisenoPorId(item.Id_diseño)}</td>
-      <td>{item.Existencias}</td>
+      
+    
       <td>{item.cantidad}</td>
       <td>{item.precio}</td>
       <td>{item.subtotal.toFixed(2)}</td>
