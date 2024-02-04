@@ -66,7 +66,7 @@ const PromocionesView = () => {
     }
   };
 
-  // ... (Previous code remains unchanged)
+ 
 
   const handleDelete = (promocionId) => {
     const selected = promociones.find((promocion) => promocion._id === promocionId);
@@ -74,30 +74,7 @@ const PromocionesView = () => {
     setShowDeleteConfirmationModal(true);
   };
 
-  const handleConfirmDelete = async () => {
-    try {
-      const token = Cookies.get('token');
-      const response = await fetch(`${url}/${selectedPromocion._id}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-access-token': token,
-        },
-      });
-
-      if (response.ok) {
-        console.log(`Promoción con ID ${selectedPromocion._id} eliminada correctamente`);
-        showData();
-        handleNotificacion(); // You may want to notify the user of successful deletion
-      } else {
-        console.error(`Error al intentar eliminar la promoción con ID ${selectedPromocion._id}`);
-      }
-    } catch (error) {
-      console.error('Error:', error);
-    }
-
-    handleCloseDeleteConfirmationModal();
-  };
+  
 
   const handleCloseDeleteConfirmationModal = () => {
     setShowDeleteConfirmationModal(false);
@@ -128,6 +105,31 @@ const PromocionesView = () => {
     );
   }, [filterText, resetPaginationToggle]);
 
+  const handleCommonErrors = (statusCode) => {
+    try {
+      switch (statusCode) {
+        case 401:
+          console.error('Error 401: No autorizado para realizar esta acción.');
+          toast.error('Su sesión ha caducado. Por favor, vuelva a iniciar sesión.', { position: toast.POSITION.TOP_CENTER });
+          // Agregar lógica aquí para redirigir al usuario a la página de inicio de sesión si es necesario
+          break;
+        case 400:
+          console.error('Error 400: Solicitud incorrecta.');
+          toast.error('Solicitud incorrecta', { position: toast.POSITION.TOP_CENTER });
+          break;
+        case 403:
+          console.error('Error 403: Permisos insuficientes para la acción.');
+          toast.error('Permisos insuficientes para la acción', { position: toast.POSITION.TOP_CENTER });
+          break;
+        default:
+          console.error(`Error desconocido con código ${statusCode}`);
+          toast.error('Error desconocido', { position: toast.POSITION.TOP_CENTER });
+      }
+    } catch (error) {
+      console.error('Error en handleCommonErrors:', error);
+    }
+  };
+  
   const handleCreate = async () => {
     try {
       const token = Cookies.get('token');
@@ -139,26 +141,56 @@ const PromocionesView = () => {
         },
         body: JSON.stringify(newPromocion),
       });
-
+  
       if (response.ok) {
         handleNotificacion();
         console.log('Promoción creada exitosamente.');
         showData();
       } else {
         console.error('Error al intentar crear la promoción.');
+        handleCommonErrors(response.status);
       }
     } catch (error) {
-      console.error('Error en la solicitud de creación:', error);
+      if (error instanceof TypeError) {
+        console.error('Error de tipo:', error);
+      } else if (error instanceof SyntaxError) {
+        console.error('Error de sintaxis:', error);
+      } else {
+        console.error('Error en la solicitud de creación:', error);
+        handleCommonErrors(error.response?.status || 500);
+      }
     }
-
+  
     handleClose();
   };
-  const handleUpdate = (promocionId) => {
-    const selected = promociones.find((promocion) => promocion._id === promocionId);
-    setSelectedPromocion(selected);
-    setShowUpdateModal(true);
+  
+  const handleConfirmDelete = async () => {
+    try {
+      const token = Cookies.get('token');
+      const response = await fetch(`${url}/${selectedPromocion._id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-access-token': token,
+        },
+      });
+  
+      if (response.ok) {
+        console.log(`Promoción con ID ${selectedPromocion._id} eliminada correctamente`);
+        showData();
+        handleNotificacion(); // Puedes notificar al usuario de la eliminación exitosa
+      } else {
+        console.error(`Error al intentar eliminar la promoción con ID ${selectedPromocion._id}`);
+        handleCommonErrors(response.status);
+      }
+    } catch (error) {
+      console.error('Error en handleConfirmDelete:', error);
+      handleCommonErrors(error.response?.status || 500);
+    }
+  
+    handleCloseDeleteConfirmationModal();
   };
-
+  
   const handleUpdateSubmit = async () => {
     try {
       const token = Cookies.get('token');
@@ -170,63 +202,76 @@ const PromocionesView = () => {
         },
         body: JSON.stringify(selectedPromocion),
       });
-
+  
       if (response.ok) {
         console.log('Promoción actualizada exitosamente.');
         showData();
       } else {
         console.error('Error al intentar actualizar la promoción.');
+        handleCommonErrors(response.status);
       }
     } catch (error) {
-      console.error('Error en la solicitud de actualización:', error);
+      console.error('Error en handleUpdateSubmit:', error);
+      handleCommonErrors(error.response?.status || 500);
     }
-
+  
     handleClose();
   };
+  
+  
+  
 
+
+  const handleUpdate = (promocionId) => {
+    const selected = promociones.find((promocion) => promocion._id === promocionId);
+    setSelectedPromocion(selected);
+    setShowUpdateModal(true);
+  };
+
+  
   useEffect(() => {
     showData();
   }, []);
 
   const columns = [
     {
-      name: 'PROMOCIÓN',
+      name: 'Promocion',
       selector: (row) => row.promocion,
       sortable: true,
       center: true,
     },
     {
-      name: 'FECHA INICIO',
+      name: 'Fecha Inicio',
       selector: (row) => format(new Date(row.fecha_inicio), 'dd/MM/yyyy'),
       sortable: true,
       center: true,
     },
     {
-      name: 'FECHA FINAL',
+      name: 'Fecha Final',
       selector: (row) => format(new Date(row.fecha_final), 'dd/MM/yyyy'),
       sortable: true,
       center: true,
     },
     {
-      name: 'DESCUENTO',
+      name: 'Descuento',
       selector: (row) => `${row.descuento}%`,
       sortable: true,
       center: true,
     },
     {
-      name: 'DESCRIPCIÓN',
+      name: 'Descripcion',
       selector: (row) => row.descripcion,
       sortable: true,
       center: true,
     },
     {
-      name: 'ESTADO',
+      name: 'Estado',
       selector: (row) => (row.estado ? 'Activo' : 'Inactivo'),
       sortable: true,
       center: true,
     },
     {
-      name: 'CANTIDAD',
+      name: 'Cantidad',
       selector: (row) => row.cantidad_Articulos,
       sortable: true,
       center: true,

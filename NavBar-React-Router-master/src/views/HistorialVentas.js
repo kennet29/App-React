@@ -26,29 +26,62 @@ const DataTableComponent = () => {
   const [disenos, setDisenos] = useState([]);
   const [promotions, setPromotions] = useState([]);
 
-  useEffect(() => {
-  
-    axios.get('http://localhost:4000/api/detalleventa')
-      .then(response => {
-        setData(response.data);
+// Import useState and useEffect if not already imported
+// Add this function outside the DataTableComponent component
 
-        response.data.forEach(row => {
-          axios.get(`http://localhost:4000/api/ventas/${row.id_ventas}`)
-            .then(clientResponse => {
-              setClientNames(prevNames => ({
-                ...prevNames,
-                [row.id_ventas]: clientResponse.data.cliente
-              }));
-            })
-            .catch(clientError => {
-              console.error('Error al obtener el nombre del cliente:', clientError);
-            });
-        });
-      })
-      .catch(error => {
-        console.error('Error al obtener datos:', error);
+const updateFechaField = async (id_ventas) => {
+  try {
+    // Fetch the data for the specified id_ventas from the ventas endpoint
+    const response = await axios.get(`http://localhost:4000/api/ventas/${id_ventas}`);
+
+    // Convert the fecha field to a JavaScript Date object
+    const fechaDate = new Date(response.data.fecha);
+
+    // Format the date to display only day, month, and year
+    const formattedFecha = fechaDate.toLocaleDateString('es-ES', {
+      day: 'numeric',
+      month: 'numeric',
+      year: 'numeric',
+    });
+
+    // Update the fecha field in the state based on the formatted date
+    setData((prevData) =>
+      prevData.map((row) =>
+        row.id_ventas === id_ventas ? { ...row, fecha: formattedFecha } : row
+      )
+    );
+  } catch (error) {
+    console.error('Error updating fecha field:', error);
+  }
+};
+
+// Inside the first useEffect
+useEffect(() => {
+  axios.get('http://localhost:4000/api/detalleventa')
+    .then(response => {
+      setData(response.data);
+
+      response.data.forEach(row => {
+        axios.get(`http://localhost:4000/api/ventas/${row.id_ventas}`)
+          .then(clientResponse => {
+            setClientNames(prevNames => ({
+              ...prevNames,
+              [row.id_ventas]: clientResponse.data.cliente
+            }));
+
+            // Call the updateFechaField function with the id_ventas
+            updateFechaField(row.id_ventas);
+          })
+          .catch(clientError => {
+            console.error('Error al obtener el nombre del cliente:', clientError);
+          });
       });
-  }, []);
+    })
+    .catch(error => {
+      console.error('Error al obtener datos:', error);
+    });
+}, []);
+
 
   useEffect(() => {
     const fetchTallas = async () => {
@@ -197,6 +230,7 @@ const getNombreArticulo = (idArticulo) => {
       cell: row => clientNames[row.id_ventas],
       sortable: true,
     },
+    { name: 'Fecha', selector: 'fecha', sortable: true },
     {
       name: 'Acciones',
       cell: row => (
@@ -218,13 +252,13 @@ const getNombreArticulo = (idArticulo) => {
       button: true,
     },
   ];
-
   const filteredData = data.filter(
     item =>
       item._id.toLowerCase().includes(filterText.toLowerCase()) ||
       item.id_ventas.toLowerCase().includes(filterText.toLowerCase()) ||
       item.total.toString().toLowerCase().includes(filterText.toLowerCase()) ||
-      clientNames[item.id_ventas].toLowerCase().includes(filterText.toLowerCase())
+      clientNames[item.id_ventas].toLowerCase().includes(filterText.toLowerCase()) ||
+      item.fecha.toLowerCase().includes(filterText.toLowerCase())
   );
 
   const articlesTableColumns = [
@@ -253,21 +287,22 @@ const getNombreArticulo = (idArticulo) => {
   return (
     <div>
       <MyNavbar />
-      <div style={{ width: '80%', margin: 'auto', border: '2px solid black', borderRadius: '2px', marginTop: '5%', marginBottom: '5%', textAlign: 'center' }}>
+      <div style={{ width: '90%', margin: 'auto', border: '2px solid black', borderRadius: '2px', marginTop: '5%', marginBottom: '5%', textAlign: 'center' }}>
         <DataTable
           style={{fontSize:'55px'}}
-   
+          title="Historial Ventas"
           columns={columns}
           data={filteredData}
           responsive
           pagination
           subHeader
           subHeaderComponent={
-            <input style={{borderRadius:'4px'}}
+            <input 
               type="text"
               placeholder="Buscar ..."
               value={filterText}
               onChange={(e) => setFilterText(e.target.value)}
+              style={{ width: '250px', marginRight: '10px', borderRadius: '5px' }}
             />
           }
           paginationResetDefaultPage={resetPaginationToggle}

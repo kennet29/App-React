@@ -63,31 +63,7 @@ const ProveedoresView = () => {
     setShowConfirmationModal(true);
   };
   
-  const handleConfirmDelete = async () => {
-    try {
-      const token = Cookies.get('token'); 
-      const response = await fetch(`${url}/${selectedProveedorId}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-access-token': token,
-        },
-      });
-  
-      if (response.ok) {
-        toast.success('Proveedor Eliminado correctamente', { position: toast.POSITION.TOP_CENTER });
-        showData(); 
-      } else {
-        toast.error('Error Proveedor no encontrado', { position: toast.POSITION.TOP_CENTER });
-        console.error(`Error al intentar eliminar el proveedor con ID ${selectedProveedorId}`);
-      }
-    } catch (error) {
-      console.error('Error:', error);
-    }
-  
-    setShowConfirmationModal(false);
-  };
-  
+ 
 
 
   const filteredItems = proveedores.filter(
@@ -107,6 +83,31 @@ const ProveedoresView = () => {
     );
   }, [filterText, resetPaginationToggle]);
 
+  const handleCommonErrors = (statusCode) => {
+    try {
+      switch (statusCode) {
+        case 401:
+          console.error('Error 401: No autorizado para realizar esta acción.');
+          toast.error('Su sesión ha caducado. Por favor, vuelva a iniciar sesión.', { position: toast.POSITION.TOP_CENTER });
+          // Agregar lógica aquí para redirigir al usuario a la página de inicio de sesión si es necesario
+          break;
+        case 400:
+          console.error('Error 400: Solicitud incorrecta.');
+          toast.error('Solicitud incorrecta', { position: toast.POSITION.TOP_CENTER });
+          break;
+        case 403:
+          console.error('Error 403: Permisos insuficientes para la acción.');
+          toast.error('Permisos insuficientes para la acción', { position: toast.POSITION.TOP_CENTER });
+          break;
+        default:
+          console.error(`Error desconocido con código ${statusCode}`);
+          toast.error('Error desconocido', { position: toast.POSITION.TOP_CENTER });
+      }
+    } catch (error) {
+      console.error('Error en handleCommonErrors:', error);
+    }
+  };
+  
   const handleCreate = async () => {
     try {
       const token = Cookies.get('token');
@@ -118,27 +119,48 @@ const ProveedoresView = () => {
         },
         body: JSON.stringify(newProveedor),
       });
-
+  
       if (response.ok) {
         toast.success('Proveedor creado correctamente', { position: toast.POSITION.TOP_CENTER });
         showData();
       } else {
+        handleCommonErrors(response.status);
         toast.error('Complete todos los campos', { position: toast.POSITION.TOP_CENTER });
         console.error('Error al intentar crear el proveedor.');
       }
     } catch (error) {
       console.error('Error en la solicitud de creación:', error);
     }
-
+  
     handleClose();
   };
-
-  const handleUpdate = (proveedorId) => {
-    const selected = proveedores.find((proveedor) => proveedor._id === proveedorId);
-    setSelectedProveedor(selected);
-    setShowUpdateModal(true);
+  
+  const handleConfirmDelete = async () => {
+    try {
+      const token = Cookies.get('token');
+      const response = await fetch(`${url}/${selectedProveedorId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-access-token': token,
+        },
+      });
+  
+      if (response.ok) {
+        toast.success('Proveedor Eliminado correctamente', { position: toast.POSITION.TOP_CENTER });
+        showData();
+      } else {
+        handleCommonErrors(response.status);
+        toast.error('Error Proveedor no encontrado', { position: toast.POSITION.TOP_CENTER });
+        console.error(`Error al intentar eliminar el proveedor con ID ${selectedProveedorId}`);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  
+    setShowConfirmationModal(false);
   };
-
+  
   const handleUpdateSubmit = async () => {
     try {
       const token = Cookies.get('token');
@@ -150,20 +172,29 @@ const ProveedoresView = () => {
         },
         body: JSON.stringify(selectedProveedor),
       });
-
+  
       if (response.ok) {
         toast.success('Proveedor Editado correctamente', { position: toast.POSITION.TOP_CENTER });
         console.log('Proveedor actualizado exitosamente.');
         showData();
       } else {
+        handleCommonErrors(response.status);
         toast.error('Complete todos los campos.', { position: toast.POSITION.TOP_CENTER });
         console.error('Error al intentar actualizar el proveedor.');
       }
     } catch (error) {
       console.error('Error en la solicitud de actualización:', error);
     }
-
+  
     handleClose();
+  };
+  
+
+
+  const handleUpdate = (proveedorId) => {
+    const selected = proveedores.find((proveedor) => proveedor._id === proveedorId);
+    setSelectedProveedor(selected);
+    setShowUpdateModal(true);
   };
 
   useEffect(() => {
@@ -173,37 +204,37 @@ const ProveedoresView = () => {
   
   const columns = [
     {
-      name: 'NOMBRE',
+      name: 'Nombre',
       selector: (row) => row.nombre,
       sortable: true,
       center: true,
     },
     {
-      name: 'DIRECCIÓN',
+      name: 'Doreccíon',
       selector: (row) => row.direccion,
       sortable: true,
       center: true,
     },
     {
-      name: 'TELÉFONO',
+      name: 'Telefono',
       selector: (row) => row.telefono,
       sortable: true,
       center: true,
     },
     {
-      name: 'CORREO',
+      name: 'E-mail',
       selector: (row) => row.correo,
       sortable: true,
       center: true,
     },
     {
-      name: 'DESCRIPCIÓN',
+      name: 'Descripcíon',
       selector: (row) => row.descripcion,
       sortable: true,
       center: true,
     },
     {
-      name: 'ESTADO',
+      name: 'Estado',
       selector: (row) => (row.estado ? 'Activo' : 'Inactivo'),
       sortable: true,
       center: true,

@@ -31,31 +31,30 @@ const LoginView = () => {
       const response = await fetch('http://localhost:4000/api/auth/signin', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(formData),
       });
   
       if (response.ok) {
         const data = await response.json();
   
-        // Guardar el token, el email, y el _id en cookies con una duración de 1 día (ajustable)
+        // Guardar el token, el email y el _id en cookies con una duración de 1 día (ajustable)
         Cookies.set('token', data.token, { expires: 1 });
         Cookies.set('email', formData.email, { expires: 1 });
-        Cookies.set('_id', data.id, { expires: 1 });
+        Cookies.set('_id', data._id, { expires: 1 }); // Guardar el _id en la cookie
   
-        // Set the 'miCookie' here
-        Cookies.set('miCookie', 'valorEjemplo', { expires: 1 });
+     
   
-        // Mostrar los datos por consola
+        
         console.log('Token:', data.token);
         console.log('Email:', formData.email);
-        console.log('_id:', data.id);
+        console.log('_id:', data._id);
   
-        // Redirigir a la ruta /index
+   
         setRedirectToIndex(true);
       } else {
-        // Mostrar un toast en caso de credenciales incorrectas
+       
         toast.error('Contraseña o usuario incorrecto');
       }
     } catch (error) {

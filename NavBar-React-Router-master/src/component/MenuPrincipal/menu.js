@@ -6,6 +6,7 @@ import { faSackDollar, faBoxesPacking, faArrowRight,faCalendarCheck,faAddressCar
 import { ButtonGroup, Dropdown } from 'react-bootstrap';
 import { MdOutlineSettings } from "react-icons/md";
 import 'bootstrap/dist/css/bootstrap.min.css';
+import { BsBoxes } from "react-icons/bs";
 import './menu.css';
 import MyNavbar from '../Navbar';
 import Footer from '../footer/footer';
@@ -53,6 +54,31 @@ const Menu = () => {
     </ButtonGroup>
           </div>
         </div>
+
+
+
+
+
+        <div className="col-md-3">
+          <div className="card custom-card text-center ">
+            <div className="card-icon"><BsBoxes /> </div>
+            <div className="card-title">Mercancia</div>
+            <div className="card-description"> </div>
+            <ButtonGroup role="group" aria-label="Button group with nested dropdown"  >
+      <Dropdown as={ButtonGroup}>
+        <Dropdown.Toggle variant="primary" id="dropdown-basic" style={{width:'225px',height:'30px',padding:'0'}}>
+          Opciones
+        </Dropdown.Toggle>
+        <Dropdown.Menu style={{backgroundColor:'#4a4a4a',color:'white'}}>
+          <Dropdown.Item style={{color:'white'}} href="/mercancia">Administrar Mercancia</Dropdown.Item>
+         
+        </Dropdown.Menu>
+      </Dropdown>
+    </ButtonGroup>
+          </div>
+        </div>
+
+
         <div className="col-md-3">
           <div className="card custom-card text-center ">
             <div className="card-icon"> <MdOutlineSettings style={{fontSize:'60px',padding:'0'}} />
@@ -84,6 +110,8 @@ const Menu = () => {
           <Dropdown.Item style={{color:'white'}} href="/proveedores">Proveedores</Dropdown.Item>
           <Dropdown.Item style={{color:'white'}} href="/categorias">Categorías</Dropdown.Item>
           <Dropdown.Item style={{color:'white'}} href="/articulos">Articulos</Dropdown.Item>
+          <Dropdown.Item style={{color:'white'}} href="/bodegas">Bodegas</Dropdown.Item>
+
         </Dropdown.Menu>
       </Dropdown>
     </ButtonGroup>
@@ -101,7 +129,7 @@ const Menu = () => {
         </Dropdown.Toggle>
         <Dropdown.Menu style={{backgroundColor:'#4a4a4a',color:'white'}}>
           <Dropdown.Item style={{color:'white'}} href="/createuser">Crear Usuario</Dropdown.Item>
-          <Dropdown.Item style={{color:'white'}} href="#">Editar Usuario</Dropdown.Item>
+          <Dropdown.Item style={{color:'white'}} href="/listuser">Editar Usuario</Dropdown.Item>
         </Dropdown.Menu>
       </Dropdown>
     </ButtonGroup>

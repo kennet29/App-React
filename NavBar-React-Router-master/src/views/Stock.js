@@ -7,20 +7,24 @@ import Navbar from '../component/Navbar';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-const StockView = () => {
+const MercanciaView = () => {
   const [stock, setStock] = useState([]);
 
   const [showUpdateModal, setShowUpdateModal] = useState(false);
+  const [filteredStock, setFilteredStock] = useState([]);
+
   const [filterText, setFilterText] = useState('');
   const [resetPaginationToggle, setResetPaginationToggle] = useState(false);
   const [articulos, setArticulos] = useState([]);
   const [colores, setColores] = useState([]);
+  const [categorias, setCategorias] = useState([]);
   const [marcas, setMarcas] = useState([]);
   const [tallas, setTallas] = useState([]);
   const [tiposDeEstilo, setTiposDeEstilo] = useState([]);
   const [materiales, setMateriales] = useState([]);
   const [disenos, setDisenos] = useState([]);
   const [promociones, setPromociones] = useState([]);
+  const [bodegas, setBodegas] = useState([]);
 
   const [newItem, setNewItem] = useState({
     Id_articulo: '',
@@ -90,6 +94,10 @@ const StockView = () => {
   const marcasData = await marcasResponse.json();
   setMarcas(marcasData);
   
+  const categoriasResponse = await fetch('http://localhost:4000/api/categorias/');
+  const categoriasData = await categoriasResponse.json();
+  setCategorias(categoriasData);
+
   const articulosResponse = await fetch('http://localhost:4000/api/articulos');
   const articulosData = await articulosResponse.json();
   setArticulos(articulosData);
@@ -123,6 +131,11 @@ const StockView = () => {
     const response = await fetch('http://localhost:4000/api/stock/');
     const data = await response.json();
     setStock(data);
+    setFilteredStock(data);
+
+    const bodegasresponse = await fetch('http://localhost:4000/api/bodegas');
+    const bodegasData = await bodegasresponse.json();
+    setBodegas(bodegasData);
 
   } catch (error) {
     console.error('Error fetching data:', error);
@@ -130,56 +143,104 @@ const StockView = () => {
 };
 
 
+useEffect(() => {
+  const lowerCaseFilter = filterText.toLowerCase();
+  const filteredData = stock.filter((item) => {
+    const articulo = articulos.find((articulo) => articulo._id === item.Id_articulo);
+    const categoria = categorias.find((categoria) => categoria._id ===  item.Id_categoria);
+    const color = colores.find((color) => color._id === item.Id_color);
+    const marca = marcas.find((marca) => marca._id === item.Id_marca);
+    const talla = tallas.find((talla) => talla._id === item.Id_talla);
+    const estilo = tiposDeEstilo.find((tipoDeEstilo) => tipoDeEstilo._id === item.Id_estilo);
+    const material = materiales.find((material) => material._id === item.Id_material);
+    const diseno = disenos.find((diseno) => diseno._id === item.Id_diseño);
+    const promocion = promociones.find((promocion) => promocion._id === item.Id_promocion);
+    const bodega = bodegas.find((bodega) => bodega._id === item.Id_bodega);
+
+    return (
+      articulo && articulo.nombre.toLowerCase().includes(lowerCaseFilter) ||
+      categoria && categoria.categoria.toLowerCase().includes(lowerCaseFilter) ||
+      color && color.color.toLowerCase().includes(lowerCaseFilter) ||
+      marca && marca.marca.toLowerCase().includes(lowerCaseFilter) ||
+      talla && talla.talla.toLowerCase().includes(lowerCaseFilter) ||
+      estilo && estilo.estilo.toLowerCase().includes(lowerCaseFilter) ||
+      material && material.material.toLowerCase().includes(lowerCaseFilter) ||
+      diseno && diseno.diseno.toLowerCase().includes(lowerCaseFilter) ||
+      promocion && promocion.promocion.toLowerCase().includes(lowerCaseFilter) ||
+      bodega && bodega.bodega.toLowerCase().includes(lowerCaseFilter) ||
+      item._id.toLowerCase().includes(lowerCaseFilter) 
+    );
+  });
+  setFilteredStock(filteredData);
+}, [filterText, stock, articulos,categorias, colores, marcas, tallas, tiposDeEstilo, materiales, disenos, promociones, bodegas]);
+
+
   const columns = [
+    {
+      name: 'ID',
+      selector: (row) => row._id,
+      sortable: true,
+      center: true,
+    },
  {
   name: 'Articulo',
   selector: (row) => {
     const articulo = articulos.find((articulo) => articulo._id === row.Id_articulo);
-    return articulo ? articulo.nombre : '';
-  },
-  sortable: true,
-  center: true,
-},
-
-    {
-      name: 'ID Usuario',
-      selector: (row) => row.Id_usuario,
-      sortable: true,
-      center: true,
-    },
-   {
-  name: 'Color',
-  selector: (row) => {
-    const color = colores.find((color) => color._id === row.Id_color);
-    return color ? color.color : '';
-  },
-  sortable: true,
-  center: true,
-},
-  {
-  name: 'Marca',
-  selector: (row) => {
-    const marca = marcas.find((marca) => marca._id === row.Id_marca);
-    return marca ? marca.marca : '';
-  },
-  sortable: true,
-  center: true,
-},
-
-   {
-  name: 'Talla',
-  selector: (row) => {
-    const talla = tallas.find((talla) => talla._id === row.Id_talla);
-    return talla ? talla.talla : '';
+    return articulo ? articulo.nombre : 'Desconocido';
   },
   sortable: true,
   center: true,
 },
 {
-  name: 'Tipo de Estilo',
+  name: 'Categoria',
+  selector: (row) => {
+    const categoria = categorias.find((categoria) => categoria._id === row.Id_categoria);
+    return categoria ? categoria.categoria : 'Desconocida';
+  },
+  sortable: true,
+  center: true,
+},
+   {
+  name: 'Color',
+  selector: (row) => {
+    const color = colores.find((color) => color._id === row.Id_color);
+    return color ? color.color : 'Desconocido';
+  },
+  sortable: true,
+  center: true,
+},{
+  name:'Bodega',
+  selector:(row) =>{
+    const bodega = bodegas.find((bodega) => bodega._id == row.Id_bodega);
+    return bodega ? bodega.bodega: 'Desconocida';
+  }
+},
+  {
+  name: 'Marca',
+  selector: (row) => {
+    const marca = marcas.find((marca) => marca._id === row.Id_marca);
+    return marca ? marca.marca : 'Desconocida';
+  },
+  sortable: true,
+  center: true,
+},
+
+
+
+   {
+  name: 'Talla',
+  selector: (row) => {
+    const talla = tallas.find((talla) => talla._id === row.Id_talla);
+    return talla ? talla.talla : 'Desconocida';
+  },
+  sortable: true,
+  center: true,
+},
+{
+  name: 'Estilo',
   selector: (row) => {
     const tipoDeEstilo = tiposDeEstilo.find((tipoDeEstilo) => tipoDeEstilo._id === row.Id_estilo);
-    return tipoDeEstilo ? tipoDeEstilo.estilo : '';
+    return tipoDeEstilo ? tipoDeEstilo.estilo : 'Desconocido';
   },
   sortable: true,
   center: true,
@@ -189,7 +250,7 @@ const StockView = () => {
   name: 'Material',
   selector: (row) => {
     const material = materiales.find((material) => material._id === row.Id_material);
-    return material ? material.material : '';
+    return material ? material.material : 'Desconocido';
   },
   sortable: true,
   center: true,
@@ -203,6 +264,7 @@ const StockView = () => {
   sortable: true,
   center: true,
 },
+
     {
       name: 'Descuento',
       selector: (row) => row.Descuento,
@@ -279,59 +341,52 @@ const StockView = () => {
     },
   ];
   
-
   const subHeaderComponentMemo = useMemo(() => {
     return (
-      <div style={{ display: 'flex', margin: '0 auto', marginBottom: '10px' }}>
+      <div style={{ display: 'flex', margin: '0 auto', marginBottom: '5px' }}>
         <input
           type="text"
-          placeholder="Search by Item ID"
+          placeholder="Buscar ..."
           value={filterText}
           onChange={(e) => setFilterText(e.target.value)}
+          style={{borderRadius:'5px'}}
         />
       </div>
     );
   }, [filterText, resetPaginationToggle]);
 
-  
-
-  
-
-  const handleUpdateSubmit = async () => {
-    try {
-      if (!selectedItem || !selectedItem._id) {
-        console.error('No item selected for update');
-        return;
-      }
-  
-      // Construye la URL con el ID del elemento seleccionado
-      const urlWithId = `http://localhost:4000/api/stock/${selectedItem._id}`;
-  
-      // Realiza la solicitud POST al servidor con los datos actualizados
-      const response = await fetch(urlWithId, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(selectedItem), // Envia los datos actualizados en el cuerpo de la solicitud
-      });
-  
-      // Verifica si la solicitud fue exitosa (código 2xx)
-      if (response.ok) {
-        // Realiza alguna acción adicional si es necesario
-        handleNotification();
-        handleClose(); // Cierra el modal después de la actualización exitosa
-      } else {
-        // Maneja errores si la solicitud no fue exitosa
-        console.error('Error updating item:', response.statusText);
-        // Puedes mostrar un mensaje de error al usuario si es necesario
-      }
-    } catch (error) {
-      console.error('Error updating item:', error);
-      // Puedes mostrar un mensaje de error al usuario si es necesario
+ const handleUpdateSubmit = async () => {
+  try {
+    if (!selectedItem || !selectedItem._id) {
+      console.error('No item selected for update');
+      return;
     }
-  };
-  
+
+    const urlWithId = `http://localhost:4000/api/stock/update/${selectedItem._id}`;
+
+    // Log the formatted JSON being sent
+    console.log('JSON being sent:', JSON.stringify(selectedItem, null, 2));
+
+    const response = await fetch(urlWithId, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(selectedItem),
+    });
+
+    if (response.ok) {
+      handleNotification();
+      handleClose();
+    } else {
+      console.error('Error updating item:', response.statusText);
+    }
+  } catch (error) {
+    console.error('Error updating item:', error);
+  }
+};
+
+
 
   useEffect(() => {
     showData();
@@ -343,14 +398,15 @@ const StockView = () => {
      
 
       <Styles.StyledDataTable
-        columns={columns}
-        data={stock}
-        pagination
-        paginationResetDefaultPage={resetPaginationToggle}
-        subHeader
-        subHeaderComponent={subHeaderComponentMemo}
-        persistTableHead
-      />
+  columns={columns}
+  data={filteredStock}
+  pagination
+  paginationResetDefaultPage={resetPaginationToggle}
+  subHeader
+  subHeaderComponent={subHeaderComponentMemo}
+  persistTableHead
+/>
+
 
 
 <Styles.StyledModal show={showUpdateModal} onHide={handleClose}>
@@ -359,160 +415,6 @@ const StockView = () => {
   </Modal.Header>
   <Modal.Body>
     <Form>
-
-    <Form.Group controlId="formIdArticulo">
-  <Form.Label>Artículo</Form.Label>
-  <Form.Control
-    as="select"
-    value={selectedItem ? selectedItem.Id_articulo : ''}
-    onChange={(e) =>
-      setSelectedItem({
-        ...selectedItem,
-        Id_articulo: e.target.value,
-      })
-    }
-  >
-    <option value="">Selecciona un artículo</option>
-    {articulos.map((articulo) => (
-      <option key={articulo._id} value={articulo._id}>
-        {articulo.nombre}
-      </option>
-    ))}
-  </Form.Control>
-</Form.Group>
-
-
-<Form.Group controlId="formIdColor">
-  <Form.Label>Color</Form.Label>
-  <Form.Control
-    as="select"
-    value={selectedItem ? selectedItem.Id_color : ''}
-    onChange={(e) =>
-      setSelectedItem({
-        ...selectedItem,
-        Id_color: e.target.value,
-      })
-    }
-  >
-    <option value="">Selecciona un color</option>
-    {colores.map((color) => (
-      <option key={color._id} value={color._id}>
-        {color.color}
-      </option>
-    ))}
-  </Form.Control>
-</Form.Group>
-
-<Form.Group controlId="formIdMarca">
-  <Form.Label>Marca</Form.Label>
-  <Form.Control
-    as="select"
-    value={selectedItem ? selectedItem.Id_marca : ''}
-    onChange={(e) =>
-      setSelectedItem({
-        ...selectedItem,
-        Id_marca: e.target.value,
-      })
-    }
-  >
-    <option value="">Selecciona una marca</option>
-    {marcas.map((marca) => (
-      <option key={marca._id} value={marca._id}>
-        {marca.marca}
-      </option>
-    ))}
-  </Form.Control>
-</Form.Group>
-
-
-
-<Form.Group controlId="formIdTalla">
-  <Form.Label>Talla</Form.Label>
-  <Form.Control
-    as="select"
-    value={selectedItem ? selectedItem.Id_talla : ''}
-    onChange={(e) =>
-      setSelectedItem({
-        ...selectedItem,
-        Id_talla: e.target.value,
-      })
-    }
-  >
-    <option value="">Selecciona una talla</option>
-    {tallas.map((talla) => (
-      <option key={talla._id} value={talla._id}>
-        {talla.talla}
-      </option>
-    ))}
-  </Form.Control>
-</Form.Group>
-
-
-<Form.Group controlId="formIdEstilo">
-  <Form.Label>Estilo</Form.Label>
-  <Form.Control
-    as="select"
-    value={selectedItem ? selectedItem.Id_estilo : ''}
-    onChange={(e) =>
-      setSelectedItem({
-        ...selectedItem,
-        Id_estilo: e.target.value,
-      })
-    }
-  >
-    <option value="">Selecciona un estilo</option>
-    {tiposDeEstilo.map((estilo) => (
-      <option key={estilo._id} value={estilo._id}>
-        {estilo.estilo}
-      </option>
-    ))}
-  </Form.Control>
-</Form.Group>
-
-
-<Form.Group controlId="formIdMaterial">
-  <Form.Label>Material</Form.Label>
-  <Form.Control
-    as="select"
-    value={selectedItem ? selectedItem.Id_material : ''}
-    onChange={(e) =>
-      setSelectedItem({
-        ...selectedItem,
-        Id_material: e.target.value,
-      })
-    }
-  >
-    <option value="">Selecciona un material</option>
-    {materiales.map((material) => (
-      <option key={material._id} value={material._id}>
-        {material.material}
-      </option>
-    ))}
-  </Form.Control>
-</Form.Group>
-
-
-<Form.Group controlId="formIdDiseno">
-  <Form.Label>Diseño</Form.Label>
-  <Form.Control
-    as="select"
-    value={selectedItem ? selectedItem.Id_diseno : ''}
-    onChange={(e) =>
-      setSelectedItem({
-        ...selectedItem,
-        Id_diseno: e.target.value,
-      })
-    }
-  >
-    <option value="">Selecciona un diseño</option>
-    {disenos.map((diseno) => (
-      <option key={diseno._id} value={diseno._id}>
-        {diseno.diseno}
-      </option>
-    ))}
-  </Form.Control>
-</Form.Group>
-
 
 <Form.Group controlId="formDescuento">
   <Form.Label>Descuento</Form.Label>
@@ -582,8 +484,8 @@ const StockView = () => {
       })
     }
   >
-    <option value={true}>Active</option>
-    <option value={false}>Inactive</option>
+    <option value={true}>Activo</option>
+    <option value={false}>Inactivo</option>
   </Form.Control>
 </Form.Group>
 <Form.Group controlId="formDanos">
@@ -599,7 +501,7 @@ const StockView = () => {
     }
   >
     <option value={false}>No</option>
-    <option value={true}>Yes</option>
+    <option value={true}>SI</option>
   </Form.Control>
 </Form.Group>
 <Form.Group controlId="formDescripcion">
@@ -654,6 +556,29 @@ const StockView = () => {
 </Form.Group>
 
 
+<Form.Group controlId="formIdBodega">
+  <Form.Label>Bodega</Form.Label>
+  <Form.Control
+    as="select"
+    value={selectedItem ? selectedItem.Id_bodega : ''}
+    onChange={(e) =>
+      setSelectedItem({
+        ...selectedItem,
+        Id_bodega: e.target.value,
+      })
+    }
+  >
+    <option value="">Selecciona una bodega</option>
+    {bodegas.map((bodega) => (
+      <option key={bodega._id} value={bodega._id}>
+        {bodega.bodega}
+      </option>
+    ))}
+  </Form.Control>
+</Form.Group>
+
+
+
     </Form>
   </Modal.Body>
   <Styles.ModalFooter>
@@ -671,4 +596,4 @@ const StockView = () => {
 </Styles.AppContainer>
 );
   }
-export default StockView;
+export default MercanciaView;

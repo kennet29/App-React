@@ -6,12 +6,12 @@ import { FaTrash,FaEdit } from 'react-icons/fa';
 import MyNavbar from '../component/Navbar';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import Cookies from 'js-cookie'; // Import the Cookies library
+import Cookies from 'js-cookie'; 
 
 
 const ColoresView = () => {
   const [cookieData, setCookieData] = useState({
-    miCookie: Cookies.get('miCookie') || null, // Puedes ajustar el nombre de la cookie
+    miCookie: Cookies.get('miCookie') || null, 
   });
   
   const [colors, setColors] = useState([]);
@@ -66,36 +66,7 @@ const ColoresView = () => {
     setShowDeleteModal(true);
   };
 
-  const handleDeleteConfirm = async () => {
-    try {
-      const deleteUrl = `http://localhost:4000/api/colores/${deleteColorId}`;
-      const response = await fetch(deleteUrl, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-access-token': Cookies.get('token'), // Include the token in the headers
-        },
-      });
-
-      if (response.ok) {
-        console.log(`Color con ID ${deleteColorId} borrado exitosamente.`);
-        toast.success('Color Eliminado', { position: toast.POSITION.TOP_CENTER });
-        showData();
-      } else {
-        if (response.status === 403) {
-          console.error('Permisos insuficientes para eliminar el color.');
-          toast.error('Permisos insuficientes para eliminar el color', { position: toast.POSITION.TOP_CENTER });
-        } else {
-          toast.error('Error al borrar el Color', { position: toast.POSITION.TOP_CENTER });
-          console.error(`Error al borrar el color con ID ${deleteColorId}.`);
-        }
-      }
-    } catch (error) {
-      console.error('Error al realizar la solicitud DELETE:', error);
-    } finally {
-      setShowDeleteModal(false);
-    }
-  };
+ 
 
 
   const handleClear = () => {
@@ -125,58 +96,71 @@ const ColoresView = () => {
     );
   }, [filterText, resetPaginationToggle]);
 
-  const handleCreate = async () => {
+  const handleDeleteConfirm = async () => {
     try {
-      const createUrl = 'http://localhost:4000/api/colores';
-      const response = await fetch(createUrl, {
-        method: 'POST',
+      const deleteUrl = `http://localhost:4000/api/colores/${deleteColorId}`;
+      const response = await fetch(deleteUrl, {
+        method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
-          'x-access-token': Cookies.get('token'), // Include the token in the headers
+          'x-access-token': Cookies.get('token'),
         },
-        body: JSON.stringify(newColor),
       });
-
+  
       if (response.ok) {
-        toast.success('Color creado exitosamente.', { position: toast.POSITION.TOP_CENTER });
-        console.log('Color creado exitosamente.');
-      
+        console.log(`Color con ID ${deleteColorId} borrado exitosamente.`);
+        toast.success('Color eliminado exitosamente', { position: toast.POSITION.TOP_CENTER });
         showData();
-        // Save a color-related cookie after successful creation
-        Cookies.set('colorCookie', 'colorValue', { expires: 1 });
       } else {
-        toast.error('Por favor complete todos los campos', { position: toast.POSITION.TOP_CENTER });
-        console.error('Error al intentar crear el color.');
+        if (response.status === 401) {
+          console.error(' No autorizado para eliminar el color.');
+          toast.error(' No autorizado para eliminar el color', { position: toast.POSITION.TOP_CENTER });
+        } else if (response.status === 403) {
+          console.error(' Permisos insuficientes para eliminar el color.');
+          toast.error(' Permisos insuficientes para eliminar el color', { position: toast.POSITION.TOP_CENTER });
+        } else if (response.status === 400) {
+          console.error(' Datos incorrectos o incompletos para eliminar el color.');
+          toast.error(' Datos incorrectos o incompletos para eliminar el color', { position: toast.POSITION.TOP_CENTER });
+        } else {
+          toast.error('Error al borrar el color', { position: toast.POSITION.TOP_CENTER });
+          console.error(`Error al borrar el color con ID ${deleteColorId}.`);
+        }
       }
     } catch (error) {
-      console.error('Error en la solicitud de creación:', error);
+      console.error('Error al realizar la solicitud DELETE:', error);
+    } finally {
+      setShowDeleteModal(false);
     }
-
-    handleClose();
   };
 
   const handleUpdateSubmit = async () => {
     try {
       const updateUrl = `http://localhost:4000/api/colores/${selectedColor._id}`;
-      const token = Cookies.get('token'); // Get the token from cookies
+      const token = Cookies.get('token');
   
       const response = await fetch(updateUrl, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'x-access-token': token, // Include the token in the headers
+          'x-access-token': token,
         },
         body: JSON.stringify(selectedColor),
       });
   
       if (response.ok) {
-        toast.success('Color actualizado exitosamente.', { position: toast.POSITION.TOP_CENTER });
+        toast.success('Color actualizado exitosamente', { position: toast.POSITION.TOP_CENTER });
         console.log('Color actualizado exitosamente.');
         showData();
       } else {
-        if (response.status === 403) {
-          console.error('Permisos insuficientes para actualizar el color.');
-          toast.error('Permisos insuficientes para actualizar el color', { position: toast.POSITION.TOP_CENTER });
+        if (response.status === 401) {
+          console.error(' No autorizado para actualizar el color.');
+          toast.error(' No autorizado para actualizar el color', { position: toast.POSITION.TOP_CENTER });
+        } else if (response.status === 403) {
+          console.error(' Permisos insuficientes para actualizar el color.');
+          toast.error(' Permisos insuficientes para actualizar el color', { position: toast.POSITION.TOP_CENTER });
+        } else if (response.status === 400) {
+          console.error(' Datos incorrectos o incompletos para actualizar el color.');
+          toast.error(' Datos incorrectos o incompletos para actualizar el color', { position: toast.POSITION.TOP_CENTER });
         } else {
           toast.error('Por favor complete todos los campos', { position: toast.POSITION.TOP_CENTER });
           console.error('Error al intentar actualizar el color.');
@@ -189,25 +173,65 @@ const ColoresView = () => {
     handleClose();
   };
 
+  const handleCreate = async () => {
+    try {
+      const createUrl = 'http://localhost:4000/api/colores';
+      const response = await fetch(createUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-access-token': Cookies.get('token'),
+        },
+        body: JSON.stringify(newColor),
+      });
+  
+      if (response.ok) {
+        toast.success('Color creado exitosamente', { position: toast.POSITION.TOP_CENTER });
+        console.log('Color creado exitosamente.');
+        showData();
+        Cookies.set('colorCookie', 'colorValue', { expires: 1 });
+      } else {
+        if (response.status === 401) {
+          console.error(' No autorizado para crear el color.');
+          toast.error(' No autorizado para crear el color', { position: toast.POSITION.TOP_CENTER });
+        } else if (response.status === 403) {
+          console.error(' Permisos insuficientes para crear el color.');
+          toast.error(' Permisos insuficientes para crear el color', { position: toast.POSITION.TOP_CENTER });
+        } else if (response.status === 400) {
+          console.error(' Datos incorrectos o incompletos para crear el color.');
+          toast.error(' Datos incorrectos o incompletos para crear el color', { position: toast.POSITION.TOP_CENTER });
+        } else {
+          toast.error('Por favor complete todos los campos', { position: toast.POSITION.TOP_CENTER });
+          console.error('Error al intentar crear el color.');
+        }
+      }
+    } catch (error) {
+      console.error('Error en la solicitud de creación:', error);
+    }
+  
+    handleClose();
+  };
+  
+
   useEffect(() => {
     showData();
   }, []);
 
   const columns = [
     {
-      name: 'COLOR',
+      name: 'Color',
       selector: (row) => row.color,
       sortable: true,
       center: true,
     },
     {
-      name: 'ESTADO',
+      name: 'Estado',
       selector: (row) => (row.estado ? 'Activo' : 'Inactivo'),
       sortable: true,
       center: true,
     },
     {
-      name: 'DESCRIPCIÓN',
+      name: 'Descripcíon',
       selector: (row) => row.descripcion,
       sortable: true,
       center: true,

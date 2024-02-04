@@ -66,36 +66,7 @@ const DisenosView = () => {
     setShowDeleteModal(true);
   };
 
-  const handleDeleteConfirmed = async () => {
-    try {
-      const token = Cookies.get('token'); 
-      const response = await fetch(`${url}/${deleteItemId}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-access-token': token,
-        },
-      });
-
-      if (response.ok) {
-        console.log(`Diseño con ID ${deleteItemId} eliminado correctamente`);
-        showData(); // Refresh the data after deletion
-        toast.success('Diseño eliminado correctamente', { position: toast.POSITION.TOP_CENTER });
-      }  else if (response.status === 403) {
-        console.error('Permisos insuficientes para borrar .');
-        toast.error('Permisos insuficientes para borrar el artículo', { position: toast.POSITION.TOP_CENTER });
-      } else {
-        console.error(`Error al eliminar el diseño con ID ${deleteItemId}`);
-        toast.error('Error al eliminar el diseño', { position: toast.POSITION.TOP_CENTER });
-      }
-    } catch (error) {
-      console.error('Error deleting design:', error);
-      toast.error('Error al eliminar el diseño', { position: toast.POSITION.TOP_CENTER });
-    } finally {
-      setShowDeleteModal(false);
-      setDeleteItemId(null);
-    }
-  };
+ 
 
   const handleClear = () => {
     if (filterText) {
@@ -121,10 +92,61 @@ const DisenosView = () => {
     );
   }, [filterText, resetPaginationToggle]);
 
+  const handleCommonErrors = (statusCode) => {
+    switch (statusCode) {
+      case 401:
+        console.error('Error 401: No autorizado para realizar esta acción.');
+        toast.error('Su sesión ha caducado. Por favor, vuelva a iniciar sesión.', { position: toast.POSITION.TOP_CENTER });
+        // Add logic here to redirect the user to the login page if needed
+        break;
+      case 400:
+        console.error('Error 400: Solicitud incorrecta.');
+        toast.error('Solicitud incorrecta', { position: toast.POSITION.TOP_CENTER });
+        break;
+      case 403:
+        console.error('Error 403: Permisos insuficientes para la acción.');
+        toast.error('Permisos insuficientes para la acción', { position: toast.POSITION.TOP_CENTER });
+        break;
+      default:
+        console.error(`Error desconocido con código ${statusCode}`);
+        toast.error('Error desconocido', { position: toast.POSITION.TOP_CENTER });
+    }
+  };
+  
+  
+  const handleDeleteConfirmed = async () => {
+    try {
+      const token = Cookies.get('token');
+      const response = await fetch(`${url}/${deleteItemId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-access-token': token,
+        },
+      });
+  
+      if (response.ok) {
+        console.log(`Diseño con ID ${deleteItemId} eliminado correctamente`);
+        showData();
+        toast.success('Diseño eliminado correctamente', { position: toast.POSITION.TOP_CENTER });
+      } else {
+        handleCommonErrors(response.status);
+        console.error(`Error al eliminar el diseño con ID ${deleteItemId}`);
+        toast.error('Error al eliminar el diseño', { position: toast.POSITION.TOP_CENTER });
+      }
+    } catch (error) {
+      console.error('Error deleting design:', error);
+      toast.error('Error al eliminar el diseño', { position: toast.POSITION.TOP_CENTER });
+    } finally {
+      setShowDeleteModal(false);
+      setDeleteItemId(null);
+    }
+  };
+  
   const handleCreate = async () => {
     try {
       const createUrl = 'http://localhost:4000/api/disenos';
-      const token = Cookies.get('token'); 
+      const token = Cookies.get('token');
       console.log('JSON que se envía al crear:', JSON.stringify(newDiseno));
   
       const response = await fetch(createUrl, {
@@ -138,26 +160,26 @@ const DisenosView = () => {
   
       if (response.ok) {
         console.log('Diseño creado exitosamente.');
-      
         showData();
+        toast.success('Diseño creado correctamente', { position: toast.POSITION.TOP_CENTER });
       } else {
-        toast.error('Por favor complete todos los campos', { position: toast.POSITION.TOP_CENTER });
+        handleCommonErrors(response.status);
         console.error('Error al intentar crear el diseño.');
       }
     } catch (error) {
       console.error('Error en la solicitud de creación:', error);
+      toast.error('Error al crear el diseño', { position: toast.POSITION.TOP_CENTER });
     }
   
     handleClose();
   };
   
-
   const handleUpdateSubmit = async () => {
     try {
       const updateUrl = `http://localhost:4000/api/disenos/${selectedDiseno._id}`;
-  
+      const token = Cookies.get('token');
       console.log('JSON que se envía al actualizar:', JSON.stringify(selectedDiseno));
-      const token = Cookies.get('token'); 
+  
       const response = await fetch(updateUrl, {
         method: 'PUT',
         headers: {
@@ -172,8 +194,8 @@ const DisenosView = () => {
         showData();
         toast.success('Diseño actualizado correctamente', { position: toast.POSITION.TOP_CENTER });
       } else {
+        handleCommonErrors(response.status);
         console.error('Error al intentar actualizar el diseño.');
-        toast.error('Error al actualizar el diseño', { position: toast.POSITION.TOP_CENTER });
       }
     } catch (error) {
       console.error('Error en la solicitud de actualización:', error);
@@ -183,6 +205,7 @@ const DisenosView = () => {
     }
   };
   
+  
 
   useEffect(() => {
     showData();
@@ -190,19 +213,19 @@ const DisenosView = () => {
 
   const columns = [
     {
-      name: 'DISEÑO',
+      name: 'Diseño',
       selector: (row) => row.diseno,
       sortable: true,
       center: true,
     },
     {
-      name: 'ESTADO',
+      name: 'Estado',
       selector: (row) => (row.estado ? 'Activo' : 'Inactivo'),
       sortable: true,
       center: true,
     },
     {
-      name: 'DESCRIPCIÓN',
+      name: 'Descripción',
       selector: (row) => row.descripcion,
       sortable: true,
       center: true,
@@ -211,15 +234,15 @@ const DisenosView = () => {
       name: 'Acciones',
       cell: (row) => (
         <div>
-        {/* Update button with edit icon */}
+
         <Styles.ActionButton onClick={() => handleUpdate(row._id)} update>
           <FaEdit /> 
         </Styles.ActionButton>
 
-        {/* Delete button with trash icon */}
         <Styles.ActionButton onClick={() => handleDelete(row._id)}>
           <FaTrash /> 
         </Styles.ActionButton>
+        
       </div>
       ),
       center: true,

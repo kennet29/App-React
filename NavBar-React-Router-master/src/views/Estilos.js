@@ -67,34 +67,7 @@ const EstilosView = () => {
     }
   };
 
-  const handleDelete = (estiloId) => {
-    showDeleteConfirmationModal(estiloId);
-  };
-
-  const handleDeleteConfirmed = async (estiloId) => {
-    const token = Cookies.get('token'); 
-    try {
-      const response = await fetch(`${url}/${estiloId}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-access-token': token,
-        },
-      });
-  
-      if (response.ok) {
-        console.log(`Estilo con ID ${estiloId} eliminado correctamente.`);
-        showData(); // Update the styles list after deletion
-        toast.success('Estilo eliminado correctamente', { position: toast.POSITION.TOP_CENTER });
-      } else  {
-        console.error(`Error al eliminar el estilo con ID ${estiloId}.`);
-      }
-    } catch (error) {
-      console.error('Error:', error);
-    } finally {
-      closeDeleteConfirmationModal();
-    }
-  };
+ 
   
 
   const handleClear = () => {
@@ -121,13 +94,35 @@ const EstilosView = () => {
     );
   }, [filterText, resetPaginationToggle]);
 
+  const handleCommonErrors = (statusCode) => {
+    switch (statusCode) {
+      case 401:
+        console.error('Error 401: No autorizado para realizar esta acción.');
+        toast.error('Su sesión ha caducado. Por favor, vuelva a iniciar sesión.', { position: toast.POSITION.TOP_CENTER });
+        // Add logic here to redirect the user to the login page if needed
+        break;
+      case 400:
+        console.error('Error 400: Solicitud incorrecta.');
+        toast.error('Solicitud incorrecta', { position: toast.POSITION.TOP_CENTER });
+        break;
+      case 403:
+        console.error('Error 403: Permisos insuficientes para la acción.');
+        toast.error('Permisos insuficientes para la acción', { position: toast.POSITION.TOP_CENTER });
+        break;
+      default:
+        console.error(`Error desconocido con código ${statusCode}`);
+        toast.error('Error desconocido', { position: toast.POSITION.TOP_CENTER });
+    }
+  };
+
+
   const handleCreate = async () => {
     try {
       // Log the JSON being sent
       console.log('Creating new style with JSON:', JSON.stringify(newEstilo));
   
       const createUrl = 'http://localhost:4000/api/estilos';
-      const token = Cookies.get('token'); 
+      const token = Cookies.get('token');
       const response = await fetch(createUrl, {
         method: 'POST',
         headers: {
@@ -139,10 +134,10 @@ const EstilosView = () => {
   
       if (response.ok) {
         console.log('Estilo creado exitosamente.');
-       
         showData();
         toast.success('Estilo creado exitosamente', { position: toast.POSITION.TOP_CENTER });
       } else {
+        handleCommonErrors(response.status);
         console.error('Error al intentar crear el estilo.');
         toast.error('Error al intentar crear el estilo', { position: toast.POSITION.TOP_CENTER });
       }
@@ -154,12 +149,41 @@ const EstilosView = () => {
     handleClose();
   };
   
+  const handleDelete = (estiloId) => {
+    showDeleteConfirmationModal(estiloId);
+  };
   
-
+  const handleDeleteConfirmed = async (estiloId) => {
+    const token = Cookies.get('token');
+    try {
+      const response = await fetch(`${url}/${estiloId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-access-token': token,
+        },
+      });
+  
+      if (response.ok) {
+        console.log(`Estilo con ID ${estiloId} eliminado correctamente.`);
+        showData(); // Update the styles list after deletion
+        toast.success('Estilo eliminado correctamente', { position: toast.POSITION.TOP_CENTER });
+      } else {
+        handleCommonErrors(response.status);
+        console.error(`Error al eliminar el estilo con ID ${estiloId}.`);
+        toast.error('Error al eliminar el estilo', { position: toast.POSITION.TOP_CENTER });
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    } finally {
+      closeDeleteConfirmationModal();
+    }
+  };
+  
   const handleUpdateSubmit = async () => {
     try {
       const updateUrl = `http://localhost:4000/api/estilos/${selectedEstilo._id}`;
-      const token = Cookies.get('token'); 
+      const token = Cookies.get('token');
       const response = await fetch(updateUrl, {
         method: 'PUT',
         headers: {
@@ -174,6 +198,7 @@ const EstilosView = () => {
         showData();
         toast.success('Estilo actualizado exitosamente', { position: toast.POSITION.TOP_CENTER });
       } else {
+        handleCommonErrors(response.status);
         console.error('Error al intentar actualizar el estilo.');
         toast.error('Error al intentar actualizar el estilo', { position: toast.POSITION.TOP_CENTER });
       }
@@ -185,25 +210,28 @@ const EstilosView = () => {
     handleClose();
   };
   
+
+
+
   useEffect(() => {
     showData();
   }, []);
 
   const columns = [
     {
-      name: 'ESTILO',
+      name: 'Estilo',
       selector: (row) => row.estilo,
       sortable: true,
       center: true,
     },
     {
-      name: 'ESTADO',
+      name: 'Estado',
       selector: (row) => (row.estado ? 'Activo' : 'Inactivo'),
       sortable: true,
       center: true,
     },
     {
-      name: 'DESCRIPCIÓN',
+      name: 'Descripcíon',
       selector: (row) => row.descripcion,
       sortable: true,
       center: true,
@@ -270,11 +298,6 @@ const EstilosView = () => {
   <option value="true">Activo</option>
   <option value="false">Inactivo</option>
 </Form.Control>
-
-
-
-
-
             <Form.Group controlId="formDescripcion">
               <Form.Label>Descripción</Form.Label>
               <Form.Control

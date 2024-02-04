@@ -71,7 +71,7 @@ const ArticulosView = () => {
     setShowDeleteConfirmation(true);
   };
 
- const handleDeleteConfirmed = async () => {
+const handleDeleteConfirmed = async () => {
   try {
     const deleteUrl = `http://localhost:4000/api/articulos/${deleteItemId}`;
     const token = Cookies.get('token'); // Get the token from cookies
@@ -89,8 +89,13 @@ const ArticulosView = () => {
       showArticulos();
       toast.success('Artículo eliminado correctamente', { position: toast.POSITION.TOP_CENTER });
     } else if (response.status === 403) {
+      // Forbidden error (403)
       console.error('Permisos insuficientes para borrar el artículo.');
       toast.error('Permisos insuficientes para borrar el artículo', { position: toast.POSITION.TOP_CENTER });
+    } else if (response.status === 401) {
+      // Unauthorized error (401)
+      console.error('Error de autenticación al borrar el artículo.');
+      toast.error('Error de autenticación al intentar eliminar el artículo', { position: toast.POSITION.TOP_CENTER });
     } else {
       console.error(`Error al borrar el articulo con ID ${deleteItemId}.`);
       toast.error('Error al intentar eliminar el artículo', { position: toast.POSITION.TOP_CENTER });
@@ -102,6 +107,7 @@ const ArticulosView = () => {
     closeDeleteConfirmationModal();
   }
 };
+
 
 
 
@@ -140,31 +146,42 @@ const ArticulosView = () => {
       // Check if the required cookie is available
       const miCookie = Cookies.get('miCookie');
       const token = Cookies.get('token');
-  
+    
       console.log('miCookie:', miCookie);
-  
-      // Continue with the rest of your code
+    
       const createUrl = 'http://localhost:4000/api/articulos';
       const response = await fetch(createUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-access-token': token, // Include the token in the header
+          'x-access-token': token, 
         },
         body: JSON.stringify(newArticulo),
       });
-  
-      // ... (your existing code)
+    
+      if (response.status === 401) {
+        // Unauthorized error (401)
+        toast.error('Error de autenticación. Por favor, inicie sesión nuevamente.');
+      } else if (response.status === 403) {
+        // Forbidden error (403)
+        toast.error('Acceso no permitido. No tiene los permisos necesarios.');
+      } else if (!response.ok) {
+        // Handle other errors if needed
+        toast.error('Se produjo un error en la solicitud de creación.');
+      } else {
+        // Handle successful response
+        toast.success('Artículo creado con éxito.');
+        showArticulos(); // Update the table data
+        handleClose();
+      }
     } catch (error) {
       console.error('Error en la solicitud de creación:', error);
+      toast.error('Se produjo un error en la solicitud de creación.');
     }
-  
-    
-    handleClose();
   };
-
-
   
+
+
 const handleUpdateSubmit = async () => {
   try {
     const updateUrl = `http://localhost:4000/api/articulos/${selectedArticulo._id}`;
@@ -179,18 +196,25 @@ const handleUpdateSubmit = async () => {
       body: JSON.stringify(selectedArticulo),
     });
 
-    if (response.ok) {
-      console.log('Articulo actualizado exitosamente.');
-      showArticulos();
-      toast.success('Artículo actualizado correctamente', { position: toast.POSITION.TOP_CENTER });
-    } else {
-      console.error('Error al intentar actualizar el articulo.');
-      toast.error('Error al intentar actualizar el artículo', { position: toast.POSITION.TOP_CENTER });
+    if (response.status === 401) {
+        // Unauthorized error (401)
+        toast.error('Error de autenticación. Por favor, inicie sesión nuevamente.');
+      } else if (response.status === 403) {
+        // Forbidden error (403)
+        toast.error('Acceso no permitido. No tiene los permisos necesarios.');
+      } else if (!response.ok) {
+        // Handle other errors if needed
+        toast.error('Se produjo un error en la solicitud de Actualizacion.');
+      } else {
+        // Handle successful response
+        toast.success('Artículo actualizado con éxito.');
+        showArticulos(); // Update the table data
+        handleClose();
+      }
+    } catch (error) {
+      console.error('Error en la solicitud de creación:', error);
+      toast.error('Se produjo un error en la solicitud de Actualizacion.');
     }
-  } catch (error) {
-    console.error('Error en la solicitud de actualización:', error);
-    toast.error('Error en la solicitud de actualización', { position: toast.POSITION.TOP_CENTER });
-  }
 
   handleClose();
 };

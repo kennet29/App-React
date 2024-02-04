@@ -173,19 +173,19 @@ const TallasView = () => {
 
   const columns = [
     {
-      name: 'TALLA',
+      name: 'Talla',
       selector: (row) => row.talla,
       sortable: true,
       center: true,
     },
     {
-      name: 'ESTADO',
+      name: 'Estado',
       selector: (row) => (row.estado ? 'Activo' : 'Inactivo'),
       sortable: true,
       center: true,
     },
     {
-      name: 'DESCRIPCIÓN',
+      name: 'Descripcion',
       selector: (row) => row.descripcion,
       sortable: true,
       center: true,

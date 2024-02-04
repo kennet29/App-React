@@ -64,30 +64,6 @@ const MarcasView = () => {
   };
 
   
-  const handleDeleteConfirmed = async (marcaId) => {
-    try {
-      const token = Cookies.get('token');
-      const response = await fetch(`${url}/${marcaId}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-access-token': token, // Include the token in the header
-        },
-        
-      });
-  
-      if (response.ok) {
-        toast.success('Material eliminado exitosamente', { position: toast.POSITION.TOP_CENTER });
-        console.log(`Marca con ID ${marcaId} eliminada correctamente`);
-        showData(); 
-      } else {
-        toast.error('Error en el borrado', { position: toast.POSITION.TOP_CENTER });
-        console.error(`Error al eliminar la marca con ID ${marcaId}`);
-      }
-    } catch (error) {
-      console.error('Error deleting marca:', error);
-    }
-  };
   
 
 
@@ -108,74 +84,120 @@ const MarcasView = () => {
     );
   }, [filterText, resetPaginationToggle]);
 
- const handleCreate = async () => {
-  const token = Cookies.get('token');
-  try {
-    console.log('JSON que se envía en la creación:', JSON.stringify(newMarca)); 
-    const newMarcaToSend = {
-      ...newMarca,
-      estado: newMarca.estado === 'Activo',
-    };
 
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-access-token': token, // Include the token in the header
-      },
-      body: JSON.stringify(newMarcaToSend),
-    });
 
-    if (response.ok) {
-      toast.success('Marca creada exitosamente', { position: toast.POSITION.TOP_CENTER });
-      console.log('Marca creada exitosamente.');
-     
-      showData();
-    } else {
-      toast.error('Error en la creacion', { position: toast.POSITION.TOP_CENTER });
-      console.error('Error al intentar crear la marca.');
+  const handleCommonErrors = (statusCode) => {
+    switch (statusCode) {
+      case 401:
+        console.error('Error 401: No autorizado para realizar esta acción.');
+        toast.error('Su sesión ha caducado. Por favor, vuelva a iniciar sesión.', { position: toast.POSITION.TOP_CENTER });
+        // Add logic here to redirect the user to the login page if needed
+        break;
+      case 400:
+        console.error('Error 400: Solicitud incorrecta.');
+        toast.error('Solicitud incorrecta', { position: toast.POSITION.TOP_CENTER });
+        break;
+      case 403:
+        console.error('Error 403: Permisos insuficientes para la acción.');
+        toast.error('Permisos insuficientes para la acción', { position: toast.POSITION.TOP_CENTER });
+        break;
+      default:
+        console.error(`Error desconocido con código ${statusCode}`);
+        toast.error('Error desconocido', { position: toast.POSITION.TOP_CENTER });
     }
-  } catch (error) {
-    console.error('Error en la solicitud de creación:', error);
-  }
-
-  handleClose();
-};
+  };
 
 
-const handleUpdateSubmit = async () => {
-  try {
+  const handleCreate = async () => {
     const token = Cookies.get('token');
+    try {
+      console.log('JSON que se envía en la creación:', JSON.stringify(newMarca)); 
+      const newMarcaToSend = {
+        ...newMarca,
+        estado: newMarca.estado === 'Activo',
+      };
   
-    const selectedMarcaToSend = {
-      ...selectedMarca,
-      estado: selectedMarca.estado === 'Activo',
-    };
-
-    const response = await fetch(`${url}/${selectedMarca._id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-access-token': token, // Include the token in the header
-      },
-      body: JSON.stringify(selectedMarcaToSend),
-    });
-
-    if (response.ok) {
-      toast.success('Marca actualizado exitosamente', { position: toast.POSITION.TOP_CENTER });
-      console.log('Marca actualizada exitosamente.');
-      showData();
-    } else {
-      toast.error('Error en la actualizacion', { position: toast.POSITION.TOP_CENTER });
-      console.error('Error al intentar actualizar la marca.');
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-access-token': token, // Include the token in the header
+        },
+        body: JSON.stringify(newMarcaToSend),
+      });
+  
+      if (response.ok) {
+        toast.success('Marca creada exitosamente', { position: toast.POSITION.TOP_CENTER });
+        console.log('Marca creada exitosamente.');
+        showData();
+      } else {
+        handleCommonErrors(response.status); // Agregar notificación de error común
+        console.error('Error al intentar crear la marca.');
+      }
+    } catch (error) {
+      console.error('Error en la solicitud de creación:', error);
     }
-  } catch (error) {
-    console.error('Error en la solicitud de actualización:', error);
-  }
-
-  handleClose();
-};
-
+  
+    handleClose();
+  };
+  
+  const handleDeleteConfirmed = async (marcaId) => {
+    try {
+      const token = Cookies.get('token');
+      const response = await fetch(`${url}/${marcaId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-access-token': token, // Include the token in the header
+        },
+      });
+  
+      if (response.ok) {
+        toast.success('Material eliminado exitosamente', { position: toast.POSITION.TOP_CENTER });
+        console.log(`Marca con ID ${marcaId} eliminada correctamente`);
+        showData(); 
+      } else {
+        handleCommonErrors(response.status); // Agregar notificación de error común
+        console.error(`Error al eliminar la marca con ID ${marcaId}`);
+      }
+    } catch (error) {
+      console.error('Error deleting marca:', error);
+    }
+  };
+  
+  const handleUpdateSubmit = async () => {
+    try {
+      const token = Cookies.get('token');
+    
+      const selectedMarcaToSend = {
+        ...selectedMarca,
+        estado: selectedMarca.estado === 'Activo',
+      };
+  
+      const response = await fetch(`${url}/${selectedMarca._id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-access-token': token, // Include the token in the header
+        },
+        body: JSON.stringify(selectedMarcaToSend),
+      });
+  
+      if (response.ok) {
+        toast.success('Marca actualizado exitosamente', { position: toast.POSITION.TOP_CENTER });
+        console.log('Marca actualizada exitosamente.');
+        showData();
+      } else {
+        handleCommonErrors(response.status); // Agregar notificación de error común
+        console.error('Error al intentar actualizar la marca.');
+      }
+    } catch (error) {
+      console.error('Error en la solicitud de actualización:', error);
+    }
+  
+    handleClose();
+  };
+  
 
   useEffect(() => {
     showData();

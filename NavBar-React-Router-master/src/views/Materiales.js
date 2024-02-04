@@ -65,31 +65,7 @@ const MaterialesView = () => {
     setShowDeleteConfirmationModal(true);
   };
 
-  const handleConfirmDelete = async (materialId) => {
-    const token = Cookies.get('token');
-    try {
-      const response = await fetch(`${url}/${materialId}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-access-token': token, // Include the token in the header
-        },
-      });
-
-      if (response.ok) {
-        toast.success('Material eliminado exitosamente', { position: toast.POSITION.TOP_CENTER });
-        console.log(`Material con ID ${materialId} eliminado correctamente`);
-        showData(); // Refresh data after successful deletion
-      } else {
-        console.error(`Error al intentar eliminar el material con ID ${materialId}`);
-      }
-    } catch (error) {
-      console.error('Error:', error);
-    }
-
-    // Cerrar el modal de confirmación
-    setShowDeleteConfirmationModal(false);
-  };
+ 
 
 
   const handleClear = () => {
@@ -116,6 +92,28 @@ const MaterialesView = () => {
     );
   }, [filterText, resetPaginationToggle]);
 
+
+  const handleCommonErrors = (statusCode) => {
+    switch (statusCode) {
+      case 401:
+        console.error('Error 401: No autorizado para realizar esta acción.');
+        toast.error('Su sesión ha caducado. Por favor, vuelva a iniciar sesión.', { position: toast.POSITION.TOP_CENTER });
+        // Agregar lógica aquí para redirigir al usuario a la página de inicio de sesión si es necesario
+        break;
+      case 400:
+        console.error('Error 400: Solicitud incorrecta.');
+        toast.error('Solicitud incorrecta', { position: toast.POSITION.TOP_CENTER });
+        break;
+      case 403:
+        console.error('Error 403: Permisos insuficientes para la acción.');
+        toast.error('Permisos insuficientes para la acción', { position: toast.POSITION.TOP_CENTER });
+        break;
+      default:
+        console.error(`Error desconocido con código ${statusCode}`);
+        toast.error('Error desconocido', { position: toast.POSITION.TOP_CENTER });
+    }
+  };
+  
   const handleCreate = async () => {
     const token = Cookies.get('token');
     try {
@@ -127,24 +125,50 @@ const MaterialesView = () => {
         },
         body: JSON.stringify(newMaterial),
       });
-
+  
       if (response.ok) {
         toast.success('Material creado exitosamente', { position: toast.POSITION.TOP_CENTER });
-        
         showData();
       } else {
+        handleCommonErrors(response.status); // Agregar notificación de error común
         console.error('Error al intentar crear el material.');
       }
     } catch (error) {
       console.error('Error en la solicitud de creación:', error);
     }
-
+  
     handleClose();
   };
-
+  
+  const handleConfirmDelete = async (materialId) => {
+    const token = Cookies.get('token');
+    try {
+      const response = await fetch(`${url}/${materialId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-access-token': token,
+        },
+      });
+  
+      if (response.ok) {
+        toast.success('Material eliminado exitosamente', { position: toast.POSITION.TOP_CENTER });
+        console.log(`Material con ID ${materialId} eliminado correctamente`);
+        showData();
+      } else {
+        handleCommonErrors(response.status); // Agregar notificación de error común
+        console.error(`Error al intentar eliminar el material con ID ${materialId}`);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  
+    setShowDeleteConfirmationModal(false);
+  };
+  
   const handleUpdateSubmit = async () => {
     try {
-      const token = Cookies.get('token'); 
+      const token = Cookies.get('token');
       const response = await fetch(`${url}/${selectedMaterial._id}`, {
         method: 'PUT',
         headers: {
@@ -153,20 +177,22 @@ const MaterialesView = () => {
         },
         body: JSON.stringify(selectedMaterial),
       });
-
+  
       if (response.ok) {
         toast.success('Material actualizado exitosamente', { position: toast.POSITION.TOP_CENTER });
         console.log('Material actualizado exitosamente.');
         showData();
       } else {
+        handleCommonErrors(response.status); // Agregar notificación de error común
         console.error('Error al intentar actualizar el material.');
       }
     } catch (error) {
       console.error('Error en la solicitud de actualización:', error);
     }
-
+  
     handleClose();
   };
+  
 
   useEffect(() => {
     showData();
@@ -174,19 +200,19 @@ const MaterialesView = () => {
 
   const columns = [
     {
-      name: 'MATERIAL',
+      name: 'Material',
       selector: (row) => row.material,
       sortable: true,
       center: true,
     },
     {
-      name: 'DESCRIPCIÓN',
+      name: 'Descripcíon',
       selector: (row) => row.descripcion,
       sortable: true,
       center: true,
     },
     {
-      name: 'ESTADO',
+      name: 'Estado',
       selector: (row) => (row.estado ? 'Activo' : 'Inactivo'),
       sortable: true,
       center: true,

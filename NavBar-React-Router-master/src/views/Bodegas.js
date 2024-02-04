@@ -77,7 +77,11 @@ const BodegasView = () => {
           setBodegas((prevBodegas) => prevBodegas.filter((bodega) => bodega._id !== deletingBodegaId));
           toast.success('Bodega Eliminado correctamente', { position: toast.POSITION.TOP_CENTER });
           console.log(`Bodega con ID ${deletingBodegaId} borrada exitosamente.`);
-        }else if (response.status === 403) {
+        }else if (response.status === 401) {
+          console.error('Error en la autenticacion para borrar la bodega.');
+          toast.error('Permisos insuficientes para borrar el artículo', { position: toast.POSITION.TOP_CENTER });
+        }
+        else if (response.status === 403) {
           console.error('Permisos insuficientes para borrar la bodega.');
           toast.error('Permisos insuficientes para borrar el artículo', { position: toast.POSITION.TOP_CENTER });
         }
@@ -152,10 +156,13 @@ const BodegasView = () => {
         setBodegas((prevBodegas) => [...prevBodegas, nuevaBodegaCreada]);
         toast.success('Bodega creada exitosamente', { position: toast.POSITION.TOP_CENTER });
         console.log('Bodega creada exitosamente.');
-   
-      } else if (response.status === 403) {
-        console.error('Permisos insuficientes para borrar el artículo.');
-        toast.error('Permisos insuficientes para borrar el artículo', { position: toast.POSITION.TOP_CENTER });
+      }
+    else if (response.status === 401) {
+      console.error('Error de autenticación al crear la bodega.');
+      toast.error('Error de autenticación al intentar actualizar la bodega', { position: toast.POSITION.TOP_CENTER });
+    }else if (response.status === 403) {
+        console.error('Permisos insuficientes para crear la bodega.');
+        toast.error('Permisos insuficientes para borrar la bodega', { position: toast.POSITION.TOP_CENTER });
       }
     } catch (error) {
       console.error('Error en la solicitud POST:', error);
@@ -170,7 +177,7 @@ const BodegasView = () => {
       estado: document.getElementById('updateFormEstado').value,
       descripcion: document.getElementById('updateFormDescripcion').value,
     };
-
+  
     try {
       const token = Cookies.get('token');
       const response = await fetch(`http://localhost:4000/api/bodegas/${updatingBodega._id}`, {
@@ -181,7 +188,7 @@ const BodegasView = () => {
         },
         body: JSON.stringify(updatedBodega),
       });
-
+  
       if (response.ok) {
         const updatedBodegaData = await response.json();
         setBodegas((prevBodegas) =>
@@ -191,15 +198,24 @@ const BodegasView = () => {
         );
         toast.success('Bodega editada exitosamente', { position: toast.POSITION.TOP_CENTER });
         console.log(`Bodega con ID ${updatingBodega._id} actualizada exitosamente.`);
+      } else if (response.status === 401) {
+        // Unauthorized error (401)
+        console.error('Error de autenticación al actualizar la bodega.');
+        toast.error('Error de autenticación al intentar actualizar la bodega', { position: toast.POSITION.TOP_CENTER });
+      } else if (response.status === 403) {
+        // Forbidden error (403)
+        console.error('Permisos insuficientes para actualizar la bodega.');
+        toast.error('Permisos insuficientes para actualizar la bodega', { position: toast.POSITION.TOP_CENTER });
       } else {
         console.error(`Error actualizando la bodega con ID ${updatingBodega._id}`);
       }
     } catch (error) {
       console.error('Error en la solicitud PUT:', error);
     }
-
+  
     handleUpdateClose();
   };
+  
 
   useEffect(() => {
     showData();
@@ -207,19 +223,19 @@ const BodegasView = () => {
 
   const columns = [
     {
-      name: 'BODEGA',
+      name: 'Bodega',
       selector: (row) => row.bodega,
       sortable: true,
       center: true,
     },
     {
-      name: 'ESTADO',
+      name: 'Estado',
       selector: (row) => (row.estado ? 'Activo' : 'Inactivo'),
       sortable: true,
       center: true,
     },
     {
-      name: 'DESCRIPCIÓN',
+      name: 'Descripción',
       selector: (row) => row.descripcion,
       sortable: true,
       center: true,
