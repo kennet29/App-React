@@ -20,7 +20,8 @@ const HistorialIngresosView = () => {
   const [materiales, setMateriales] = useState([]);
   const [disenos, setDisenos] = useState([]);
   const [proveedores, setProveedores] = useState([]);
-
+  
+  const [users, setUsers] = useState([]);
   const [filterText, setFilterText] = useState('');
 
   const updateFechaIngresoField = async (id_ingreso) => {
@@ -148,6 +149,7 @@ useEffect(() => {
         return {
           _id: item._id,
           id_ingreso: item.id_ingreso,
+          id_usuario: incomeData.id_usuario,
           id_proveedor: incomeData.id_proveedor,
           total: item.total,
           articulos: item.articulos,
@@ -229,9 +231,6 @@ const getProveedorById = (provId) => {
 };
 
 
-const handleFilterChange = (e) => {
-  setFilterText(e.target.value);
-};
 
 const filteredData = data.filter(
   item =>
@@ -241,12 +240,44 @@ const filteredData = data.filter(
     item.total.toString().toLowerCase().includes(filterText.toLowerCase()) ||
     item.fecha.toLowerCase().includes(filterText.toLowerCase())
 );
+const handleFilterChange = (e) => {
+  setFilterText(e.target.value);
+};
+
+
+
+
+
+// Fetch user data
+useEffect(() => {
+  const fetchUsers = async () => {
+    try {
+      const response = await axios.get('http://localhost:4000/api/user/all');
+      setUsers(response.data);
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+    }
+  };
+  fetchUsers();
+}, []);
+
+// Function to get username by user ID
+const getUserNameById = (userId) => {
+  const user = users.find((u) => u._id === userId);
+  return user ? user.username : 'Desconocido';
+};
 
   const columns = [
-    { name: 'Id', selector: '_id', sortable: true },
+    { name: 'Id', selector: '_id', sortable: true,center:true },
     { name: 'Id Ingreso', selector: 'id_ingreso', sortable: true },
+     { name: 'Usuario', selector: 'id_usuario', sortable: true, cell: row => getUserNameById(row.id_usuario) },
     { name: 'Proveedor', selector: 'id_proveedor', sortable: true ,cell :row =>getProveedorById(row.id_proveedor) },
-    { name: 'Total C$', selector: 'total', sortable: true },
+    {
+      name: 'Total C$',
+      selector: 'total',
+      sortable: true,
+      cell: row => parseFloat(row.total).toFixed(2),
+    },
     { name: 'Fecha', selector: 'fecha', sortable: true },
     {
       name: 'Acciones',

@@ -22,10 +22,7 @@ const BodegasView = () => {
   const [deletingBodegaId, setDeletingBodegaId] = useState(null);
 
   const [updatingBodega, setUpdatingBodega] = useState(null);
-  const handleNotificacion = () => {
-   
-    toast.success('Operación exitosa', { position: toast.POSITION.TOP_CENTER });
-  };
+
 
   const handleClose = () => setShowCreateModal(false);
   const handleShow = () => setShowCreateModal(true);

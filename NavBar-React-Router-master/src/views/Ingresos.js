@@ -7,6 +7,7 @@ import Footer from '../component/footer/footer';
 import MyNavbar from '../component/Navbar';
 import { toast } from 'react-toastify';
 import { ToastContainer } from 'react-toastify';
+import Cookies from 'js-cookie';
 
   const IngresosView = () => {
   const [articulos, setArticulos] = useState([]);
@@ -307,7 +308,7 @@ import { ToastContainer } from 'react-toastify';
 
   const getMarcaNombreById = (id) => {
     const marca = marcas.find((marca) => marca._id === id);
-    return marca ? marca.marca : '';
+    return marca ? marca.marca : 'Desconocida';
   };
   
   const getMaterialNameById = (materialId) => {
@@ -332,10 +333,11 @@ const getNombreCategoriaById = (categoriaId) => {
 
 
   const handleFacturarIngreso = async () => {
+    const id_user = Cookies.get('_id');
     try {
         // Primera solicitud POST para crear el ingreso
         const ingresoData = {
-            id_usuario: "652b4bac458db698d7db1485",
+            id_usuario: id_user,
             id_proveedor: formulario.idProveedor,
             fecha: new Date().toISOString(),
             iva: ivaTotal,
@@ -378,7 +380,7 @@ const getNombreCategoriaById = (categoriaId) => {
         for (const articulo of articulosIngresados) {
             const stockData = {
                 Id_articulo: articulo.idArticulo,
-                Id_usuario: "652b4bac458db698d7db1485",
+                Id_usuario: id_user,
                 Id_categoria:articulo.idCategoria,
                 Id_color: articulo.idColor,
                 Id_marca: articulo.idMarca,

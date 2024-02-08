@@ -18,7 +18,7 @@ const UserInfo = () => {
     const token = Cookies.get('token');
     const fetchData = async () => {
       try {
-        const response = await fetch('http://localhost:4000/api/user/', {
+        const response = await fetch('http://localhost:4000/api/user/info', {
           headers: {
             'Content-Type': 'application/json',
             'x-access-token': token,

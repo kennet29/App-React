@@ -214,6 +214,9 @@ useEffect(() => {
     const bodega = bodegas.find((bodega) => bodega._id == row.Id_bodega);
     return bodega ? bodega.bodega: 'Desconocida';
   }
+  ,
+  sortable: true,
+  center: true,
 },
   {
   name: 'Marca',

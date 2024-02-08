@@ -10,9 +10,7 @@ import Cookies from 'js-cookie';
 
 
 const ColoresView = () => {
-  const [cookieData, setCookieData] = useState({
-    miCookie: Cookies.get('miCookie') || null, 
-  });
+
   
   const [colors, setColors] = useState([]);
   const [showCreateModal, setShowCreateModal] = useState(false);

@@ -23,6 +23,7 @@ import HistorialIngresos from "./views/HistorialIngresos.js";
 import HistorialVentas from "./views/HistorialVentas.js";
 import DetalleIngresosView from "./views/Detalle-ingresos.js";
 import UserInfo from "./views/ListUser.js";
+import MercanciaDañada from "./views/MercanciaDañada.js";
 
 
 
@@ -54,6 +55,8 @@ function App() {
           <Route path='/historial-Ventas' component={HistorialVentas}></Route>
           <Route path='/ingresos-detalles' component={DetalleIngresosView} ></Route>
           <Route path='/listuser' component={UserInfo} exact />   
+          <Route path='/mercancia-dañada' component={MercanciaDañada} exact />   
+
         </Switch>
       </Router>
     </>

@@ -71,6 +71,7 @@ const Menu = () => {
         </Dropdown.Toggle>
         <Dropdown.Menu style={{backgroundColor:'#4a4a4a',color:'white'}}>
           <Dropdown.Item style={{color:'white'}} href="/mercancia">Administrar Mercancia</Dropdown.Item>
+          <Dropdown.Item style={{color:'white'}} href="/mercancia-dañada">Mercancia Dañada</Dropdown.Item>
          
         </Dropdown.Menu>
       </Dropdown>
