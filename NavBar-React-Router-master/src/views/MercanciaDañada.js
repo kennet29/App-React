@@ -150,8 +150,14 @@ const MercanciaDañada = () => {
     center: true,},
     { name: 'id_ingreso', selector: 'id_ingreso', sortable: true,   center: true, },
     { name: 'Cantidad', selector: 'Cantidad', sortable: true,   center: true, },
-    { name: 'Daños', selector: 'Daños', sortable: true,   center: true, },
-    { name: 'Estado', selector: 'Estado', sortable: true,   center: true, },
+    {
+      name: 'Daños',
+      selector: 'Daños',
+      sortable: true,
+      center: true,
+
+    },
+    { name: 'Estado', selector: 'Estado', sortable: true,   center: true,      cell: row => row.Daños ? 'Activo' : 'Inactivo', },
     { name: 'Descripcion', selector: 'Descripcion', sortable: true,   center: true, },
   ];
 

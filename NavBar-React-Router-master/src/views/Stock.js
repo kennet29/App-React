@@ -6,10 +6,11 @@ import {  FaEdit } from 'react-icons/fa';
 import Navbar from '../component/Navbar';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-
+import { TbShoppingBagX } from "react-icons/tb";
+import Cookies from 'js-cookie';
 const MercanciaView = () => {
   const [stock, setStock] = useState([]);
-
+  const [existencias, setExistencias] = useState(0);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [filteredStock, setFilteredStock] = useState([]);
 
@@ -175,6 +176,131 @@ useEffect(() => {
 }, [filterText, stock, articulos,categorias, colores, marcas, tallas, tiposDeEstilo, materiales, disenos, promociones, bodegas]);
 
 
+const [showDamageModal, setShowDamageModal] = useState(false);
+const [damageData, setDamageData] = useState({
+  id_stock: "",
+  id_articulo: "",
+  id_usuario: "",
+  id_categoria: "",
+  id_marca: "",
+  id_talla: "",
+  id_color: "",
+  id_ingreso: "",
+});
+
+const moveItemDamage = (row) => {
+
+  const userId = Cookies.get('_id');
+  // Extract necessary data from the selected row
+  const {
+    _id,
+    Estado,
+    Id_articulo,
+    Id_usuario,
+    Id_categoria,
+    Id_marca,
+    Id_talla,
+    Id_color,
+    Id_ingreso,
+  } = row;
+
+  
+  setDamageData({
+    id_stock: _id,
+    id_articulo: Id_articulo,
+    id_usuario: userId,
+    id_categoria: Id_categoria,
+    id_marca: Id_marca,
+    id_talla: Id_talla,
+    id_color: Id_color,
+    id_ingreso: Id_ingreso,
+    Daños: "",
+    Estado: Estado,
+    Cantidad: 0,
+    Descripcion: "",
+    Fecha: '', 
+    existencias: row.Existencias, 
+  });
+  setExistencias(row.existencias);
+
+  // Show the modal
+  setShowDamageModal(true);
+};
+
+const handleDamageSubmit = async () => {
+  const token = Cookies.get('token');
+  try {
+    if (!damageData.Daños || damageData.Cantidad <= 0 || !damageData.Descripcion || !damageData.Fecha) {
+      toast.warning('Completa los datos del Modal.', { position: toast.POSITION.TOP_CENTER });
+      return;
+    }
+    if (damageData.Cantidad > damageData.existencias) {
+      toast.warning('Se está intentando pasar más cantidad que la existencia', { position: toast.POSITION.TOP_CENTER });
+      return;
+    }
+
+    // Ensure damageData.Fecha is a valid Date object
+    if (!(damageData.Fecha instanceof Date)) {
+      damageData.Fecha = new Date(damageData.Fecha);
+    }
+
+    // Check if damageData.Fecha is a valid Date object after conversion
+    if (isNaN(damageData.Fecha.getTime())) {
+      toast.error('Fecha no válida', { position: toast.POSITION.TOP_CENTER });
+      return;
+    }
+
+    // Log the formatted JSON being sent to the server
+    console.log('JSON being sent to server:', JSON.stringify(damageData, null, 2));
+
+    // Send data to the specified URL using the POST method
+    const response = await fetch('http://localhost:4000/api/mercancia/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(damageData),
+    });
+
+    if (response.ok) {
+      // Calculate the difference between Existencias and Cantidad
+      const DiferenciaExistencias = damageData.existencias - damageData.Cantidad;
+
+      // Show success toast
+      toast.success('Damage information saved successfully', { position: toast.POSITION.TOP_CENTER });
+
+      // Log the difference to the console
+      console.log('DiferenciaExistencias:', DiferenciaExistencias);
+
+      // Close the modal after successful submission
+      setShowDamageModal(false);
+
+      // Send data to update the stock with the calculated difference
+      const updateStockUrl = `http://localhost:4000/api/stock/update/${damageData.id_stock}`;
+      const updateStockResponse = await fetch(updateStockUrl, {
+        method: 'PUT', // You may need to adjust the method based on your server's API
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ _id: damageData.id_stock, DiferenciaExistencias }),
+      });
+
+      if (updateStockResponse.ok) {
+        console.log('Stock updated successfully');
+      } else {
+        console.error('Error updating stock:', updateStockResponse.statusText);
+      }
+    } else {
+      console.error('Error saving damage information:', response.statusText);
+    }
+  } catch (error) {
+    console.error('Error saving damage information:', error);
+  }
+};
+
+
+
+
   const columns = [
     {
       name: 'ID',
@@ -211,7 +337,7 @@ useEffect(() => {
 },{
   name:'Bodega',
   selector:(row) =>{
-    const bodega = bodegas.find((bodega) => bodega._id == row.Id_bodega);
+    const bodega = bodegas.find((bodega) => bodega._id === row.Id_bodega);
     return bodega ? bodega.bodega: 'Desconocida';
   }
   ,
@@ -266,6 +392,12 @@ useEffect(() => {
   },
   sortable: true,
   center: true,
+},
+{
+name:'Existencias',
+selector:(row) => row.Existencias,
+sortable:true,
+centre:true,
 },
 
     {
@@ -333,11 +465,18 @@ useEffect(() => {
     },    
     {
       name: 'Acciones',
+     
       cell: (row) => (
         <div>
-          <Styles.ActionButton onClick={() => handleUpdate(row._id)} update>
+          <Styles.ActionButton style={{padding:'0px'}} onClick={() => handleUpdate(row._id)} update>
             <FaEdit />
           </Styles.ActionButton>
+          <Styles.ActionButton
+        style={{ backgroundColor: 'blue', margin: '0 auto', padding: '0px' }}
+        onClick={() => moveItemDamage(row)}  // Pass the selected row to the function
+      >
+        <TbShoppingBagX />
+      </Styles.ActionButton>
         </div>
       ),
       center: true,
@@ -491,7 +630,7 @@ useEffect(() => {
     <option value={false}>Inactivo</option>
   </Form.Control>
 </Form.Group>
-<Form.Group controlId="formDanos">
+<Form.Group controlId="formDaños">
   <Form.Label>Daños</Form.Label>
   <Form.Control
     as="select"
@@ -593,6 +732,79 @@ useEffect(() => {
     </Button>
   </Styles.ModalFooter>
 </Styles.StyledModal>
+
+
+<Styles.StyledModal show={showDamageModal} onHide={() => setShowDamageModal(false)}>
+<Modal.Header closeButton>
+          <Modal.Title>Mover Mercancia Dañada</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+      
+          <Form.Group controlId="formDaños">
+            <Form.Label>Descripcion Daños </Form.Label>
+            <Form.Control
+              type="text"
+              placeholder="Ingrese la Descripcion ..."
+              value={damageData.Daños}
+              onChange={(e) => setDamageData({ ...damageData, Daños: e.target.value })}
+            />
+          </Form.Group>
+          
+          <Form.Group controlId="formCantidad">
+  <Form.Label>Cantidad</Form.Label>
+  <Form.Control
+    type="number"
+    placeholder="Ingrese la  Cantidad ..."
+    value={damageData.Cantidad}
+    onChange={(e) => setDamageData({ ...damageData, Cantidad: parseInt(e.target.value, 10) || 0 })}
+    onKeyPress={(e) => {
+  
+      const isNumber = /^\d+$/;
+      if (!isNumber.test(e.key)) {
+        e.preventDefault();
+      }
+
+   
+      const enteredValue = parseInt(e.target.value + e.key, 10) || 0;
+      if (enteredValue > existencias) {
+        e.preventDefault();
+       
+        toast.warning('Stock insuficiente', { position: toast.POSITION.TOP_CENTER });
+      }
+    }}
+  />
+</Form.Group>
+
+
+          <Form.Group controlId="formDescripcion">
+            <Form.Label>Descripcion Articulo</Form.Label>
+            <Form.Control
+              type="text"
+              placeholder="Ingresa Descripcion ..."
+              value={damageData.Descripcion}
+              onChange={(e) => setDamageData({ ...damageData, Descripcion: e.target.value })}
+            />
+          </Form.Group>
+
+          <Form.Group controlId="formFecha">
+  <Form.Label>Fecha</Form.Label>
+  <Form.Control
+    type="date"
+    value={damageData.Fecha instanceof Date ? damageData.Fecha.toISOString().split('T')[0] : damageData.Fecha}
+    onChange={(e) => setDamageData({ ...damageData, Fecha: new Date(e.target.value) })}
+  />
+</Form.Group>
+
+        </Modal.Body>
+        <Styles.ModalFooter>
+          <Button className="otros" variant="primary" onClick={handleDamageSubmit}>
+            Save Damage Information
+          </Button>
+          <Button className="otros" variant="secondary" onClick={() => setShowDamageModal(false)}>
+            Close
+          </Button>
+        </Styles.ModalFooter>
+      </Styles.StyledModal>
 
 <Footer />
 <ToastContainer />

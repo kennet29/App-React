@@ -28,11 +28,11 @@ export const ActionButton = styled.button`
   text-decoration: none;
   display: inline-block;
   font-size: 14px;
-  margin: 4px 2px;
+  margin:  2px;
   cursor: pointer;
   border-radius: 4px;
-  width: 40px;
-  height: 40px;
+  width: 35px;
+  height: 35px;
 `;
 
 export const CreateButton = styled(Button)`
